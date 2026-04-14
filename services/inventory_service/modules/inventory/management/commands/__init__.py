@@ -1,0 +1,1 @@
+"""Commands for inventory module."""

@@ -1,0 +1,94 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Sora:wght@500;600;700;800&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 30 40% 97%;
+  --foreground: 213 38% 14%;
+  --card: 0 0% 100%;
+  --muted: 36 33% 92%;
+  --border: 28 25% 84%;
+  --primary: 15 83% 54%;
+  --accent: 174 73% 34%;
+  --success: 146 62% 38%;
+  --warning: 40 94% 51%;
+  --danger: 2 76% 56%;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: "IBM Plex Sans", sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  background: hsl(var(--background));
+  background-image: 
+    radial-gradient(at 0% 0%, hsla(15, 83%, 54%, 0.08) 0, transparent 55%),
+    radial-gradient(at 100% 10%, hsla(174, 73%, 34%, 0.08) 0, transparent 60%),
+    linear-gradient(180deg, hsla(36, 80%, 93%, 0.45), hsla(0, 0%, 100%, 0));
+  color: hsl(var(--foreground));
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,h2,h3,h4,h5,h6 { 
+  font-family: "Sora", sans-serif;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+
+.glass {
+  background: rgba(255, 250, 244, 0.84);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+.container-app { @apply mx-auto w-full max-w-[1440px] px-4 sm:px-8 lg:px-14; }
+
+.btn-primary {
+  @apply inline-flex items-center justify-center rounded-2xl bg-primary px-6 py-3 text-sm font-bold text-white transition-all hover:-translate-y-0.5 hover:brightness-95 active:scale-95 disabled:opacity-50;
+}
+
+.btn-secondary {
+  @apply inline-flex items-center justify-center rounded-2xl border border-border bg-card px-6 py-3 text-sm font-bold transition-all hover:bg-muted active:scale-95 disabled:opacity-50;
+}
+
+.card-premium {
+  @apply rounded-3xl border border-border/80 bg-card p-6 shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-premium;
+}
+
+input, select, textarea {
+  @apply rounded-2xl border border-border bg-white px-4 py-3 text-sm outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20;
+}
+
+.ambient-wrap {
+  position: relative;
+  isolation: isolate;
+}
+
+.ambient-wrap::before,
+.ambient-wrap::after {
+  content: "";
+  position: fixed;
+  pointer-events: none;
+  z-index: -1;
+  width: 44rem;
+  height: 44rem;
+  border-radius: 9999px;
+  filter: blur(100px);
+  opacity: 0.22;
+}
+
+.ambient-wrap::before {
+  left: -14rem;
+  top: -8rem;
+  background: hsl(var(--primary));
+}
+
+.ambient-wrap::after {
+  right: -15rem;
+  bottom: -14rem;
+  background: hsl(var(--accent));
+}
