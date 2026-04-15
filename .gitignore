@@ -8,3 +8,4 @@ __pycache__/
 htmlcov/
 .next/
 node_modules/
+*/.next/
