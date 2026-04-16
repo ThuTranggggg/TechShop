@@ -9,21 +9,31 @@ import { OrderSummaryCard } from "@/components/orders/order-summary-card";
 import { useRouter } from "next/navigation";
 import { trackAiEvent } from "@/services/api/ai";
 import { getAccessToken } from "@/services/auth";
-import { extractUserIdFromJwt } from "@/lib/jwt";
+import { decodeJwt, extractUserIdFromJwt } from "@/lib/jwt";
+import { useMounted } from "@/hooks/use-mounted";
 
 export default function CheckoutPage() {
   const router = useRouter();
+  const mounted = useMounted();
   const token = getAccessToken();
-  const userId = token ? extractUserIdFromJwt(token) : undefined;
+  const tokenData = mounted && token ? decodeJwt(token) : null;
+  const userId = mounted && token ? extractUserIdFromJwt(token) : undefined;
   const [error, setError] = useState("");
-  const { data: cart } = useQuery({ queryKey: ["cart"], queryFn: getCurrentCart });
-  useQuery({ queryKey: ["checkout-preview"], queryFn: checkoutPreview });
+  const { data: cart } = useQuery({ queryKey: ["cart"], queryFn: getCurrentCart, enabled: mounted && Boolean(token) });
+  useQuery({ queryKey: ["checkout-preview"], queryFn: checkoutPreview, enabled: mounted && Boolean(token) });
   useEffect(() => {
     trackAiEvent({ event_type: "checkout_started", user_id: userId, metadata: { source: "checkout_page" } }).catch(() => undefined);
   }, [userId]);
 
   const createMutation = useMutation({
-    mutationFn: (shipping_address: AddressInput) => createOrderFromCart({ cart_id: cart!.id, shipping_address }),
+    mutationFn: (shipping_address: AddressInput) => createOrderFromCart({
+      cart_id: cart!.id,
+      shipping_address,
+      customer: tokenData ? {
+        name: String(tokenData.full_name ?? ""),
+        email: String(tokenData.email ?? ""),
+      } : undefined,
+    }),
     onSuccess: (order) => {
       trackAiEvent({ event_type: "order_created", user_id: userId, metadata: { order_id: order.id } }).catch(() => undefined);
       router.push(`/orders/${order.id}?justPlaced=1`);
@@ -31,7 +41,7 @@ export default function CheckoutPage() {
     onError: (e) => setError(e instanceof Error ? e.message : "Checkout failed"),
   });
 
-  if (!cart) return null;
+  if (!mounted || !cart) return null;
 
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px]">

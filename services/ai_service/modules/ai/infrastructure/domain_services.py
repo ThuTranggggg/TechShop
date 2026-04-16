@@ -4,7 +4,6 @@ Infrastructure domain services implementations.
 import logging
 from typing import List, Optional, Dict, Any, Tuple
 from uuid import UUID
-from decimal import Decimal
 
 from modules.ai.domain.entities import (
     BehavioralEvent,
@@ -29,6 +28,7 @@ from modules.ai.infrastructure.repositories import (
     DjangoBehavioralEventRepository,
     DjangoKnowledgeChunkRepository,
 )
+from modules.ai.infrastructure.providers import get_ai_provider
 
 logger = logging.getLogger(__name__)
 
@@ -128,7 +128,7 @@ class EventBasedPreferenceProfileBuilder(PreferenceProfileBuilder):
             profile.preferred_categories = cat_prefs
 
         # Update price range preference
-        if event.price_amount:
+        if event.price_amount is not None:
             price_range = self.price_normalizer.normalize_price(float(event.price_amount))
             price_prefs = list(profile.preferred_price_ranges)
             existing = next((p for p in price_prefs if p.price_range == price_range), None)
@@ -277,11 +277,12 @@ class MockGraphService(GraphService):
         return []
 
 
-class SimpleRetrievalService(RetrievalService):
-    """Simple keyword-based retrieval service for MVP."""
+class SemanticRetrievalService(RetrievalService):
+    """Semantic retrieval over pgvector-backed knowledge chunks."""
 
     def __init__(self):
         self.chunk_repo = DjangoKnowledgeChunkRepository()
+        self.provider = get_ai_provider()
 
     def retrieve_relevant_chunks(
         self,
@@ -289,8 +290,14 @@ class SimpleRetrievalService(RetrievalService):
         limit: int = 5,
         filters: Optional[Dict[str, Any]] = None,
     ) -> List[KnowledgeChunk]:
-        """Retrieve relevant chunks using keyword search."""
-        return self.chunk_repo.search_similar(query, limit=limit)
+        """Use a query embedding so retrieval remains grounded in stored vectors."""
+        query_embedding = self.provider.generate_embeddings([query])[0]
+        return self.chunk_repo.search_similar(
+            query,
+            limit=limit,
+            filters=filters,
+            query_embedding=query_embedding,
+        )
 
     def retrieve_by_type(
         self,
@@ -298,8 +305,9 @@ class SimpleRetrievalService(RetrievalService):
         document_type: str,
         limit: int = 5,
     ) -> List[KnowledgeChunk]:
-        """Retrieve chunks by document type."""
-        chunks = self.chunk_repo.search_similar(query, limit=limit * 2)
-        # Filter by type (document_type should be in metadata or we filter by document)
-        filtered = [c for c in chunks if c.metadata.get("document_type") == document_type]
-        return filtered[:limit]
+        """Restrict semantic retrieval to a single knowledge type."""
+        return self.retrieve_relevant_chunks(
+            query,
+            limit=limit,
+            filters={"document_types": [document_type]},
+        )

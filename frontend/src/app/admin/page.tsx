@@ -10,6 +10,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { getOrders } from "@/services/api/orders";
 import { getUserPreferenceSummary } from "@/services/api/ai";
 import { formatPrice } from "@/lib/utils";
+import { useMounted } from "@/hooks/use-mounted";
 
 type ProductForm = {
   id?: string;
@@ -39,9 +40,10 @@ const INITIAL_FORM: ProductForm = {
 };
 
 export default function AdminPage() {
+  const mounted = useMounted();
   const token = getAccessToken();
-  const userId = token ? extractUserIdFromJwt(token) : "";
-  const role = token ? extractUserRoleFromJwt(token) : "";
+  const userId = mounted && token ? extractUserIdFromJwt(token) : "";
+  const role = mounted && token ? extractUserRoleFromJwt(token) : "";
   const isAdmin = role === "admin" || role === "staff";
   const qc = useQueryClient();
   const [form, setForm] = useState<ProductForm>(INITIAL_FORM);
@@ -51,11 +53,11 @@ export default function AdminPage() {
   const { data: categories } = useQuery({ queryKey: ["categories"], queryFn: getCategories });
   const { data: brands } = useQuery({ queryKey: ["brands"], queryFn: getBrands });
   const { data: productTypes } = useQuery({ queryKey: ["product-types"], queryFn: getProductTypes });
-  const { data: orders } = useQuery({ queryKey: ["admin-orders"], queryFn: getOrders, enabled: isAdmin });
+  const { data: orders } = useQuery({ queryKey: ["admin-orders"], queryFn: getOrders, enabled: mounted && isAdmin });
   const { data: aiPreference } = useQuery({
     queryKey: ["admin-ai-preference", userId],
     queryFn: () => getUserPreferenceSummary(userId),
-    enabled: Boolean(isAdmin && userId),
+    enabled: Boolean(mounted && isAdmin && userId),
   });
 
   const createMutation = useMutation({
@@ -107,7 +109,7 @@ export default function AdminPage() {
     }
   };
 
-  if (!isAdmin) {
+  if (!mounted || !isAdmin) {
     return <div className="card-premium mx-auto max-w-4xl"><h1 className="text-xl font-bold">Bạn không có quyền truy cập khu vực Admin.</h1></div>;
   }
 

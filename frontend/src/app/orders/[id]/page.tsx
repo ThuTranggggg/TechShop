@@ -11,18 +11,25 @@ import { RecommendationCarousel } from "@/components/recommendations/recommendat
 import { getProducts } from "@/services/api/products";
 
 export default function OrderDetailPage() {
-  const { id } = useParams<{ id: string }>();
+  const params = useParams<{ id: string | string[] }>();
+  const id = Array.isArray(params.id) ? params.id[0] : params.id;
   const search = useSearchParams();
   const justPlaced = search.get("justPlaced") === "1";
   const qc = useQueryClient();
-  const { data: order } = useQuery({ queryKey: ["order", id], queryFn: () => getOrderDetail(id) });
-  const { data: timeline } = useQuery({ queryKey: ["timeline", id], queryFn: () => getOrderTimeline(id), enabled: Boolean(order) });
+  const { data: order, isLoading: orderLoading } = useQuery({ queryKey: ["order", id], queryFn: () => getOrderDetail(id), enabled: Boolean(id) });
+  const { data: timeline } = useQuery({ queryKey: ["timeline", id], queryFn: () => getOrderTimeline(id), enabled: Boolean(order && id) });
   const { data: tracking } = useQuery({ queryKey: ["tracking", order?.shipment_reference], queryFn: () => getShipmentTracking(String(order?.shipment_reference)), enabled: Boolean(order?.shipment_reference) });
   const { data: rec } = useQuery({ queryKey: ["order-recommend"], queryFn: () => getProducts({ page_size: "3", is_featured: "true" }) });
   const paySuccess = useMutation({ mutationFn: mockPaySuccess, onSuccess: () => qc.invalidateQueries({ queryKey: ["order", id] }) });
   const payFail = useMutation({ mutationFn: mockPayFail, onSuccess: () => qc.invalidateQueries({ queryKey: ["order", id] }) });
 
-  if (!order) return null;
+  if (orderLoading || !id) {
+    return <div className="rounded-2xl border border-border bg-white p-5 text-sm text-slate-500">Đang tải đơn hàng...</div>;
+  }
+
+  if (!order) {
+    return <div className="rounded-2xl border border-border bg-white p-5 text-sm text-slate-500">Không tìm thấy đơn hàng.</div>;
+  }
 
   return (
     <div className="space-y-6">

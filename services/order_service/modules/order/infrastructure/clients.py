@@ -73,6 +73,26 @@ class CartServiceClient:
             return {}
 
 
+class ProductServiceClient:
+    """Client for retrieving product snapshots for order item history."""
+
+    def __init__(self, base_url: str = None, timeout: float = 5.0):
+        self.base_url = base_url or os.getenv("PRODUCT_SERVICE_URL", "http://gateway/product")
+        self.timeout = timeout
+
+    def get_product_detail(self, product_id: UUID) -> Dict[str, Any]:
+        url = f"{self.base_url}/api/v1/catalog/products/{product_id}/"
+        try:
+            with httpx.Client(timeout=self.timeout) as client:
+                resp = client.get(url)
+                resp.raise_for_status()
+                payload = resp.json()
+                return payload.get("data", payload)
+        except httpx.HTTPError as e:
+            logger.warning(f"Failed to fetch product {product_id}: {e}")
+            return {}
+
+
 class InventoryServiceClient:
     """
     Client for communicating with inventory_service.
@@ -111,7 +131,8 @@ class InventoryServiceClient:
             "items": items,
         }
         headers = {
-            "X-Internal-Service-Key": self.internal_key,
+            "X-Internal-Service": "order_service",
+            "X-Internal-Token": self.internal_key,
             "Content-Type": "application/json",
         }
         try:
@@ -135,7 +156,8 @@ class InventoryServiceClient:
             "reservation_ids": reservation_ids,
         }
         headers = {
-            "X-Internal-Service-Key": self.internal_key,
+            "X-Internal-Service": "order_service",
+            "X-Internal-Token": self.internal_key,
             "Content-Type": "application/json",
         }
         try:
@@ -161,7 +183,8 @@ class InventoryServiceClient:
             "reason": reason,
         }
         headers = {
-            "X-Internal-Service-Key": self.internal_key,
+            "X-Internal-Service": "order_service",
+            "X-Internal-Token": self.internal_key,
             "Content-Type": "application/json",
         }
         try:
@@ -435,3 +458,25 @@ class UserServiceClient:
         except Exception as e:
             logger.warning(f"Unexpected error validating user address: {e}")
             return {"is_valid": False, "message": str(e)}
+
+    def get_user_by_id(self, user_id: UUID) -> Dict[str, Any]:
+        """
+        Fetch the user's public profile for order snapshots.
+
+        Order creation needs a stable customer snapshot even when the cart
+        payload does not include customer metadata.
+        """
+        url = f"{self.base_url}/api/v1/internal/users/get/"
+        headers = {
+            "X-Internal-Service-Key": self.internal_key,
+            "Content-Type": "application/json",
+        }
+        params = {"user_id": str(user_id)}
+        try:
+            with httpx.Client(timeout=self.timeout) as client:
+                resp = client.get(url, params=params, headers=headers)
+                resp.raise_for_status()
+                return resp.json().get("data", {})
+        except httpx.HTTPError as e:
+            logger.error(f"Failed to fetch user {user_id}: {e}")
+            raise ValueError(f"User lookup failed: {str(e)}")

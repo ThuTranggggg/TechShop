@@ -110,7 +110,13 @@ class CreateOrderFromCartSerializer(serializers.Serializer):
     
     cart_id = serializers.UUIDField()
     shipping_address = serializers.JSONField()
+    customer = serializers.JSONField(required=False)
     notes = serializers.CharField(required=False, allow_blank=True)
+
+    def validate_customer(self, value):
+        if value and (not value.get("name") or not value.get("email")):
+            raise serializers.ValidationError("Customer name and email required")
+        return value
     
     def validate_shipping_address(self, value):
         """Validate shipping address fields."""

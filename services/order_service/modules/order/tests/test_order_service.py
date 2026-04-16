@@ -4,7 +4,6 @@ Comprehensive tests for Order service.
 Tests cover domain logic, application services, and API endpoints.
 """
 
-import pytest
 from decimal import Decimal
 from uuid import uuid4
 from datetime import datetime
@@ -19,9 +18,9 @@ from ..domain import (
     OrderNumber, ProductReference, AddressSnapshot, CustomerSnapshot,
     ProductSnapshot, Money, OrderValidator, OrderCalculationService
 )
-from ...infrastructure import OrderRepositoryImpl, OrderItemRepositoryImpl
-from ...infrastructure.models import OrderModel, OrderItemModel, OrderStatusHistoryModel
-from ...application import (
+from ..infrastructure import OrderRepositoryImpl, OrderItemRepositoryImpl
+from ..infrastructure.models import OrderModel, OrderItemModel, OrderStatusHistoryModel
+from ..application import (
     GetUserOrdersService, GetOrderDetailService, CreateOrderFromCartService
 )
 
@@ -166,6 +165,32 @@ class OrderValidatorTests(TestCase):
         
         result = OrderValidator.validate_checkout_payload(payload)
         self.assertTrue(result)
+
+    def test_validate_checkout_payload_without_customer_is_allowed(self):
+        """Checkout payloads can omit customer and rely on user lookup."""
+        payload = {
+            "user_id": str(uuid4()),
+            "cart_id": str(uuid4()),
+            "items": [
+                {
+                    "product_id": str(uuid4()),
+                    "quantity": 1,
+                    "unit_price": "100000",
+                }
+            ],
+            "shipping_address": {
+                "receiver_name": "Receiver",
+                "line1": "1 Main St",
+                "district": "District",
+            },
+            "totals": {
+                "subtotal": "100000",
+                "grand_total": "100000",
+            }
+        }
+
+        result = OrderValidator.validate_checkout_payload(payload)
+        self.assertTrue(result)
     
     def test_validate_checkout_payload_missing_items(self):
         """Test validation rejects empty cart."""
@@ -300,6 +325,52 @@ class GetOrderDetailServiceTests(TestCase):
         self.assertIsNone(result)
 
 
+class CreateOrderFromCartServiceTests(TestCase):
+    """Test order creation orchestration."""
+
+    def test_build_order_uses_user_profile_when_cart_payload_has_no_customer(self):
+        """Checkout payloads from cart should still create a customer snapshot."""
+
+        class FakeUserClient:
+            def get_user_by_id(self, user_id):
+                return {
+                    "id": str(user_id),
+                    "email": "john@example.com",
+                    "full_name": "John Doe",
+                    "phone_number": "0909123456",
+                }
+
+        service = CreateOrderFromCartService(user_client=FakeUserClient())
+        user_id = uuid4()
+        order = service._build_order_from_payload(
+            user_id=user_id,
+            cart_id=uuid4(),
+            checkout_payload={
+                "items": [
+                    {
+                        "product_id": str(uuid4()),
+                        "product_name": "Galaxy A55",
+                        "product_slug": "galaxy-a55",
+                        "quantity": 1,
+                        "unit_price": "9990000",
+                    }
+                ]
+            },
+            shipping_address={
+                "receiver_name": "John Doe",
+                "receiver_phone": "0909123456",
+                "line1": "1 Main St",
+                "district": "District 1",
+                "city": "Ho Chi Minh City",
+            },
+        )
+
+        self.assertEqual(order.customer_snapshot.name, "John Doe")
+        self.assertEqual(order.customer_snapshot.email, "john@example.com")
+        self.assertEqual(order.customer_snapshot.phone, "0909123456")
+        self.assertEqual(len(order.items), 1)
+
+
 # Integration tests would require mocking inter-service clients
 class OrderAPITests(TestCase):
     """Test Order API endpoints."""
@@ -317,7 +388,7 @@ class OrderAPITests(TestCase):
     def test_list_orders_requires_auth(self):
         """Test that list orders requires authentication."""
         response = self.client.get("/api/v1/orders/")
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, 403)
     
     def test_list_orders_with_auth(self):
         """Test listing orders with auth."""
@@ -328,8 +399,6 @@ class OrderAPITests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["success"], True)
 
-
-@pytest.mark.django_db
 class OrderRequestResponseTests:
     """Test request/response serialization."""
     

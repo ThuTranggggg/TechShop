@@ -1,6 +1,6 @@
 export const config = {
   appName: "TechShop",
-  apiBaseUrl: process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080",
+  apiBaseUrl: process.env.NEXT_PUBLIC_API_BASE_URL || "/api/proxy",
   aiSuggestions: [
     "Samsung nào dưới 10 triệu?",
     "Đơn hàng của tôi đang ở đâu?",

@@ -70,6 +70,8 @@ DEMO_PRODUCTS = [
     ("galaxy-s23-fe", "Galaxy S23 FE", "samsung", 12990000, False),
     ("xiaomi-14", "Xiaomi 14", "xiaomi", 17990000, False),
     ("redmi-note-13", "Redmi Note 13", "xiaomi", 6990000, False),
+    ("iphone-se", "iPhone SE", "apple", 10990000, False),
+    ("redmi-13c", "Redmi 13C", "xiaomi", 3990000, False),
 ]
 
 logging.basicConfig(
@@ -205,6 +207,7 @@ class TechShopSeeder:
         ok = True
         ok = self.seed_users() and ok
         ok = self.seed_product_catalog() and ok
+        ok = self.sync_ai_product_knowledge() and ok
         ok = self.seed_inventory() and ok
         ok = self.seed_carts() and ok
         ok = self.seed_orders_and_payments() and ok
@@ -405,6 +408,17 @@ print("seeded_products", ProductModel.objects.filter(status="active", is_active=
             logger.warning("  ✗ Could not read product list: %s", exc)
 
         return len(self.state.products) > 0
+
+    def sync_ai_product_knowledge(self) -> bool:
+        logger.info("\n[PHASE 5B] Syncing AI Product Knowledge...")
+        ok, output = self._run_docker_manage("ai_service", ["sync_product_knowledge", "--page-size", "100"])
+        if not ok:
+            logger.warning("  ✗ AI product knowledge sync failed: %s", output)
+            return False
+        logger.info("  ✓ AI product knowledge synced")
+        if self.verbose and output:
+            logger.debug(output)
+        return True
 
     # ------------------------
     # Phase 6: Inventory

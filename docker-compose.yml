@@ -32,10 +32,14 @@ services:
       - techshop_network
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        API_PROXY_BASE_URL: "http://gateway"
     restart: unless-stopped
     environment:
-      NEXT_PUBLIC_API_BASE_URL: "http://localhost:${GATEWAY_PORT:-8080}"
+      NEXT_PUBLIC_API_BASE_URL: "/api/proxy"
+      API_PROXY_BASE_URL: "http://gateway"
       NEXT_PUBLIC_APP_NAME: "TechShop"
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
@@ -54,7 +58,7 @@ services:
     image: neo4j:5-community
     restart: unless-stopped
     environment:
-      NEO4J_AUTH: "${NEO4J_AUTH:-neo4j/neo4jpassword}"
+      NEO4J_AUTH: "${NEO4J_AUTH:-neo4j/techshoppassword}"
     ports:
       - "${NEO4J_HTTP_PORT:-7474}:7474"
       - "${NEO4J_BOLT_PORT:-7687}:7687"
@@ -67,11 +71,11 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: "${USER_SERVICE_DB_NAME:-user_service}"
-      POSTGRES_USER: "${USER_SERVICE_DB_USER:-user_service}"
-      POSTGRES_PASSWORD: "${USER_SERVICE_DB_PASSWORD:-user_service_password}"
+      POSTGRES_DB: "${USER_SERVICE_DB_NAME:-techshop_user_service}"
+      POSTGRES_USER: "${USER_SERVICE_DB_USER:-techshop_user}"
+      POSTGRES_PASSWORD: "${USER_SERVICE_DB_PASSWORD:-techshop_user_password}"
     ports:
-      - "${USER_SERVICE_DB_PORT:-5433}:5432"
+      - "${USER_SERVICE_DB_PORT:-15433}:5432"
     volumes:
       - user_service_db_data:/var/lib/postgresql/data
     networks:
@@ -81,11 +85,11 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: "${PRODUCT_SERVICE_DB_NAME:-product_service}"
-      POSTGRES_USER: "${PRODUCT_SERVICE_DB_USER:-product_service}"
-      POSTGRES_PASSWORD: "${PRODUCT_SERVICE_DB_PASSWORD:-product_service_password}"
+      POSTGRES_DB: "${PRODUCT_SERVICE_DB_NAME:-techshop_product_service}"
+      POSTGRES_USER: "${PRODUCT_SERVICE_DB_USER:-techshop_product}"
+      POSTGRES_PASSWORD: "${PRODUCT_SERVICE_DB_PASSWORD:-techshop_product_password}"
     ports:
-      - "${PRODUCT_SERVICE_DB_PORT:-5434}:5432"
+      - "${PRODUCT_SERVICE_DB_PORT:-15434}:5432"
     volumes:
       - product_service_db_data:/var/lib/postgresql/data
     networks:
@@ -95,11 +99,11 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: "${CART_SERVICE_DB_NAME:-cart_service}"
-      POSTGRES_USER: "${CART_SERVICE_DB_USER:-cart_service}"
-      POSTGRES_PASSWORD: "${CART_SERVICE_DB_PASSWORD:-cart_service_password}"
+      POSTGRES_DB: "${CART_SERVICE_DB_NAME:-techshop_cart_service}"
+      POSTGRES_USER: "${CART_SERVICE_DB_USER:-techshop_cart}"
+      POSTGRES_PASSWORD: "${CART_SERVICE_DB_PASSWORD:-techshop_cart_password}"
     ports:
-      - "${CART_SERVICE_DB_PORT:-5435}:5432"
+      - "${CART_SERVICE_DB_PORT:-15435}:5432"
     volumes:
       - cart_service_db_data:/var/lib/postgresql/data
     networks:
@@ -109,11 +113,11 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: "${ORDER_SERVICE_DB_NAME:-order_service}"
-      POSTGRES_USER: "${ORDER_SERVICE_DB_USER:-order_service}"
-      POSTGRES_PASSWORD: "${ORDER_SERVICE_DB_PASSWORD:-order_service_password}"
+      POSTGRES_DB: "${ORDER_SERVICE_DB_NAME:-techshop_order_service}"
+      POSTGRES_USER: "${ORDER_SERVICE_DB_USER:-techshop_order}"
+      POSTGRES_PASSWORD: "${ORDER_SERVICE_DB_PASSWORD:-techshop_order_password}"
     ports:
-      - "${ORDER_SERVICE_DB_PORT:-5436}:5432"
+      - "${ORDER_SERVICE_DB_PORT:-15436}:5432"
     volumes:
       - order_service_db_data:/var/lib/postgresql/data
     networks:
@@ -123,11 +127,11 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: "${PAYMENT_SERVICE_DB_NAME:-payment_service}"
-      POSTGRES_USER: "${PAYMENT_SERVICE_DB_USER:-payment_service}"
-      POSTGRES_PASSWORD: "${PAYMENT_SERVICE_DB_PASSWORD:-payment_service_password}"
+      POSTGRES_DB: "${PAYMENT_SERVICE_DB_NAME:-techshop_payment_service}"
+      POSTGRES_USER: "${PAYMENT_SERVICE_DB_USER:-techshop_payment}"
+      POSTGRES_PASSWORD: "${PAYMENT_SERVICE_DB_PASSWORD:-techshop_payment_password}"
     ports:
-      - "${PAYMENT_SERVICE_DB_PORT:-5437}:5432"
+      - "${PAYMENT_SERVICE_DB_PORT:-15437}:5432"
     volumes:
       - payment_service_db_data:/var/lib/postgresql/data
     networks:
@@ -137,11 +141,11 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: "${SHIPPING_SERVICE_DB_NAME:-shipping_service}"
-      POSTGRES_USER: "${SHIPPING_SERVICE_DB_USER:-shipping_service}"
-      POSTGRES_PASSWORD: "${SHIPPING_SERVICE_DB_PASSWORD:-shipping_service_password}"
+      POSTGRES_DB: "${SHIPPING_SERVICE_DB_NAME:-techshop_shipping_service}"
+      POSTGRES_USER: "${SHIPPING_SERVICE_DB_USER:-techshop_shipping}"
+      POSTGRES_PASSWORD: "${SHIPPING_SERVICE_DB_PASSWORD:-techshop_shipping_password}"
     ports:
-      - "${SHIPPING_SERVICE_DB_PORT:-5438}:5432"
+      - "${SHIPPING_SERVICE_DB_PORT:-15438}:5432"
     volumes:
       - shipping_service_db_data:/var/lib/postgresql/data
     networks:
@@ -151,25 +155,25 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: "${INVENTORY_SERVICE_DB_NAME:-inventory_service}"
-      POSTGRES_USER: "${INVENTORY_SERVICE_DB_USER:-inventory_service}"
-      POSTGRES_PASSWORD: "${INVENTORY_SERVICE_DB_PASSWORD:-inventory_service_password}"
+      POSTGRES_DB: "${INVENTORY_SERVICE_DB_NAME:-techshop_inventory_service}"
+      POSTGRES_USER: "${INVENTORY_SERVICE_DB_USER:-techshop_inventory}"
+      POSTGRES_PASSWORD: "${INVENTORY_SERVICE_DB_PASSWORD:-techshop_inventory_password}"
     ports:
-      - "${INVENTORY_SERVICE_DB_PORT:-5439}:5432"
+      - "${INVENTORY_SERVICE_DB_PORT:-15439}:5432"
     volumes:
       - inventory_service_db_data:/var/lib/postgresql/data
     networks:
       - techshop_network
 
   ai_service_db:
-    image: postgres:16-alpine
+    image: pgvector/pgvector:pg16
     restart: unless-stopped
     environment:
-      POSTGRES_DB: "${AI_SERVICE_DB_NAME:-ai_service}"
-      POSTGRES_USER: "${AI_SERVICE_DB_USER:-ai_service}"
-      POSTGRES_PASSWORD: "${AI_SERVICE_DB_PASSWORD:-ai_service_password}"
+      POSTGRES_DB: "${AI_SERVICE_DB_NAME:-techshop_ai_service}"
+      POSTGRES_USER: "${AI_SERVICE_DB_USER:-techshop_ai}"
+      POSTGRES_PASSWORD: "${AI_SERVICE_DB_PASSWORD:-techshop_ai_password}"
     ports:
-      - "${AI_SERVICE_DB_PORT:-5440}:5432"
+      - "${AI_SERVICE_DB_PORT:-15440}:5432"
     volumes:
       - ai_service_db_data:/var/lib/postgresql/data
     networks:
@@ -183,11 +187,11 @@ services:
       - ./services/user_service/.env.example
     environment:
       DEBUG: "true"
-      SECRET_KEY: "${USER_SERVICE_SECRET_KEY:-change-me-user-service}"
+      SECRET_KEY: "${USER_SERVICE_SECRET_KEY:-change-me-techshop-user-service}"
       ALLOWED_HOSTS: "localhost,127.0.0.1,user_service,gateway"
-      DB_NAME: "${USER_SERVICE_DB_NAME:-user_service}"
-      DB_USER: "${USER_SERVICE_DB_USER:-user_service}"
-      DB_PASSWORD: "${USER_SERVICE_DB_PASSWORD:-user_service_password}"
+      DB_NAME: "${USER_SERVICE_DB_NAME:-techshop_user_service}"
+      DB_USER: "${USER_SERVICE_DB_USER:-techshop_user}"
+      DB_PASSWORD: "${USER_SERVICE_DB_PASSWORD:-techshop_user_password}"
       DB_HOST: "user_service_db"
       DB_PORT: "5432"
       SERVICE_PORT: "${USER_SERVICE_PORT:-8001}"
@@ -217,15 +221,16 @@ services:
       - ./services/product_service/.env.example
     environment:
       DEBUG: "true"
-      SECRET_KEY: "${PRODUCT_SERVICE_SECRET_KEY:-change-me-product-service}"
+      SECRET_KEY: "${PRODUCT_SERVICE_SECRET_KEY:-change-me-techshop-product-service}"
       ALLOWED_HOSTS: "localhost,127.0.0.1,product_service,gateway"
-      DB_NAME: "${PRODUCT_SERVICE_DB_NAME:-product_service}"
-      DB_USER: "${PRODUCT_SERVICE_DB_USER:-product_service}"
-      DB_PASSWORD: "${PRODUCT_SERVICE_DB_PASSWORD:-product_service_password}"
+      DB_NAME: "${PRODUCT_SERVICE_DB_NAME:-techshop_product_service}"
+      DB_USER: "${PRODUCT_SERVICE_DB_USER:-techshop_product}"
+      DB_PASSWORD: "${PRODUCT_SERVICE_DB_PASSWORD:-techshop_product_password}"
       DB_HOST: "product_service_db"
       DB_PORT: "5432"
       SERVICE_PORT: "${PRODUCT_SERVICE_PORT:-8002}"
       SERVICE_NAME: "product_service"
+      INTERNAL_SERVICE_KEY: "${INTERNAL_SERVICE_KEY:-internal-secret-key}"
     ports:
       - "${PRODUCT_SERVICE_PORT:-8002}:8002"
     volumes:
@@ -251,15 +256,16 @@ services:
       - ./services/cart_service/.env.example
     environment:
       DEBUG: "true"
-      SECRET_KEY: "${CART_SERVICE_SECRET_KEY:-change-me-cart-service}"
+      SECRET_KEY: "${CART_SERVICE_SECRET_KEY:-change-me-techshop-cart-service}"
       ALLOWED_HOSTS: "localhost,127.0.0.1,cart_service,gateway"
-      DB_NAME: "${CART_SERVICE_DB_NAME:-cart_service}"
-      DB_USER: "${CART_SERVICE_DB_USER:-cart_service}"
-      DB_PASSWORD: "${CART_SERVICE_DB_PASSWORD:-cart_service_password}"
+      DB_NAME: "${CART_SERVICE_DB_NAME:-techshop_cart_service}"
+      DB_USER: "${CART_SERVICE_DB_USER:-techshop_cart}"
+      DB_PASSWORD: "${CART_SERVICE_DB_PASSWORD:-techshop_cart_password}"
       DB_HOST: "cart_service_db"
       DB_PORT: "5432"
       SERVICE_PORT: "${CART_SERVICE_PORT:-8003}"
       SERVICE_NAME: "cart_service"
+      INTERNAL_SERVICE_KEY: "${INTERNAL_SERVICE_KEY:-internal-secret-key}"
     ports:
       - "${CART_SERVICE_PORT:-8003}:8003"
     volumes:
@@ -285,11 +291,15 @@ services:
       - ./services/order_service/.env.example
     environment:
       DEBUG: "true"
-      SECRET_KEY: "${ORDER_SERVICE_SECRET_KEY:-change-me-order-service}"
+      SECRET_KEY: "${ORDER_SERVICE_SECRET_KEY:-change-me-techshop-order-service}"
       ALLOWED_HOSTS: "localhost,127.0.0.1,order_service,gateway"
-      DB_NAME: "${ORDER_SERVICE_DB_NAME:-order_service}"
-      DB_USER: "${ORDER_SERVICE_DB_USER:-order_service}"
-      DB_PASSWORD: "${ORDER_SERVICE_DB_PASSWORD:-order_service_password}"
+      PRODUCT_SERVICE_URL: "http://gateway/product"
+      CART_SERVICE_URL: "http://gateway/cart"
+      USER_SERVICE_URL: "http://gateway/user"
+      INTERNAL_SERVICE_KEY: "${INTERNAL_SERVICE_KEY:-internal-secret-key}"
+      DB_NAME: "${ORDER_SERVICE_DB_NAME:-techshop_order_service}"
+      DB_USER: "${ORDER_SERVICE_DB_USER:-techshop_order}"
+      DB_PASSWORD: "${ORDER_SERVICE_DB_PASSWORD:-techshop_order_password}"
       DB_HOST: "order_service_db"
       DB_PORT: "5432"
       SERVICE_PORT: "${ORDER_SERVICE_PORT:-8004}"
@@ -319,11 +329,11 @@ services:
       - ./services/payment_service/.env.example
     environment:
       DEBUG: "true"
-      SECRET_KEY: "${PAYMENT_SERVICE_SECRET_KEY:-change-me-payment-service}"
+      SECRET_KEY: "${PAYMENT_SERVICE_SECRET_KEY:-change-me-techshop-payment-service}"
       ALLOWED_HOSTS: "localhost,127.0.0.1,payment_service,gateway"
-      DB_NAME: "${PAYMENT_SERVICE_DB_NAME:-payment_service}"
-      DB_USER: "${PAYMENT_SERVICE_DB_USER:-payment_service}"
-      DB_PASSWORD: "${PAYMENT_SERVICE_DB_PASSWORD:-payment_service_password}"
+      DB_NAME: "${PAYMENT_SERVICE_DB_NAME:-techshop_payment_service}"
+      DB_USER: "${PAYMENT_SERVICE_DB_USER:-techshop_payment}"
+      DB_PASSWORD: "${PAYMENT_SERVICE_DB_PASSWORD:-techshop_payment_password}"
       DB_HOST: "payment_service_db"
       DB_PORT: "5432"
       SERVICE_PORT: "${PAYMENT_SERVICE_PORT:-8005}"
@@ -353,11 +363,11 @@ services:
       - ./services/shipping_service/.env.example
     environment:
       DEBUG: "true"
-      SECRET_KEY: "${SHIPPING_SERVICE_SECRET_KEY:-change-me-shipping-service}"
+      SECRET_KEY: "${SHIPPING_SERVICE_SECRET_KEY:-change-me-techshop-shipping-service}"
       ALLOWED_HOSTS: "localhost,127.0.0.1,shipping_service,gateway"
-      DB_NAME: "${SHIPPING_SERVICE_DB_NAME:-shipping_service}"
-      DB_USER: "${SHIPPING_SERVICE_DB_USER:-shipping_service}"
-      DB_PASSWORD: "${SHIPPING_SERVICE_DB_PASSWORD:-shipping_service_password}"
+      DB_NAME: "${SHIPPING_SERVICE_DB_NAME:-techshop_shipping_service}"
+      DB_USER: "${SHIPPING_SERVICE_DB_USER:-techshop_shipping}"
+      DB_PASSWORD: "${SHIPPING_SERVICE_DB_PASSWORD:-techshop_shipping_password}"
       DB_HOST: "shipping_service_db"
       DB_PORT: "5432"
       SERVICE_PORT: "${SHIPPING_SERVICE_PORT:-8006}"
@@ -387,15 +397,16 @@ services:
       - ./services/inventory_service/.env.example
     environment:
       DEBUG: "true"
-      SECRET_KEY: "${INVENTORY_SERVICE_SECRET_KEY:-change-me-inventory-service}"
+      SECRET_KEY: "${INVENTORY_SERVICE_SECRET_KEY:-change-me-techshop-inventory-service}"
       ALLOWED_HOSTS: "localhost,127.0.0.1,inventory_service,gateway"
-      DB_NAME: "${INVENTORY_SERVICE_DB_NAME:-inventory_service}"
-      DB_USER: "${INVENTORY_SERVICE_DB_USER:-inventory_service}"
-      DB_PASSWORD: "${INVENTORY_SERVICE_DB_PASSWORD:-inventory_service_password}"
+      DB_NAME: "${INVENTORY_SERVICE_DB_NAME:-techshop_inventory_service}"
+      DB_USER: "${INVENTORY_SERVICE_DB_USER:-techshop_inventory}"
+      DB_PASSWORD: "${INVENTORY_SERVICE_DB_PASSWORD:-techshop_inventory_password}"
       DB_HOST: "inventory_service_db"
       DB_PORT: "5432"
       SERVICE_PORT: "${INVENTORY_SERVICE_PORT:-8007}"
       SERVICE_NAME: "inventory_service"
+      INTERNAL_SERVICE_KEY: "${INTERNAL_SERVICE_KEY:-internal-secret-key}"
     ports:
       - "${INVENTORY_SERVICE_PORT:-8007}:8007"
     volumes:
@@ -421,11 +432,11 @@ services:
       - ./services/ai_service/.env.example
     environment:
       DEBUG: "true"
-      SECRET_KEY: "${AI_SERVICE_SECRET_KEY:-change-me-ai-service}"
+      SECRET_KEY: "${AI_SERVICE_SECRET_KEY:-change-me-techshop-ai-service}"
       ALLOWED_HOSTS: "localhost,127.0.0.1,ai_service,gateway"
-      DB_NAME: "${AI_SERVICE_DB_NAME:-ai_service}"
-      DB_USER: "${AI_SERVICE_DB_USER:-ai_service}"
-      DB_PASSWORD: "${AI_SERVICE_DB_PASSWORD:-ai_service_password}"
+      DB_NAME: "${AI_SERVICE_DB_NAME:-techshop_ai_service}"
+      DB_USER: "${AI_SERVICE_DB_USER:-techshop_ai}"
+      DB_PASSWORD: "${AI_SERVICE_DB_PASSWORD:-techshop_ai_password}"
       DB_HOST: "ai_service_db"
       DB_PORT: "5432"
       SERVICE_PORT: "${AI_SERVICE_PORT:-8008}"
@@ -433,9 +444,17 @@ services:
       REDIS_URL: "redis://redis:6379/0"
       NEO4J_URI: "bolt://neo4j:7687"
       NEO4J_USER: "neo4j"
-      NEO4J_PASSWORD: "neo4jpassword"
-      LLM_PROVIDER: "${LLM_PROVIDER:-placeholder}"
-      LLM_API_KEY: "${LLM_API_KEY:-replace-me}"
+      NEO4J_PASSWORD: "techshoppassword"
+      INTERNAL_SERVICE_KEY: "${INTERNAL_SERVICE_KEY:-internal-secret-key}"
+      PRODUCT_SERVICE_URL: "http://gateway/product"
+      AI_PROVIDER: "${AI_PROVIDER:-yescale}"
+      AI_API_BASE_URL: "${AI_API_BASE_URL:-https://api.yescale.io/v1}"
+      AI_CHAT_COMPLETIONS_URL: "${AI_CHAT_COMPLETIONS_URL:-https://api.yescale.io/v1/chat/completions}"
+      AI_EMBEDDINGS_URL: "${AI_EMBEDDINGS_URL:-https://api.yescale.io/v1/embeddings}"
+      AI_API_KEY: "${AI_API_KEY:-}"
+      AI_CHAT_MODEL: "${AI_CHAT_MODEL:-gpt-5.4-nano}"
+      AI_EMBEDDING_MODEL: "${AI_EMBEDDING_MODEL:-text-embedding-3-small}"
+      AI_EMBEDDING_DIMENSIONS: "${AI_EMBEDDING_DIMENSIONS:-1536}"
     ports:
       - "${AI_SERVICE_PORT:-8008}:8008"
     volumes:
@@ -467,4 +486,3 @@ volumes:
   shipping_service_db_data:
   inventory_service_db_data:
   ai_service_db_data:
-

@@ -1,74 +1,93 @@
 """
-LLM Provider abstraction and implementations.
-Supports mock and real LLM backends.
+AI provider integration for chat completions and embeddings.
 """
+from __future__ import annotations
+
 import os
 import logging
-from abc import ABC, abstractmethod
 from typing import Optional, List, Dict, Any
+
+import httpx
+
+from modules.ai.domain.value_objects import ChatIntent
 
 logger = logging.getLogger(__name__)
 
 
-class BaseLLMProvider(ABC):
-    """Base interface for LLM providers."""
-
-    @abstractmethod
-    def classify_intent(self, query: str) -> str:
-        """Classify user query intent."""
-        pass
-
-    @abstractmethod
-    def generate_answer(
-        self,
-        query: str,
-        context: str,
-        chat_history: Optional[List[Dict[str, str]]] = None,
-        user_context: Optional[Dict[str, Any]] = None,
-    ) -> str:
-        """Generate answer based on query and context."""
-        pass
-
-    @abstractmethod
-    def maybe_extract_entities(self, query: str) -> Dict[str, Any]:
-        """Extract entities from query."""
-        pass
+class AIProviderError(RuntimeError):
+    """Base provider error for ai_service upstream failures."""
 
 
-class MockLLMProvider(BaseLLMProvider):
-    """Mock LLM provider for development/testing."""
+class AIConfigurationError(AIProviderError):
+    """Raised when required provider configuration is missing."""
 
-    # Intent classification rules
+
+class AIUpstreamTimeout(AIProviderError):
+    """Raised when the upstream AI provider times out."""
+
+
+class AIUpstreamError(AIProviderError):
+    """Raised when the upstream AI provider returns a non-success response."""
+
+
+class YescaleAIProvider:
+    """Single owner for the OpenAI-compatible Yescale chat and embedding APIs."""
+
     PRODUCT_KEYWORDS = ["sản phẩm", "điện thoại", "laptop", "máy tính", "camera", "nào"]
     ORDER_KEYWORDS = ["đơn hàng", "order", "when", "khi nào"]
     SHIPMENT_KEYWORDS = ["vận chuyển", "giao", "tracking", "ở đâu", "chưa nhận"]
     POLICY_KEYWORDS = ["chính sách", "policy", "đổi", "trả", "return", "exchange"]
     PAYMENT_KEYWORDS = ["thanh toán", "payment", "trả tiền", "giá"]
 
+    def __init__(
+        self,
+        *,
+        api_key: Optional[str] = None,
+        chat_url: Optional[str] = None,
+        embeddings_url: Optional[str] = None,
+        chat_model: Optional[str] = None,
+        embedding_model: Optional[str] = None,
+        timeout_seconds: float = 20.0,
+    ):
+        self.api_key = api_key or os.getenv("AI_API_KEY", "")
+        self.chat_url = chat_url or os.getenv(
+            "AI_CHAT_COMPLETIONS_URL",
+            "https://api.yescale.io/v1/chat/completions",
+        )
+        self.embeddings_url = embeddings_url or os.getenv(
+            "AI_EMBEDDINGS_URL",
+            "https://api.yescale.io/v1/embeddings",
+        )
+        self.chat_model = chat_model or os.getenv("AI_CHAT_MODEL", "gpt-5.4-nano")
+        self.embedding_model = embedding_model or os.getenv(
+            "AI_EMBEDDING_MODEL",
+            "text-embedding-3-small",
+        )
+        self.timeout_seconds = timeout_seconds
+        if not self.api_key:
+            raise AIConfigurationError("AI_API_KEY is required for ai_service")
+
     def classify_intent(self, query: str) -> str:
-        """
-        Simple rule-based intent classification.
-        Returns: product_search, order_status, shipment_status, policy_question, general_support, unknown
-        """
+        """Keep intent routing deterministic so retrieval filters stay stable."""
         query_lower = query.lower()
 
         if any(kw in query_lower for kw in self.ORDER_KEYWORDS):
             if "status" in query_lower or "tình trạng" in query_lower:
-                return "order_status"
+                return ChatIntent.ORDER_STATUS.value
 
         if any(kw in query_lower for kw in self.SHIPMENT_KEYWORDS):
-            return "shipment_status"
+            return ChatIntent.SHIPMENT_STATUS.value
 
         if any(kw in query_lower for kw in self.POLICY_KEYWORDS):
-            return "policy_question"
+            return ChatIntent.POLICY_QUESTION.value
 
         if any(kw in query_lower for kw in self.PAYMENT_KEYWORDS):
-            return "payment_status"
+            return ChatIntent.PAYMENT_STATUS.value
 
         if any(kw in query_lower for kw in self.PRODUCT_KEYWORDS):
-            return "product_search"
+            return ChatIntent.PRODUCT_SEARCH.value
 
-        return "general_support"
+        return ChatIntent.GENERAL_SUPPORT.value
 
     def generate_answer(
         self,
@@ -77,31 +96,49 @@ class MockLLMProvider(BaseLLMProvider):
         chat_history: Optional[List[Dict[str, str]]] = None,
         user_context: Optional[Dict[str, Any]] = None,
     ) -> str:
-        """
-        Generate answer using context + templates.
-        No hallucination - only uses provided context.
-        """
-        intent = self.classify_intent(query)
+        """Generate the final answer with retrieved grounding and optional history."""
+        if not context.strip():
+            raise AIUpstreamError("No retrieval context available for the query")
 
-        if not context or context.strip() == "":
-            return self._generate_no_context_answer(intent, query)
+        messages: List[Dict[str, str]] = [
+            {
+                "role": "system",
+                "content": (
+                    "You are the TechShop AI assistant. Answer only from the provided context. "
+                    "If the answer is not in the context, say that the information is unavailable. "
+                    "Keep answers concise and grounded."
+                ),
+            }
+        ]
+        if chat_history:
+            messages.extend(chat_history[-6:])
+        if user_context:
+            messages.append(
+                {
+                    "role": "system",
+                    "content": f"User context: {user_context}",
+                }
+            )
+        messages.append(
+            {
+                "role": "user",
+                "content": f"Context:\n{context}\n\nQuestion: {query}",
+            }
+        )
 
-        # Template-based answer generation
-        if intent == "product_search":
-            return self._answer_product_query(query, context)
-        elif intent == "order_status":
-            return self._answer_order_query(query, context, user_context)
-        elif intent == "shipment_status":
-            return self._answer_shipment_query(query, context, user_context)
-        elif intent == "policy_question":
-            return self._answer_policy_query(query, context)
-        elif intent == "payment_status":
-            return self._answer_payment_query(query, context, user_context)
-        else:
-            return self._answer_general_query(query, context)
+        payload = {
+            "model": self.chat_model,
+            "messages": messages,
+            "temperature": 0.2,
+        }
+        data = self._post_json(self.chat_url, payload)
+        try:
+            return data["choices"][0]["message"]["content"].strip()
+        except (KeyError, IndexError, TypeError) as exc:
+            raise AIUpstreamError("Invalid chat completion payload") from exc
 
     def maybe_extract_entities(self, query: str) -> Dict[str, Any]:
-        """Extract brand/category/price mentions from query."""
+        """Extract lightweight product facets for retrieval hints."""
         entities = {
             "brands": [],
             "categories": [],
@@ -127,83 +164,48 @@ class MockLLMProvider(BaseLLMProvider):
         if "dưới 10 triệu" in query_lower or "under 10m" in query_lower:
             entities["price_filters"].append("under_10m")
         elif "dưới 5 triệu" in query_lower or "under 5m" in query_lower:
-            entities["price_filters"].append("under_5m")
+                entities["price_filters"].append("under_5m")
         elif "trên 20 triệu" in query_lower or "above 20m" in query_lower:
             entities["price_filters"].append("above_20m")
 
         return entities
 
-    def _generate_no_context_answer(self, intent: str, query: str) -> str:
-        """Generate answer when context is unavailable."""
-        if intent == "product_search":
-            return "Xin lỗi, tôi chưa có thông tin đủ để trả lời về các sản phẩm cụ thể bây giờ. Bạn có thể tìm kiếm trực tiếp trên cửa hàng hoặc liên hệ với hỗ trợ khách hàng."
-        elif intent == "order_status":
-            return "Để kiểm tra trạng thái đơn hàng, tôi sẽ cần biết thêm thông tin. Vui lòng cung cấp mã đơn hàng hoặc đơn hàng ID."
-        elif intent == "shipment_status":
-            return "Tôi chưa có thông tin vận chuyển hiện tại. Vui lòng cung cấp mã theo dõi hoặc mã đơn hàng."
-        elif intent == "policy_question":
-            return "Chúng tôi chưa cập nhật thông tin chính sách này. Vui lòng liên hệ với bộ phận hỗ trợ để biết thêm chi tiết."
-        else:
-            return "Tôi hiểu câu hỏi của bạn nhưng chưa có đủ thông tin để trả lời. Bạn có thể liên hệ với hỗ trợ khách hàng để được giúp đỡ."
+    def generate_embeddings(self, texts: List[str]) -> List[List[float]]:
+        """Embed multiple texts in a single round-trip to the provider."""
+        payload = {
+            "model": self.embedding_model,
+            "input": texts,
+        }
+        data = self._post_json(self.embeddings_url, payload)
+        try:
+            return [item["embedding"] for item in data["data"]]
+        except (KeyError, TypeError) as exc:
+            raise AIUpstreamError("Invalid embeddings payload") from exc
 
-    def _answer_product_query(self, query: str, context: str) -> str:
-        """Answer product-related queries."""
-        return f"Dựa trên thông tin có sẵn:\n\n{context}\n\nNếu bạn muốn biết thêm, tôi có thể giúp bạn tìm kiếm thêm sản phẩm phù hợp."
-
-    def _answer_order_query(
-        self,
-        query: str,
-        context: str,
-        user_context: Optional[Dict[str, Any]] = None,
-    ) -> str:
-        """Answer order-related queries."""
-        answer = f"Thông tin đơn hàng:\n\n{context}"
-        if user_context and user_context.get("order_reference"):
-            answer = f"Đơn hàng {user_context['order_reference']}:\n\n" + answer
-        return answer
-
-    def _answer_shipment_query(
-        self,
-        query: str,
-        context: str,
-        user_context: Optional[Dict[str, Any]] = None,
-    ) -> str:
-        """Answer shipment-related queries."""
-        answer = f"Thông tin vận chuyển:\n\n{context}"
-        if user_context and user_context.get("shipment_reference"):
-            answer = f"Vận chuyển {user_context['shipment_reference']}:\n\n" + answer
-        return answer
-
-    def _answer_policy_query(self, query: str, context: str) -> str:
-        """Answer policy-related queries."""
-        return f"Theo chính sách của chúng tôi:\n\n{context}\n\nNếu bạn có thêm câu hỏi, vui lòng liên hệ hỗ trợ."
-
-    def _answer_payment_query(
-        self,
-        query: str,
-        context: str,
-        user_context: Optional[Dict[str, Any]] = None,
-    ) -> str:
-        """Answer payment-related queries."""
-        return f"Thông tin thanh toán:\n\n{context}"
-
-    def _answer_general_query(self, query: str, context: str) -> str:
-        """Answer general queries."""
-        return f"Dựa trên thông tin có sẵn:\n\n{context}"
+    def _post_json(self, url: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+        }
+        try:
+            with httpx.Client(timeout=self.timeout_seconds) as client:
+                response = client.post(url, json=payload, headers=headers)
+                response.raise_for_status()
+                return response.json()
+        except httpx.TimeoutException as exc:
+            raise AIUpstreamTimeout("AI provider request timed out") from exc
+        except httpx.HTTPStatusError as exc:
+            raise AIUpstreamError(
+                f"AI provider error {exc.response.status_code}: {exc.response.text}"
+            ) from exc
+        except httpx.HTTPError as exc:
+            raise AIUpstreamError(f"AI provider request failed: {exc}") from exc
 
 
-def get_llm_provider() -> BaseLLMProvider:
-    """Factory function to get appropriate LLM provider."""
-    provider_type = os.getenv("LLM_PROVIDER", "mock").lower()
-
-    if provider_type == "openai":
-        # Would be real OpenAI implementation
-        logger.warning("OpenAI provider not fully implemented, using mock")
-        return MockLLMProvider()
-    elif provider_type == "anthropic":
-        # Would be real Anthropic implementation
-        logger.warning("Anthropic provider not fully implemented, using mock")
-        return MockLLMProvider()
-    else:
-        logger.info("Using mock LLM provider")
-        return MockLLMProvider()
+def get_ai_provider() -> YescaleAIProvider:
+    """Return the configured real provider or fail explicitly."""
+    provider_type = os.getenv("AI_PROVIDER", "yescale").lower()
+    if provider_type != "yescale":
+        raise AIConfigurationError(f"Unsupported AI_PROVIDER: {provider_type}")
+    logger.info("Using Yescale AI provider")
+    return YescaleAIProvider()

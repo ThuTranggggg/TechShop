@@ -1,7 +1,7 @@
 import { apiFetch } from "@/services/api/client";
 import { Order } from "@/types/models";
 
-export const createOrderFromCart = (payload: { cart_id: string; shipping_address: Record<string, string>; notes?: string }) =>
+export const createOrderFromCart = (payload: { cart_id: string; shipping_address: Record<string, string>; customer?: Record<string, string>; notes?: string }) =>
   apiFetch<Order>("/order/api/v1/orders/from-cart/", { method: "POST", body: JSON.stringify(payload) });
 
 export const getOrders = () => apiFetch<Order[]>("/order/api/v1/orders/");

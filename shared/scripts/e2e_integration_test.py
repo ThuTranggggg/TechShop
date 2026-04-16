@@ -32,8 +32,8 @@ SERVICES = {
     'cart': os.getenv('CART_SERVICE_URL', 'http://localhost:8003'),
     'order': os.getenv('ORDER_SERVICE_URL', 'http://localhost:8004'),
     'payment': os.getenv('PAYMENT_SERVICE_URL', 'http://localhost:8005'),
-    'shipping': os.getenv('SHIPPING_SERVICE_URL', 'http://localhost:8008'),
-    'ai': os.getenv('AI_SERVICE_URL', 'http://localhost:8000'),
+    'shipping': os.getenv('SHIPPING_SERVICE_URL', 'http://localhost:8006'),
+    'ai': os.getenv('AI_SERVICE_URL', 'http://localhost:8008'),
 }
 
 INTERNAL_KEY = os.getenv('INTERNAL_SERVICE_KEY', 'internal-secret-key')
@@ -407,9 +407,9 @@ class E2ETestRunner:
     
     # ===== FLOW 8: AI Recommendations =====
     
-    def test_ai_recommendation_flow(self, user_id: str, token: str) -> bool:
-        """Flow 8: Check AI recommendations after order."""
-        self.log_section("FLOW 8: AI Recommendations")
+    def test_ai_recommendation_flow(self, user_id: str, token: str, product: Dict) -> bool:
+        """Flow 8: Check AI recommendations and RAG chat after order."""
+        self.log_section("FLOW 8: AI Recommendations & Chat")
         
         if not user_id or not token:
             self.log("  Skipping: Missing user or token", 'warning')
@@ -430,7 +430,20 @@ class E2ETestRunner:
         
         # Get recommendations
         success, rec_data = self.make_request(
-            "GET", "ai", "/api/v1/ai/recommendations/",
+            "POST", "ai", "/api/v1/ai/recommendations/",
+            {
+                "user_id": user_id,
+                "products": [
+                    {
+                        "id": product.get("id"),
+                        "name": product.get("name"),
+                        "brand": product.get("brand_name") or "",
+                        "category": product.get("category_name") or "",
+                        "price": product.get("base_price"),
+                        "thumbnail_url": product.get("thumbnail_url"),
+                    }
+                ],
+            },
             auth_token=token
         )
         self.assert_success(success, "Get AI recommendations")
@@ -441,7 +454,21 @@ class E2ETestRunner:
             self.log(f"  Top recommendations: {len(recs.get('products', []))}", 'info')
             for i, prod in enumerate(products, 1):
                 self.log(f"    {i}. {prod.get('name')} (score: {prod.get('score')})", 'info')
-        
+
+        success, chat_data = self.make_request(
+            "POST", "ai", "/api/v1/ai/chat/ask/",
+            {
+                "query": "Chinh sach doi tra nhu the nao?",
+                "user_id": user_id,
+            },
+            auth_token=token,
+        )
+        self.assert_success(success, "Ask AI chat")
+        if success:
+            answer = chat_data.get("data", {})
+            self.log(f"  Chat sources: {len(answer.get('sources', []))}", 'info')
+            self.log(f"  Chat mode: {answer.get('mode')}", 'info')
+
         return True
     
     def run_all_flows(self):
@@ -490,7 +517,7 @@ class E2ETestRunner:
                 self.test_shipment_flow(order_id)
             
             # FLOW 8: AI
-            self.test_ai_recommendation_flow(user_id, token)
+            self.test_ai_recommendation_flow(user_id, token, product)
             
         except Exception as e:
             self.log(f"\nTest execution error: {str(e)}", 'error')

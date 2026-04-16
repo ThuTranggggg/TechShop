@@ -10,6 +10,7 @@ import { extractUserRoleFromJwt } from "@/lib/jwt";
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { me } from "@/services/api/user";
+import { useMounted } from "@/hooks/use-mounted";
 
 const links = [
   { href: "/products", label: "Sản phẩm" },
@@ -19,10 +20,11 @@ const links = [
 
 export function AppHeader() {
   const pathname = usePathname();
+  const mounted = useMounted();
   const token = getAccessToken();
-  const role = useMemo(() => (token ? extractUserRoleFromJwt(token) : ""), [token]);
+  const role = useMemo(() => (mounted && token ? extractUserRoleFromJwt(token) : ""), [mounted, token]);
   const isAdmin = role === "admin" || role === "staff";
-  const { data: profile } = useQuery({ queryKey: ["me"], queryFn: me, enabled: Boolean(token) });
+  const { data: profile } = useQuery({ queryKey: ["me"], queryFn: me, enabled: mounted && Boolean(token) });
 
   return (
     <header className="sticky top-0 z-50 glass">
@@ -66,9 +68,9 @@ export function AppHeader() {
           <Link href="/cart" className="relative transition-transform hover:scale-110 active:scale-90" aria-label="Cart">
             <CartBadge />
           </Link>
-          {token ? (
+          {mounted && token ? (
             <div className="flex items-center gap-2">
-              <Link href="/profile" className="btn-primary py-2.5 shadow-soft">
+              <Link href="/profile" prefetch={false} className="btn-primary py-2.5 shadow-soft">
                 <UserCircle2 className="mr-2 h-4 w-4" />
                 <span className="hidden sm:inline">{profile?.full_name || "Tài khoản"}</span>
               </Link>

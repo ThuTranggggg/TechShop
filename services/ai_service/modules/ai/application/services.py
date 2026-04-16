@@ -5,6 +5,7 @@ import logging
 from typing import List, Optional, Dict, Any
 from uuid import UUID, uuid4
 from datetime import datetime
+from django.db import transaction
 
 from modules.ai.domain.entities import (
     BehavioralEvent,
@@ -43,13 +44,19 @@ from modules.ai.infrastructure.repositories import (
     DjangoKnowledgeChunkRepository,
     DjangoChatSessionRepository,
     DjangoChatMessageRepository,
+    fetch_published_products,
+    build_product_catalog_document,
 )
+from modules.ai.infrastructure.models import KnowledgeDocumentModel
 from modules.ai.infrastructure.domain_services import (
     DefaultPriceRangeNormalizer,
     EventBasedPreferenceProfileBuilder,
     SimpleRecommendationScorer,
     MockGraphService,
-    SimpleRetrievalService,
+    SemanticRetrievalService,
+)
+from modules.ai.infrastructure.providers import (
+    get_ai_provider,
 )
 
 logger = logging.getLogger(__name__)
@@ -90,7 +97,7 @@ class TrackBehavioralEventUseCase:
 
         # Normalize price range if price provided
         price_range = None
-        if price_amount:
+        if price_amount is not None:
             price_range = self.price_normalizer.normalize_price(price_amount)
 
         # Create event
@@ -275,10 +282,13 @@ class IngestKnowledgeDocumentUseCase:
         self,
         doc_repo: Optional[KnowledgeDocumentRepository] = None,
         chunk_repo: Optional[KnowledgeChunkRepository] = None,
+        provider = None,
     ):
         self.doc_repo = doc_repo or DjangoKnowledgeDocumentRepository()
         self.chunk_repo = chunk_repo or DjangoKnowledgeChunkRepository()
+        self.provider = provider or get_ai_provider()
 
+    @transaction.atomic
     def execute(
         self,
         title: str,
@@ -307,6 +317,9 @@ class IngestKnowledgeDocumentUseCase:
 
         # Chunk content
         chunks = self._chunk_content(saved_doc.id, content)
+        embeddings = self.provider.generate_embeddings([chunk.content for chunk in chunks]) if chunks else []
+        for chunk, embedding in zip(chunks, embeddings):
+            chunk.metadata["embedding"] = embedding
         saved_chunks = self.chunk_repo.add_bulk(chunks)
         logger.info(f"Created {len(saved_chunks)} chunks")
 
@@ -403,10 +416,14 @@ class GenerateChatAnswerUseCase:
     def __init__(
         self,
         retrieval_service: Optional[RetrievalService] = None,
-        llm_provider = None,
+        llm_provider=None,
+        session_repo: Optional[ChatSessionRepository] = None,
+        message_repo: Optional[ChatMessageRepository] = None,
     ):
-        self.retrieval_service = retrieval_service or SimpleRetrievalService()
+        self.retrieval_service = retrieval_service or SemanticRetrievalService()
         self.llm_provider = llm_provider
+        self.session_repo = session_repo or DjangoChatSessionRepository()
+        self.message_repo = message_repo or DjangoChatMessageRepository()
 
     def set_llm_provider(self, provider):
         """Set LLM provider."""
@@ -416,33 +433,65 @@ class GenerateChatAnswerUseCase:
         self,
         query: str,
         user_id: Optional[UUID] = None,
+        session_id: Optional[UUID] = None,
         user_context: Optional[Dict[str, Any]] = None,
         chat_history: Optional[List[Dict[str, str]]] = None,
     ) -> Dict[str, Any]:
         """Generate answer."""
         if not self.llm_provider:
-            from modules.ai.infrastructure.providers import get_llm_provider
-            self.llm_provider = get_llm_provider()
+            self.llm_provider = get_ai_provider()
+
+        history = chat_history or []
+        if session_id and not history:
+            history = [
+                {"role": message.role.value, "content": message.content}
+                for message in self.message_repo.get_n_latest_by_session(session_id, 6)
+            ]
 
         # Classify intent
         intent = self.llm_provider.classify_intent(query)
+        filters = self._build_filters(intent)
 
         # Retrieve context
-        context_chunks = self.retrieval_service.retrieve_relevant_chunks(query, limit=5)
+        context_chunks = self.retrieval_service.retrieve_relevant_chunks(query, limit=5, filters=filters)
         context = "\n".join([chunk.content for chunk in context_chunks])
+
+        if session_id:
+            AppendChatMessageUseCase(
+                message_repo=self.message_repo,
+                session_repo=self.session_repo,
+            ).execute(
+                session_id=session_id,
+                role=ChatRole.USER.value,
+                content=query,
+                metadata={"user_id": str(user_id) if user_id else None},
+            )
 
         # Generate answer
         answer = self.llm_provider.generate_answer(
             query=query,
             context=context,
-            chat_history=chat_history,
+            chat_history=history,
             user_context=user_context,
         )
+
+        if session_id:
+            AppendChatMessageUseCase(
+                message_repo=self.message_repo,
+                session_repo=self.session_repo,
+            ).execute(
+                session_id=session_id,
+                role=ChatRole.ASSISTANT.value,
+                content=answer,
+                metadata={"intent": intent},
+            )
 
         sources = [
             {
                 "document_id": str(chunk.document_id),
                 "chunk_index": chunk.chunk_index,
+                "document_title": chunk.metadata.get("document_title"),
+                "document_type": chunk.metadata.get("document_type"),
             }
             for chunk in context_chunks
         ]
@@ -451,5 +500,62 @@ class GenerateChatAnswerUseCase:
             "answer": answer,
             "intent": intent,
             "sources": sources,
-            "mode": "mock_llm",
+            "mode": "yescale_rag",
+            "related_products": self._extract_related_products(context_chunks),
         }
+
+    @staticmethod
+    def _build_filters(intent: str) -> Dict[str, Any]:
+        if intent == ChatIntent.POLICY_QUESTION.value:
+            return {
+                "document_types": [
+                    DocumentType.RETURN_POLICY.value,
+                    DocumentType.PAYMENT_POLICY.value,
+                    DocumentType.SHIPPING_POLICY.value,
+                    DocumentType.FAQ.value,
+                    DocumentType.SUPPORT_ARTICLE.value,
+                ]
+            }
+        if intent == ChatIntent.PRODUCT_SEARCH.value:
+            return {"document_types": [DocumentType.PRODUCT_CATALOG.value]}
+        return {}
+
+    @staticmethod
+    def _extract_related_products(chunks: List[KnowledgeChunk]) -> List[Dict[str, Any]]:
+        products: Dict[str, Dict[str, Any]] = {}
+        for chunk in chunks:
+            product_id = chunk.metadata.get("product_id")
+            if not product_id or product_id in products:
+                continue
+            products[product_id] = {
+                "product_id": product_id,
+                "name": chunk.metadata.get("product_name"),
+                "slug": chunk.metadata.get("slug"),
+                "brand_name": chunk.metadata.get("brand_name"),
+                "category_name": chunk.metadata.get("category_name"),
+                "price": chunk.metadata.get("price"),
+                "thumbnail_url": chunk.metadata.get("thumbnail_url"),
+            }
+        return list(products.values())
+
+
+class SyncProductKnowledgeUseCase:
+    """Ingest published catalog products into AI-owned knowledge documents."""
+
+    def __init__(self, ingest_use_case: Optional[IngestKnowledgeDocumentUseCase] = None):
+        self.ingest_use_case = ingest_use_case or IngestKnowledgeDocumentUseCase()
+
+    @transaction.atomic
+    def execute(self, page_size: int = 100) -> Dict[str, int]:
+        products = fetch_published_products(page_size=page_size)
+        KnowledgeDocumentModel.objects.filter(
+            document_type=DocumentType.PRODUCT_CATALOG.value
+        ).delete()
+
+        created = 0
+        for product in products:
+            document = build_product_catalog_document(product)
+            self.ingest_use_case.execute(**document)
+            created += 1
+
+        return {"products_indexed": created}

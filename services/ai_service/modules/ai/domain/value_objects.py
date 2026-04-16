@@ -92,6 +92,7 @@ class DocumentType(str, Enum):
     SHIPPING_POLICY = "shipping_policy"
     PRODUCT_GUIDE = "product_guide"
     SUPPORT_ARTICLE = "support_article"
+    PRODUCT_CATALOG = "product_catalog"
 
 
 class ChatRole(str, Enum):

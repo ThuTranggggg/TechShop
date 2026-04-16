@@ -2,6 +2,7 @@
 Presentation layer - API Views.
 """
 import logging
+from datetime import datetime
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -22,6 +23,11 @@ from modules.ai.application.services import (
     CreateChatSessionUseCase,
     AppendChatMessageUseCase,
     GenerateChatAnswerUseCase,
+)
+from modules.ai.infrastructure.providers import (
+    AIConfigurationError,
+    AIUpstreamError,
+    AIUpstreamTimeout,
 )
 from modules.ai.presentation.serializers import (
     BehavioralEventSerializer,
@@ -190,7 +196,7 @@ class RecommendationsAPIView(APIView):
                 "products": top_products,
                 "total_count": len(top_products),
                 "mode": "personalized" if user_id else "anonymous",
-                "generated_at": "2024-01-01T00:00:00Z",  # Would use actual datetime
+                "generated_at": datetime.utcnow().isoformat() + "Z",
             }
             return success_response("Recommendations", result)
         except Exception as e:
@@ -294,10 +300,20 @@ class ChatAskAPIView(APIView):
             answer_data = use_case.execute(
                 query=query,
                 user_id=user_id,
+                session_id=data.get("session_id"),
                 user_context=context,
             )
 
             return success_response("Answer", answer_data)
+        except AIConfigurationError as e:
+            logger.error(f"AI config error: {e}")
+            return error_response("AI configuration error", str(e), status.HTTP_503_SERVICE_UNAVAILABLE)
+        except AIUpstreamTimeout as e:
+            logger.error(f"AI timeout: {e}")
+            return error_response("AI provider timeout", str(e), status.HTTP_504_GATEWAY_TIMEOUT)
+        except AIUpstreamError as e:
+            logger.error(f"AI upstream error: {e}")
+            return error_response("AI provider error", str(e), status.HTTP_503_SERVICE_UNAVAILABLE)
         except Exception as e:
             logger.error(f"Error generating answer: {e}")
             return error_response("Error", str(e), status.HTTP_500_INTERNAL_SERVER_ERROR)

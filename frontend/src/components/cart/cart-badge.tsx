@@ -3,9 +3,18 @@
 import { useQuery } from "@tanstack/react-query";
 import { getCartSummary } from "@/services/api/cart";
 import { ShoppingBag } from "lucide-react";
+import { getAccessToken } from "@/services/auth";
+import { useMounted } from "@/hooks/use-mounted";
 
 export function CartBadge() {
-  const { data } = useQuery({ queryKey: ["cart-summary"], queryFn: getCartSummary, staleTime: 30000 });
+  const mounted = useMounted();
+  const token = getAccessToken();
+  const { data } = useQuery({
+    queryKey: ["cart-summary"],
+    queryFn: getCartSummary,
+    staleTime: 30000,
+    enabled: mounted && Boolean(token),
+  });
   const count = data?.item_count ?? 0;
   return (
     <span className="relative inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-white">

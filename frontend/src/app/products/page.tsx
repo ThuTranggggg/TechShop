@@ -13,10 +13,12 @@ import { getRecommendations, trackAiEvent } from "@/services/api/ai";
 import { RecommendationCarousel } from "@/components/recommendations/recommendation-carousel";
 import { getAccessToken } from "@/services/auth";
 import { extractUserIdFromJwt } from "@/lib/jwt";
+import { useMounted } from "@/hooks/use-mounted";
 
 export default function ProductsPage() {
+  const mounted = useMounted();
   const token = getAccessToken();
-  const userId = token ? extractUserIdFromJwt(token) : undefined;
+  const userId = mounted && token ? extractUserIdFromJwt(token) : undefined;
   const [params, setParams] = useState<Record<string, string>>({ page_size: "12", ordering: "-published_at" });
   const { data: productsData, isLoading } = useQuery({ queryKey: ["products", params], queryFn: () => getProducts(params) });
   const { data: categoriesData } = useQuery({ queryKey: ["categories"], queryFn: getCategories });

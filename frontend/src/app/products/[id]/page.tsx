@@ -11,17 +11,19 @@ import { getProducts } from "@/services/api/products";
 import { trackAiEvent } from "@/services/api/ai";
 import { getAccessToken } from "@/services/auth";
 import { extractUserIdFromJwt } from "@/lib/jwt";
+import { useMounted } from "@/hooks/use-mounted";
 
 import { Check, ShieldCheck, Sparkles, Truck } from "lucide-react";
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const mounted = useMounted();
   const token = getAccessToken();
-  const userId = token ? extractUserIdFromJwt(token) : undefined;
+  const userId = mounted && token ? extractUserIdFromJwt(token) : undefined;
   const [variantId, setVariantId] = useState<string>();
-  const { data } = useQuery({ queryKey: ["product", id], queryFn: () => getProductDetail(id) });
-  const { data: relatedData } = useQuery({ queryKey: ["related", data?.category], enabled: Boolean(data), queryFn: () => getProducts({ category: String(data?.category), page_size: "3" }) });
+  const { data } = useQuery({ queryKey: ["product", id], queryFn: () => getProductDetail(id), enabled: Boolean(id) });
+  const { data: relatedData } = useQuery({ queryKey: ["related", data?.category], enabled: Boolean(mounted && data), queryFn: () => getProducts({ category: String(data?.category), page_size: "3" }) });
   const addMutation = useMutation({
     mutationFn: addCartItem,
     onSuccess: () => {

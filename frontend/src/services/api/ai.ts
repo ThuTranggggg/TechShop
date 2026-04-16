@@ -1,5 +1,4 @@
 import { apiFetch } from "@/services/api/client";
-
 export const getRecommendations = (payload: { user_id?: string; products: Array<Record<string, unknown>>; limit?: number }) =>
   apiFetch<{ products: Array<{ product_id: string; product_name: string; brand: string; price: number; score: number; reason_codes: string[]; thumbnail_url?: string }> }>("/ai/api/v1/ai/recommendations/", { method: "POST", body: JSON.stringify(payload) });
 
@@ -45,7 +44,20 @@ export const createChatSession = (user_id?: string) =>
   });
 
 export const askAi = (payload: { session_id?: string; user_id?: string; query: string; context?: Record<string, unknown> }) =>
-  apiFetch<{ answer: string; sources?: Array<{ document_title?: string }>; related_products?: Array<Record<string, unknown>> }>("/ai/api/v1/ai/chat/ask/", {
+  apiFetch<{
+    answer: string;
+    sources?: Array<{ document_title?: string; document_type?: string; chunk_index?: number }>;
+    related_products?: Array<{
+      product_id?: string;
+      name?: string;
+      slug?: string;
+      brand_name?: string;
+      category_name?: string;
+      thumbnail_url?: string;
+      price?: number;
+    }>;
+    mode?: string;
+  }>("/ai/api/v1/ai/chat/ask/", {
     method: "POST",
     body: JSON.stringify(payload),
   });

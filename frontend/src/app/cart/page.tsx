@@ -6,14 +6,38 @@ import { CartItemRow } from "@/components/cart/cart-item-row";
 import { EmptyState } from "@/components/ui/empty-state";
 import { OrderSummaryCard } from "@/components/orders/order-summary-card";
 import Link from "next/link";
+import { getAccessToken } from "@/services/auth";
+import { useMounted } from "@/hooks/use-mounted";
 
 import { ArrowRight, ShoppingBag, Sparkles } from "lucide-react";
 
 export default function CartPage() {
   const qc = useQueryClient();
-  const { data } = useQuery({ queryKey: ["cart"], queryFn: getCurrentCart });
+  const mounted = useMounted();
+  const token = getAccessToken();
+  const { data } = useQuery({ queryKey: ["cart"], queryFn: getCurrentCart, enabled: mounted && Boolean(token) });
   const updateMutation = useMutation({ mutationFn: ({ id, quantity }: { id: string; quantity: number }) => updateCartItem(id, quantity), onSuccess: () => qc.invalidateQueries({ queryKey: ["cart"] }) });
   const removeMutation = useMutation({ mutationFn: removeCartItem, onSuccess: () => qc.invalidateQueries({ queryKey: ["cart"] }) });
+
+  if (!mounted || !token) return (
+    <div className="flex min-h-[60vh] flex-col items-center justify-center p-8 text-center">
+      <div className="mb-8 flex h-24 w-24 items-center justify-center rounded-full bg-slate-50 text-slate-300">
+        <ShoppingBag className="h-12 w-12" />
+      </div>
+      <h2 className="text-3xl font-black text-slate-950">Giỏ hàng dành cho tài khoản đã đăng nhập</h2>
+      <p className="mt-4 max-w-xl text-lg text-slate-500">
+        Bạn vẫn có thể duyệt sản phẩm, nhưng để lưu giỏ hàng và thanh toán, hãy đăng nhập trước.
+      </p>
+      <div className="mt-10 flex flex-wrap justify-center gap-3">
+        <Link href="/products" className="btn-secondary h-14 px-8">
+          Xem sản phẩm
+        </Link>
+        <Link href="/login" className="btn-primary h-14 px-8">
+          Đăng nhập
+        </Link>
+      </div>
+    </div>
+  );
 
   if (!data?.items?.length) return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center p-8 text-center">

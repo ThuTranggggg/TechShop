@@ -72,17 +72,25 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("DB_NAME", "ai_service"),
-        "USER": os.getenv("DB_USER", "ai_service"),
-        "PASSWORD": os.getenv("DB_PASSWORD", "ai_service_password"),
-        "HOST": os.getenv("DB_HOST", "ai_service_db"),
-        "PORT": os.getenv("DB_PORT", "5432"),
-        "CONN_MAX_AGE": int(os.getenv("DB_CONN_MAX_AGE", "60")),
+if env_bool("USE_SQLITE_FOR_TESTS", False):
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "test.sqlite3",
+        }
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.getenv("DB_NAME", "ai_service"),
+            "USER": os.getenv("DB_USER", "ai_service"),
+            "PASSWORD": os.getenv("DB_PASSWORD", "ai_service_password"),
+            "HOST": os.getenv("DB_HOST", "ai_service_db"),
+            "PORT": os.getenv("DB_PORT", "5432"),
+            "CONN_MAX_AGE": int(os.getenv("DB_CONN_MAX_AGE", "60")),
+        }
+    }
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
@@ -122,8 +130,22 @@ CELERY_RESULT_BACKEND = REDIS_URL
 NEO4J_URI = os.getenv("NEO4J_URI", "bolt://neo4j:7687")
 NEO4J_USER = os.getenv("NEO4J_USER", "neo4j")
 NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "neo4jpassword")
-LLM_PROVIDER = os.getenv("LLM_PROVIDER", "placeholder")
-LLM_API_KEY = os.getenv("LLM_API_KEY", "placeholder")
+INTERNAL_SERVICE_KEY = os.getenv("INTERNAL_SERVICE_KEY", "")
+PRODUCT_SERVICE_URL = os.getenv("PRODUCT_SERVICE_URL", "http://product_service:8002")
+AI_PROVIDER = os.getenv("AI_PROVIDER", "yescale")
+AI_API_BASE_URL = os.getenv("AI_API_BASE_URL", "https://api.yescale.io/v1")
+AI_CHAT_COMPLETIONS_URL = os.getenv(
+    "AI_CHAT_COMPLETIONS_URL",
+    f"{AI_API_BASE_URL.rstrip('/')}/chat/completions",
+)
+AI_EMBEDDINGS_URL = os.getenv(
+    "AI_EMBEDDINGS_URL",
+    f"{AI_API_BASE_URL.rstrip('/')}/embeddings",
+)
+AI_API_KEY = os.getenv("AI_API_KEY", "")
+AI_CHAT_MODEL = os.getenv("AI_CHAT_MODEL", "gpt-5.4-nano")
+AI_EMBEDDING_MODEL = os.getenv("AI_EMBEDDING_MODEL", "text-embedding-3-small")
+AI_EMBEDDING_DIMENSIONS = int(os.getenv("AI_EMBEDDING_DIMENSIONS", "1536"))
 
 LOGGING = {
     "version": 1,

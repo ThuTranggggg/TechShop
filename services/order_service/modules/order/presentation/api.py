@@ -120,6 +120,7 @@ class OrderViewSet(ViewSet):
                 user_id=user_id,
                 cart_id=serializer.validated_data["cart_id"],
                 shipping_address=serializer.validated_data["shipping_address"],
+                customer_data=serializer.validated_data.get("customer"),
                 notes=serializer.validated_data.get("notes") or "",
             )
             

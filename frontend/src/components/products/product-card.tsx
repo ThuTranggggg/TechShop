@@ -9,11 +9,13 @@ import { StockBadge } from "@/components/products/stock-badge";
 import { getAccessToken } from "@/services/auth";
 import { extractUserIdFromJwt } from "@/lib/jwt";
 import { trackAiEvent } from "@/services/api/ai";
+import { useMounted } from "@/hooks/use-mounted";
 
 export function ProductCard({ product }: { product: Product }) {
   const formattedPrice = new Intl.NumberFormat("vi-VN").format(Number(product.base_price));
+  const mounted = useMounted();
   const token = getAccessToken();
-  const userId = token ? extractUserIdFromJwt(token) : undefined;
+  const userId = mounted && token ? extractUserIdFromJwt(token) : undefined;
   const trackClick = () =>
     trackAiEvent({
       event_type: "product_click",

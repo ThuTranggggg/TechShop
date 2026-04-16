@@ -2,9 +2,13 @@
 Infrastructure repositories.
 Concrete repository implementations using Django ORM.
 """
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from uuid import UUID
 from datetime import datetime
+
+from django.conf import settings
+from pgvector.django import CosineDistance
+import httpx
 
 from modules.ai.domain.entities import (
     BehavioralEvent,
@@ -301,30 +305,37 @@ class DjangoKnowledgeChunkRepository(KnowledgeChunkRepository):
 
     def add(self, chunk: KnowledgeChunk) -> KnowledgeChunk:
         """Add a new chunk."""
+        metadata = dict(chunk.metadata)
+        embedding = metadata.pop("embedding", None)
         model = KnowledgeChunkModel(
             id=chunk.id,
             document_id=chunk.document_id,
             chunk_index=chunk.chunk_index,
             content=chunk.content,
             embedding_ref=chunk.embedding_ref,
-            metadata=chunk.metadata,
+            embedding=embedding,
+            metadata=metadata,
         )
         model.save()
         return self._model_to_entity(model)
 
     def add_bulk(self, chunks: List[KnowledgeChunk]) -> List[KnowledgeChunk]:
         """Add multiple chunks."""
-        models = [
-            KnowledgeChunkModel(
-                id=chunk.id,
-                document_id=chunk.document_id,
-                chunk_index=chunk.chunk_index,
-                content=chunk.content,
-                embedding_ref=chunk.embedding_ref,
-                metadata=chunk.metadata,
+        models = []
+        for chunk in chunks:
+            metadata = dict(chunk.metadata)
+            embedding = metadata.pop("embedding", None)
+            models.append(
+                KnowledgeChunkModel(
+                    id=chunk.id,
+                    document_id=chunk.document_id,
+                    chunk_index=chunk.chunk_index,
+                    content=chunk.content,
+                    embedding_ref=chunk.embedding_ref,
+                    embedding=embedding,
+                    metadata=metadata,
+                )
             )
-            for chunk in chunks
-        ]
         KnowledgeChunkModel.objects.bulk_create(models)
         return [self._model_to_entity(m) for m in models]
 
@@ -339,26 +350,42 @@ class DjangoKnowledgeChunkRepository(KnowledgeChunkRepository):
         count, _ = KnowledgeChunkModel.objects.filter(document_id=document_id).delete()
         return count
 
-    def search_similar(self, query: str, limit: int = 5) -> List[KnowledgeChunk]:
-        """Search similar chunks (keyword-based for MVP)."""
-        # MVP: Simple keyword search
-        queryset = KnowledgeChunkModel.objects.filter(
-            content__icontains=query,
-            document__is_active=True
-        )
-        queryset = queryset.order_by("-document__updated_at")[:limit]
+    def search_similar(
+        self,
+        query: str,
+        limit: int = 5,
+        filters: Optional[Dict[str, Any]] = None,
+        query_embedding: Optional[List[float]] = None,
+    ) -> List[KnowledgeChunk]:
+        """Use semantic vector search first and keyword fallback only for backfill gaps."""
+        queryset = KnowledgeChunkModel.objects.filter(document__is_active=True).select_related("document")
+        if filters and filters.get("document_types"):
+            queryset = queryset.filter(document__document_type__in=filters["document_types"])
+        if filters and filters.get("product_only"):
+            queryset = queryset.filter(document__document_type="product_catalog")
+        if query_embedding:
+            queryset = queryset.exclude(embedding__isnull=True).annotate(
+                distance=CosineDistance("embedding", query_embedding)
+            ).order_by("distance", "-document__updated_at")
+        else:
+            queryset = queryset.filter(content__icontains=query).order_by("-document__updated_at")
+        queryset = queryset[:limit]
         return [self._model_to_entity(m) for m in queryset]
 
     @staticmethod
     def _model_to_entity(model: KnowledgeChunkModel) -> KnowledgeChunk:
         """Convert model to entity."""
+        metadata = dict(model.metadata)
+        metadata.setdefault("document_title", model.document.title)
+        metadata.setdefault("document_type", model.document.document_type)
+        metadata.setdefault("document_source", model.document.source)
         return KnowledgeChunk(
             id=model.id,
             document_id=model.document_id,
             chunk_index=model.chunk_index,
             content=model.content,
             embedding_ref=model.embedding_ref,
-            metadata=model.metadata,
+            metadata=metadata,
             created_at=model.created_at,
         )
 
@@ -454,3 +481,59 @@ class DjangoChatMessageRepository(ChatMessageRepository):
             metadata=model.metadata,
             created_at=model.created_at,
         )
+
+
+def fetch_published_products(page_size: int = 100) -> List[Dict[str, Any]]:
+    """Fetch catalog products through the owning service API to preserve boundaries."""
+    base_url = settings.PRODUCT_SERVICE_URL.rstrip("/")
+    products: List[Dict[str, Any]] = []
+    page = 1
+
+    with httpx.Client(timeout=settings.UPSTREAM_TIMEOUT) as client:
+        while True:
+            response = client.get(
+                f"{base_url}/api/v1/catalog/products/",
+                params={"page_size": page_size, "page": page},
+            )
+            response.raise_for_status()
+            payload = response.json().get("data", response.json())
+            batch = payload.get("results", [])
+            products.extend(batch)
+            if not payload.get("next"):
+                break
+            page += 1
+
+    return products
+
+
+def build_product_catalog_document(product: Dict[str, Any]) -> Dict[str, Any]:
+    """Normalize catalog fields into the existing knowledge document shape."""
+    metadata = {
+        "product_id": product["id"],
+        "product_name": product["name"],
+        "slug": product.get("slug"),
+        "brand_name": product.get("brand_name") or "",
+        "category_name": product.get("category_name") or "",
+        "price": float(product.get("base_price") or 0),
+        "thumbnail_url": product.get("thumbnail_url") or "",
+        "source_service": "product_service",
+    }
+    content = "\n".join(
+        part
+        for part in [
+            f"Product name: {product['name']}",
+            f"Brand: {metadata['brand_name']}" if metadata["brand_name"] else "",
+            f"Category: {metadata['category_name']}" if metadata["category_name"] else "",
+            f"Price VND: {metadata['price']:.0f}",
+            f"Summary: {product.get('short_description') or ''}",
+        ]
+        if part
+    )
+    return {
+        "title": product["name"],
+        "slug": f"product-{product['slug']}",
+        "document_type": "product_catalog",
+        "source": "product_service",
+        "content": content,
+        "metadata": metadata,
+    }
