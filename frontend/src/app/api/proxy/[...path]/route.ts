@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const backendBaseUrl = process.env.API_PROXY_BASE_URL ?? "http://gateway";
+// Local dev runs the frontend outside Compose, so the proxy must target the
+// published gateway URL unless Compose injects an internal Docker hostname.
+const backendBaseUrl = process.env.API_PROXY_BASE_URL ?? "http://localhost:8080";
 
 async function proxy(request: NextRequest, pathSegments: string[]) {
   const url = new URL(request.url);

@@ -64,28 +64,45 @@ DEMO_CATEGORIES = [
 DEMO_PRODUCTS = [
     ("iphone-15", "iPhone 15", "apple", 19990000, True),
     ("iphone-15-plus", "iPhone 15 Plus", "apple", 22990000, True),
+    ("iphone-15-pro", "iPhone 15 Pro", "apple", 26990000, True),
+    ("iphone-15-pro-max", "iPhone 15 Pro Max", "apple", 32990000, True),
     ("iphone-14", "iPhone 14", "apple", 16990000, False),
+    ("iphone-se", "iPhone SE", "apple", 10990000, False),
     ("galaxy-s24", "Galaxy S24", "samsung", 18990000, False),
+    ("galaxy-s24-plus", "Galaxy S24+", "samsung", 21990000, False),
+    ("galaxy-s24-ultra", "Galaxy S24 Ultra", "samsung", 29990000, True),
     ("galaxy-a55", "Galaxy A55", "samsung", 9990000, False),
     ("galaxy-s23-fe", "Galaxy S23 FE", "samsung", 12990000, False),
     ("xiaomi-14", "Xiaomi 14", "xiaomi", 17990000, False),
+    ("redmi-note-13-pro", "Redmi Note 13 Pro", "xiaomi", 7990000, False),
     ("redmi-note-13", "Redmi Note 13", "xiaomi", 6990000, False),
-    ("iphone-se", "iPhone SE", "apple", 10990000, False),
     ("redmi-13c", "Redmi 13C", "xiaomi", 3990000, False),
 ]
 
 PRODUCT_MEDIA = {
     "iphone-15": [
-        "https://images.unsplash.com/photo-1695048133142-1a20484d5c0c?auto=format&fit=crop&w=1200&q=80",
-        "https://images.unsplash.com/photo-1695048133142-1a20484d5c0c?auto=format&fit=crop&w=900&q=80",
-        "https://images.unsplash.com/photo-1678652197833-2c7d0e0f8d6d?auto=format&fit=crop&w=900&q=80",
-        "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?auto=format&fit=crop&w=900&q=80",
+        "https://www.apple.com/newsroom/images/2023/09/apple-debuts-iphone-15-and-iphone-15-plus/article/Apple-iPhone-15-lineup-design-230912_big.jpg.large.jpg",
+        "https://www.apple.com/newsroom/images/2023/09/apple-debuts-iphone-15-and-iphone-15-plus/article/Apple-iPhone-15-lineup-hero-230912_inline.jpg.large.jpg",
+        "https://www.apple.com/newsroom/images/2023/09/apple-debuts-iphone-15-and-iphone-15-plus/article/Apple-iPhone-15-48MP-01-230912_big.jpg.large.jpg",
+        "https://www.apple.com/newsroom/images/2023/09/apple-debuts-iphone-15-and-iphone-15-plus/article/Apple-iPhone-15-Night-mode-230912_big.jpg.large.jpg",
     ],
     "iphone-15-plus": [
-        "https://images.unsplash.com/photo-1695048133142-1a20484d5c0c?auto=format&fit=crop&w=1200&q=80",
-        "https://images.unsplash.com/photo-1678652197833-2c7d0e0f8d6d?auto=format&fit=crop&w=900&q=80",
-        "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?auto=format&fit=crop&w=900&q=80",
-        "https://images.unsplash.com/photo-1510557880182-3b9d8f0f2f5f?auto=format&fit=crop&w=900&q=80",
+        "https://www.apple.com/newsroom/images/2023/09/apple-debuts-iphone-15-and-iphone-15-plus/article/Apple-iPhone-15-lineup-hero-230912_inline.jpg.large.jpg",
+        "https://www.apple.com/newsroom/images/2023/09/apple-debuts-iphone-15-and-iphone-15-plus/article/Apple-iPhone-15-lineup-color-lineup-230912_big.jpg.large.jpg",
+        "https://www.apple.com/newsroom/images/2023/09/apple-debuts-iphone-15-and-iphone-15-plus/article/Apple-iPhone-15-48MP-02-230912_big.jpg.large.jpg",
+        "https://www.apple.com/newsroom/images/2023/09/apple-debuts-iphone-15-and-iphone-15-plus/article/Apple-iPhone-15-Portrait-mode-24MP-01-230912_big.jpg.large.jpg",
+    ],
+    "iphone-15-pro": [
+        "https://www.apple.com/newsroom/images/2023/09/apple-unveils-iphone-15-pro-and-iphone-15-pro-max/article/Apple-iPhone-15-Pro-lineup-hero-230912_Full-Bleed-Image.jpg.large.jpg",
+        "https://www.apple.com/newsroom/images/2023/09/apple-unveils-iphone-15-pro-and-iphone-15-pro-max/article/Apple-iPhone-15-Pro-lineup-color-lineup-230912_big.jpg.large.jpg",
+        "https://www.apple.com/newsroom/images/2023/09/apple-unveils-iphone-15-pro-and-iphone-15-pro-max/article/Apple-iPhone-15-Pro-Photo-mode-Smart-HDR-230912_big.jpg.large.jpg",
+        "https://www.apple.com/newsroom/images/2023/09/apple-unveils-iphone-15-pro-and-iphone-15-pro-max/article/Apple-iPhone-15-Pro-lineup-USB-C-connector-cable-230912_big.jpg.large.jpg",
+    ],
+    "iphone-15-pro-max": [
+        "https://www.apple.com/newsroom/images/2023/09/apple-unveils-iphone-15-pro-and-iphone-15-pro-max/article/Apple-iPhone-15-Pro-lineup-hero-230912_Full-Bleed-Image.jpg.large.jpg",
+        "https://www.apple.com/newsroom/images/2023/09/apple-unveils-iphone-15-pro-and-iphone-15-pro-max/article/Apple-iPhone-15-Pro-Max-48MP-camera-01-230912_big.jpg.large.jpg",
+        "https://www.apple.com/newsroom/images/2023/09/apple-unveils-iphone-15-pro-and-iphone-15-pro-max/article/Apple-iPhone-15-Pro-Max-Telephoto-camera-230912_big.jpg.large.jpg",
+        "https://www.apple.com/newsroom/images/2023/09/apple-unveils-iphone-15-pro-and-iphone-15-pro-max/article/Apple-iPhone-15-Pro-Max-Night-mode-Portrait-mode-230912_big.jpg.large.jpg",
     ],
     "iphone-14": [
         "https://images.unsplash.com/photo-1663767688549-1d7d1d8f3b8a?auto=format&fit=crop&w=1200&q=80",
@@ -100,16 +117,28 @@ PRODUCT_MEDIA = {
         "https://images.unsplash.com/photo-1512499617640-c2f999098c0b?auto=format&fit=crop&w=900&q=80",
     ],
     "galaxy-s24": [
-        "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?auto=format&fit=crop&w=1200&q=80",
-        "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?auto=format&fit=crop&w=900&q=80",
-        "https://images.unsplash.com/photo-1598327105666-5b89351aff97?auto=format&fit=crop&w=900&q=80",
-        "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=900&q=80",
+        "https://upload.wikimedia.org/wikipedia/commons/c/c7/Galaxy_S24_Ultra.jpg",
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Galaxy_S24_Ultra.jpg/960px-Galaxy_S24_Ultra.jpg",
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Galaxy_S24_Ultra.jpg/500px-Galaxy_S24_Ultra.jpg",
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Galaxy_S24_Ultra.jpg/360px-Galaxy_S24_Ultra.jpg",
+    ],
+    "galaxy-s24-plus": [
+        "https://commons.wikimedia.org/wiki/Special:Redirect/file/Samsung_Galaxy_S24_series.jpg",
+        "https://commons.wikimedia.org/wiki/Special:Redirect/file/Samsung_Galaxy_s24_series_2.jpg",
+        "https://commons.wikimedia.org/wiki/Special:Redirect/file/Samsung_Galaxy_S24.jpg",
+        "https://commons.wikimedia.org/wiki/Special:Redirect/file/Samsung_Galaxy_S24_01.jpg",
+    ],
+    "galaxy-s24-ultra": [
+        "https://upload.wikimedia.org/wikipedia/commons/c/c7/Galaxy_S24_Ultra.jpg",
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Galaxy_S24_Ultra.jpg/960px-Galaxy_S24_Ultra.jpg",
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Galaxy_S24_Ultra.jpg/500px-Galaxy_S24_Ultra.jpg",
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Galaxy_S24_Ultra.jpg/360px-Galaxy_S24_Ultra.jpg",
     ],
     "galaxy-a55": [
-        "https://images.unsplash.com/photo-1622620996948-5ba5c9c3fd8b?auto=format&fit=crop&w=1200&q=80",
-        "https://images.unsplash.com/photo-1622620996948-5ba5c9c3fd8b?auto=format&fit=crop&w=900&q=80",
-        "https://images.unsplash.com/photo-1512499617640-c2f999098c0b?auto=format&fit=crop&w=900&q=80",
-        "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?auto=format&fit=crop&w=900&q=80",
+        "https://upload.wikimedia.org/wikipedia/commons/b/b4/Galaxy_A55.jpg",
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Galaxy_A55.jpg/760px-Galaxy_A55.jpg",
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Galaxy_A55.jpg/500px-Galaxy_A55.jpg",
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Galaxy_A55.jpg/360px-Galaxy_A55.jpg",
     ],
     "galaxy-s23-fe": [
         "https://images.unsplash.com/photo-1595941069915-4ebc5197c14a?auto=format&fit=crop&w=1200&q=80",
@@ -118,10 +147,15 @@ PRODUCT_MEDIA = {
         "https://images.unsplash.com/photo-1622090186215-e9685a4f1b0e?auto=format&fit=crop&w=900&q=80",
     ],
     "xiaomi-14": [
-        "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?auto=format&fit=crop&w=1200&q=80",
+        "https://upload.wikimedia.org/wikipedia/commons/7/71/%E5%B0%8F%E7%B1%B314_Pro%E5%92%8C%E5%B0%8F%E7%B1%B314%EF%BC%882024%E5%B9%B42%E6%9C%8820%E6%97%A5%EF%BC%89.jpg",
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/%E5%B0%8F%E7%B1%B314_Pro%E5%92%8C%E5%B0%8F%E7%B1%B314%EF%BC%882024%E5%B9%B42%E6%9C%8820%E6%97%A5%EF%BC%89.jpg/1280px-%E5%B0%8F%E7%B1%B314_Pro%E5%92%8C%E5%B0%8F%E7%B1%B314%EF%BC%882024%E5%B9%B42%E6%9C%8820%E6%97%A5%EF%BC%89.jpg",
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/%E5%B0%8F%E7%B1%B314_Pro%E5%92%8C%E5%B0%8F%E7%B1%B314%EF%BC%882024%E5%B9%B42%E6%9C%8820%E6%97%A5%EF%BC%89.jpg/960px-%E5%B0%8F%E7%B1%B314_Pro%E5%92%8C%E5%B0%8F%E7%B1%B314%EF%BC%882024%E5%B9%B42%E6%9C%8820%E6%97%A5%EF%BC%89.jpg",
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/%E5%B0%8F%E7%B1%B314_Pro%E5%92%8C%E5%B0%8F%E7%B1%B314%EF%BC%882024%E5%B9%B42%E6%9C%8820%E6%97%A5%EF%BC%89.jpg/500px-%E5%B0%8F%E7%B1%B314_Pro%E5%92%8C%E5%B0%8F%E7%B1%B314%EF%BC%882024%E5%B9%B42%E6%9C%8820%E6%97%A5%EF%BC%89.jpg",
+    ],
+    "redmi-note-13-pro": [
+        "https://images.unsplash.com/photo-1622620996948-5ba5c9c3fd8b?auto=format&fit=crop&w=1200&q=80",
         "https://images.unsplash.com/photo-1598327105666-5b89351aff97?auto=format&fit=crop&w=900&q=80",
-        "https://images.unsplash.com/photo-1622090186215-e9685a4f1b0e?auto=format&fit=crop&w=900&q=80",
-        "https://images.unsplash.com/photo-1512499617640-c2f999098c0b?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1510557880182-3b9d8f0f2f5f?auto=format&fit=crop&w=900&q=80",
     ],
     "redmi-note-13": [
         "https://images.unsplash.com/photo-1622620996948-5ba5c9c3fd8b?auto=format&fit=crop&w=1200&q=80",
@@ -451,11 +485,11 @@ for idx, (slug, name, brand_slug, price, featured) in enumerate(items, start=1):
     for media_index, media_url in enumerate(media_map.get(slug, [])):
         p.media.get_or_create(
             media_url=media_url,
-            defaults={
-                "alt_text": f"{name} image {media_index + 1}",
+            defaults={{
+                "alt_text": name + " image " + str(media_index + 1),
                 "sort_order": media_index,
                 "is_primary": media_index == 0,
-            },
+            }},
         )
 
 print("seeded_products", ProductModel.objects.filter(status="active", is_active=True, published_at__isnull=False).count())

@@ -77,7 +77,7 @@ class ProductServiceClient:
     """Client for retrieving product snapshots for order item history."""
 
     def __init__(self, base_url: str = None, timeout: float = 5.0):
-        self.base_url = base_url or os.getenv("PRODUCT_SERVICE_URL", "http://gateway/product")
+        self.base_url = base_url or os.getenv("PRODUCT_SERVICE_URL", "http://product_service:8002")
         self.timeout = timeout
 
     def get_product_detail(self, product_id: UUID) -> Dict[str, Any]:
@@ -295,7 +295,7 @@ class ShippingServiceClient:
     """
     
     def __init__(self, base_url: str = None, timeout: float = 5.0, internal_key: str = None):
-        self.base_url = base_url or os.getenv("SHIPPING_SERVICE_URL", "http://shipping_service:8008")
+        self.base_url = base_url or os.getenv("SHIPPING_SERVICE_URL", "http://shipping_service:8006")
         self.timeout = timeout
         self.internal_key = internal_key or os.getenv("INTERNAL_SERVICE_KEY", "")
     
@@ -358,7 +358,7 @@ class AIServiceClient:
     """
     
     def __init__(self, base_url: str = None, timeout: float = 3.0, internal_key: str = None):
-        self.base_url = base_url or os.getenv("AI_SERVICE_URL", "http://ai_service:8000")
+        self.base_url = base_url or os.getenv("AI_SERVICE_URL", "http://ai_service:8008")
         self.timeout = timeout
         self.internal_key = internal_key or os.getenv("INTERNAL_SERVICE_KEY", "")
     
