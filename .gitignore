@@ -9,3 +9,4 @@ htmlcov/
 .next/
 node_modules/
 */.next/
+*.tsbuildinfo
