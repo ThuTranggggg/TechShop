@@ -74,6 +74,69 @@ DEMO_PRODUCTS = [
     ("redmi-13c", "Redmi 13C", "xiaomi", 3990000, False),
 ]
 
+PRODUCT_MEDIA = {
+    "iphone-15": [
+        "https://images.unsplash.com/photo-1695048133142-1a20484d5c0c?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1695048133142-1a20484d5c0c?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1678652197833-2c7d0e0f8d6d?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?auto=format&fit=crop&w=900&q=80",
+    ],
+    "iphone-15-plus": [
+        "https://images.unsplash.com/photo-1695048133142-1a20484d5c0c?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1678652197833-2c7d0e0f8d6d?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1510557880182-3b9d8f0f2f5f?auto=format&fit=crop&w=900&q=80",
+    ],
+    "iphone-14": [
+        "https://images.unsplash.com/photo-1663767688549-1d7d1d8f3b8a?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1663767688549-1d7d1d8f3b8a?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1512499617640-c2f999098c0b?auto=format&fit=crop&w=900&q=80",
+    ],
+    "iphone-se": [
+        "https://images.unsplash.com/photo-1580910051074-3eb694886505?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1580910051074-3eb694886505?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1565849904461-04a58ad377e0?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1512499617640-c2f999098c0b?auto=format&fit=crop&w=900&q=80",
+    ],
+    "galaxy-s24": [
+        "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1598327105666-5b89351aff97?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=900&q=80",
+    ],
+    "galaxy-a55": [
+        "https://images.unsplash.com/photo-1622620996948-5ba5c9c3fd8b?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1622620996948-5ba5c9c3fd8b?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1512499617640-c2f999098c0b?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?auto=format&fit=crop&w=900&q=80",
+    ],
+    "galaxy-s23-fe": [
+        "https://images.unsplash.com/photo-1595941069915-4ebc5197c14a?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1595941069915-4ebc5197c14a?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1622090186215-e9685a4f1b0e?auto=format&fit=crop&w=900&q=80",
+    ],
+    "xiaomi-14": [
+        "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1598327105666-5b89351aff97?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1622090186215-e9685a4f1b0e?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1512499617640-c2f999098c0b?auto=format&fit=crop&w=900&q=80",
+    ],
+    "redmi-note-13": [
+        "https://images.unsplash.com/photo-1622620996948-5ba5c9c3fd8b?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1510557880182-3b9d8f0f2f5f?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1512499617640-c2f999098c0b?auto=format&fit=crop&w=900&q=80",
+    ],
+    "redmi-13c": [
+        "https://images.unsplash.com/photo-1622620996948-5ba5c9c3fd8b?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1598327105666-5b89351aff97?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1510557880182-3b9d8f0f2f5f?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?auto=format&fit=crop&w=900&q=80",
+    ],
+}
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
@@ -343,6 +406,7 @@ for slug, name in brands.items():
     brand_objs[slug] = b
 
 items = {repr(DEMO_PRODUCTS)}
+media_map = {repr(PRODUCT_MEDIA)}
 for idx, (slug, name, brand_slug, price, featured) in enumerate(items, start=1):
     p, _ = ProductModel.objects.get_or_create(
         slug=slug,
@@ -358,7 +422,7 @@ for idx, (slug, name, brand_slug, price, featured) in enumerate(items, start=1):
             "status": "active",
             "is_active": True,
             "is_featured": featured,
-            "thumbnail_url": f"https://picsum.photos/seed/{{slug}}/800/600",
+            "thumbnail_url": media_map.get(slug, [f"https://images.unsplash.com/photo-1512499617640-c2f999098c0b?auto=format&fit=crop&w=1200&q=80"])[0],
             "published_at": timezone.now(),
         }},
     )
@@ -383,6 +447,16 @@ for idx, (slug, name, brand_slug, price, featured) in enumerate(items, start=1):
             "barcode": f"BAR{{100000 + idx}}",
         }},
     )
+
+    for media_index, media_url in enumerate(media_map.get(slug, [])):
+        p.media.get_or_create(
+            media_url=media_url,
+            defaults={
+                "alt_text": f"{name} image {media_index + 1}",
+                "sort_order": media_index,
+                "is_primary": media_index == 0,
+            },
+        )
 
 print("seeded_products", ProductModel.objects.filter(status="active", is_active=True, published_at__isnull=False).count())
 """.strip()

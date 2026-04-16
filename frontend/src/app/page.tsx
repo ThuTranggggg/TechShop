@@ -109,7 +109,7 @@ export default function HomePage() {
             {recData.products.map((item) => (
               <article key={item.product_id} className="rounded-2xl border border-border bg-muted/40 p-4">
                 <div className="inline-flex rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-primary">
-                  {item.reason_codes?.[0] ?? "Recommendation"}
+                  {item.reason_codes?.[0] ?? "Gợi ý"}
                 </div>
                 <h3 className="mt-3 line-clamp-2 font-display text-lg font-bold text-slate-900">{item.product_name}</h3>
                 <p className="mt-1 text-xs uppercase tracking-[0.14em] text-slate-500">{item.brand}</p>

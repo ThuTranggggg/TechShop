@@ -42,6 +42,11 @@ export default function ProductDetailPage() {
   });
 
   const variants = useMemo(() => (data?.variants ?? []).map((v) => ({ id: v.id, name: v.name })), [data?.variants]);
+  const galleryImages = useMemo(() => {
+    const mediaImages = (data?.media ?? []).map((item) => ({ src: item.media_url, alt: item.alt_text || data?.name || "Product image" }));
+    const fallback = data?.thumbnail_url ? [{ src: data.thumbnail_url, alt: data.name }] : [];
+    return [...mediaImages, ...fallback].slice(0, 5);
+  }, [data]);
   useEffect(() => {
     if (!data) return;
     trackAiEvent({
@@ -60,18 +65,23 @@ export default function ProductDetailPage() {
   return (
     <div className="space-y-16 pb-20">
       <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:items-start">
-        {/* Product Gallery */}
         <div className="sticky top-24 space-y-4">
           <div className="overflow-hidden rounded-[2.5rem] bg-slate-50 card-premium">
-            <img 
-              src={data.thumbnail_url || "https://images.unsplash.com/photo-1517336714739-489689fd1ca8?w=1200"} 
-              alt={data.name} 
-              className="aspect-square w-full object-cover transition-transform duration-700 hover:scale-105" 
+            <img
+              src={galleryImages[0]?.src || data.thumbnail_url || "https://images.unsplash.com/photo-1517336714739-489689fd1ca8?w=1200"}
+              alt={galleryImages[0]?.alt || data.name}
+              className="aspect-square w-full object-cover transition-transform duration-700 hover:scale-105"
             />
           </div>
           <div className="grid grid-cols-4 gap-4">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="aspect-square rounded-2xl bg-slate-100 border border-slate-200/50 hover:border-primary cursor-pointer transition-colors" />
+            {galleryImages.slice(1, 5).map((image, index) => (
+              <button
+                key={`${image.src}-${index}`}
+                type="button"
+                className="overflow-hidden rounded-2xl border border-slate-200/50 bg-slate-100 transition-colors hover:border-primary"
+              >
+                <img src={image.src} alt={image.alt} className="aspect-square h-full w-full object-cover" />
+              </button>
             ))}
           </div>
         </div>
@@ -160,7 +170,7 @@ export default function ProductDetailPage() {
       <section className="border-t border-slate-100 pt-16">
         <header className="mb-12">
           <h2 className="text-3xl font-black">Sản phẩm liên quan</h2>
-          <p className="mt-2 text-slate-500">Có thể bạn cũng quan tâm đến những thiết bị này.</p>
+          <p className="mt-2 text-slate-500">Các mẫu cùng phân khúc hoặc cùng thương hiệu để bạn tham khảo.</p>
         </header>
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
            {relatedData?.results?.map((p) => (

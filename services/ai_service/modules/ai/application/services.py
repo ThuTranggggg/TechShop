@@ -455,6 +455,8 @@ class GenerateChatAnswerUseCase:
         # Retrieve context
         context_chunks = self.retrieval_service.retrieve_relevant_chunks(query, limit=5, filters=filters)
         context = "\n".join([chunk.content for chunk in context_chunks])
+        if user_context:
+            context = f"{context}\n\nUser context:\n{user_context}"
 
         if session_id:
             AppendChatMessageUseCase(
@@ -518,6 +520,8 @@ class GenerateChatAnswerUseCase:
             }
         if intent == ChatIntent.PRODUCT_SEARCH.value:
             return {"document_types": [DocumentType.PRODUCT_CATALOG.value]}
+        if intent == ChatIntent.ORDER_STATUS.value:
+            return {"document_types": [DocumentType.SUPPORT_ARTICLE.value, DocumentType.FAQ.value]}
         return {}
 
     @staticmethod

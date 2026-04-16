@@ -3,6 +3,7 @@ from uuid import uuid4
 from django.test import SimpleTestCase
 
 from modules.ai.application.services import GenerateChatAnswerUseCase
+from modules.ai.infrastructure.providers import YescaleAIProvider
 
 
 class StubChunk:
@@ -55,7 +56,17 @@ class StubProvider:
         return f"Grounded answer for: {query}"
 
 
+class OrderStatusProvider(StubProvider):
+    def classify_intent(self, query: str) -> str:
+        return "order_status"
+
+
 class RAGChatTests(SimpleTestCase):
+    def test_provider_classifies_vietnamese_order_status_queries(self):
+        provider = YescaleAIProvider(api_key="test-key")
+
+        self.assertEqual(provider.classify_intent("Trạng thái đơn hàng của tôi thế nào?"), "order_status")
+
     def test_generate_chat_answer_includes_sources_and_related_products(self):
         chunk = StubChunk(
             document_id=uuid4(),
@@ -94,3 +105,25 @@ class RAGChatTests(SimpleTestCase):
 
         with self.assertRaises(ValueError):
             use_case.execute(query="Samsung nao duoi 10 trieu?")
+
+    def test_generate_chat_answer_handles_order_context(self):
+        chunk = StubChunk(
+            document_id=uuid4(),
+            chunk_index=0,
+            content="Order status guidance only",
+            metadata={"document_title": "Order status FAQ", "document_type": "faq"},
+        )
+        use_case = GenerateChatAnswerUseCase(
+            retrieval_service=StubRetrievalService([chunk]),
+            llm_provider=OrderStatusProvider(),
+            session_repo=StubSessionRepo(),
+            message_repo=StubMessageRepo(),
+        )
+
+        result = use_case.execute(
+            query="Trạng thái đơn hàng của tôi thế nào?",
+            user_context={"order_number": "ORD-001", "status": "shipping"},
+        )
+
+        self.assertEqual(result["intent"], "order_status")
+        self.assertEqual(result["sources"][0]["document_title"], "Order status FAQ")

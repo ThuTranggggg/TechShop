@@ -30,7 +30,7 @@ export function ProductCard({ product }: { product: Product }) {
     <article className="group card-premium relative flex flex-col items-stretch overflow-hidden bg-card p-0">
       <Link href={`/products/${product.id}`} onClick={trackClick} className="relative block aspect-[4/3] w-full overflow-hidden bg-muted">
          <img 
-          src={product.thumbnail_url || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=900"} 
+          src={product.thumbnail_url || "https://images.unsplash.com/photo-1512499617640-c2f999098c0b?auto=format&fit=crop&w=900&q=80"} 
           alt={product.name} 
           className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" 
         />

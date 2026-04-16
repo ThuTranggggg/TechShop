@@ -34,8 +34,8 @@ class YescaleAIProvider:
     """Single owner for the OpenAI-compatible Yescale chat and embedding APIs."""
 
     PRODUCT_KEYWORDS = ["sản phẩm", "điện thoại", "laptop", "máy tính", "camera", "nào"]
-    ORDER_KEYWORDS = ["đơn hàng", "order", "when", "khi nào"]
-    SHIPMENT_KEYWORDS = ["vận chuyển", "giao", "tracking", "ở đâu", "chưa nhận"]
+    ORDER_KEYWORDS = ["đơn hàng", "order", "trạng thái đơn", "tình trạng đơn", "khi nào", "đã đặt"]
+    SHIPMENT_KEYWORDS = ["vận chuyển", "giao", "tracking", "ở đâu", "chưa nhận", "đang giao", "ship"]
     POLICY_KEYWORDS = ["chính sách", "policy", "đổi", "trả", "return", "exchange"]
     PAYMENT_KEYWORDS = ["thanh toán", "payment", "trả tiền", "giá"]
 
@@ -73,6 +73,8 @@ class YescaleAIProvider:
 
         if any(kw in query_lower for kw in self.ORDER_KEYWORDS):
             if "status" in query_lower or "tình trạng" in query_lower:
+                return ChatIntent.ORDER_STATUS.value
+            if "trạng thái" in query_lower or "đơn hàng" in query_lower:
                 return ChatIntent.ORDER_STATUS.value
 
         if any(kw in query_lower for kw in self.SHIPMENT_KEYWORDS):
