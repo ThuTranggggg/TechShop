@@ -26,6 +26,18 @@ docker compose up --build frontend gateway
 ```
 Truy cập qua gateway: `http://localhost:8080`.
 
+## Playwright E2E
+- Mặc định `npm run test:e2e` chạy against full Docker Compose stack qua gateway `http://localhost:8080`.
+- Trước khi chạy, bảo đảm `docker compose up -d` đã xong và seed demo data:
+  ```bash
+  python shared/scripts/seed_complete_system.py --verbose
+  ```
+- Nếu cần smoke mode nhẹ hơn trong lúc debug frontend riêng, dùng:
+  ```bash
+  PLAYWRIGHT_USE_MOCK_BACKEND=1 npm run test:e2e
+  ```
+- Suite hiện bao phủ auth, catalog, cart/checkout/orders, chat, profile, và admin flows.
+
 ## Env
 - `NEXT_PUBLIC_API_BASE_URL`: base URL gateway (mặc định `http://localhost:8080`; Docker Compose ghi đè thành `/api/proxy` cho môi trường container)
 - `API_PROXY_BASE_URL`: target cho route `/api/proxy/*` phía server (mặc định `http://localhost:8080`; Docker Compose ghi đè thành `http://gateway`)

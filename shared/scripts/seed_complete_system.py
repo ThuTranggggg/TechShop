@@ -456,7 +456,8 @@ for idx, (slug, name, brand_slug, price, featured) in enumerate(items, start=1):
             "status": "active",
             "is_active": True,
             "is_featured": featured,
-            "thumbnail_url": media_map.get(slug, [f"https://images.unsplash.com/photo-1512499617640-c2f999098c0b?auto=format&fit=crop&w=1200&q=80"])[0],
+            # Keep seeded media URLs short so they fit within the model field limit.
+            "thumbnail_url": f"https://picsum.photos/seed/{{slug}}/800/600",
             "published_at": timezone.now(),
         }},
     )
@@ -478,13 +479,16 @@ for idx, (slug, name, brand_slug, price, featured) in enumerate(items, start=1):
             "is_default": True,
             "is_active": True,
             "price_override": price,
-            "barcode": f"BAR{{100000 + idx}}",
+            # Keep the barcode deterministic per product so rerunning the seed
+            # does not collide with variants created in a previous run.
+            "barcode": f"BAR-{{slug.upper()}}-STD",
         }},
     )
 
     for media_index, media_url in enumerate(media_map.get(slug, [])):
+        short_media_url = f"https://picsum.photos/seed/{{slug}}-{{media_index + 1}}/800/600"
         p.media.get_or_create(
-            media_url=media_url,
+            media_url=short_media_url,
             defaults={{
                 "alt_text": name + " image " + str(media_index + 1),
                 "sort_order": media_index,
@@ -507,9 +511,16 @@ print("seeded_products", ProductModel.objects.filter(status="active", is_active=
         try:
             resp = self._request("get", "product", "/api/v1/catalog/products/?page_size=100")
             if resp.status_code == 200:
-                payload = resp.json()
-                self.state.products = payload.get("results", [])
-                logger.info("  ✓ Public catalog count: %s", payload.get("count", 0))
+                payload = self._extract_data(resp)
+                if isinstance(payload, dict):
+                    self.state.products = payload.get("results", [])
+                    logger.info("  ✓ Public catalog count: %s", payload.get("count", 0))
+                elif isinstance(payload, list):
+                    self.state.products = payload
+                    logger.info("  ✓ Public catalog count: %s", len(payload))
+                else:
+                    self.state.products = []
+                    logger.info("  ✓ Public catalog count: 0")
             else:
                 logger.warning("  ✗ Could not read product list: %s", resp.status_code)
         except Exception as exc:
