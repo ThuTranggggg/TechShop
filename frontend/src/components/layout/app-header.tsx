@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Compass, LayoutDashboard, LogOut, Sparkles, UserCircle2 } from "lucide-react";
+import { LayoutDashboard, LogOut, Sparkles, UserCircle2 } from "lucide-react";
 import { CartBadge } from "@/components/cart/cart-badge";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -61,10 +61,6 @@ export function AppHeader() {
               Admin
             </Link>
           ) : null}
-          <Link href="/products" className="hidden sm:inline-flex items-center gap-2 rounded-full border border-border bg-card px-3.5 py-2 text-xs font-semibold text-slate-600 hover:bg-muted">
-            <Compass className="h-3.5 w-3.5" />
-            Browse
-          </Link>
           <Link href="/cart" className="relative transition-transform hover:scale-110 active:scale-90" aria-label="Cart">
             <CartBadge />
           </Link>

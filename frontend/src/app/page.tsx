@@ -38,16 +38,16 @@ export default function HomePage() {
 
   return (
     <div className="space-y-14 pb-10">
-      <section className="relative overflow-hidden rounded-[2.5rem] border border-border/80 bg-gradient-to-br from-orange-50 via-white to-emerald-50 p-7 md:p-12">
+      <section className="relative overflow-hidden rounded-[2.5rem] border border-border/80 bg-gradient-to-br from-sky-50 via-white to-cyan-50 p-7 md:p-12">
         <div className="pointer-events-none absolute -right-24 top-0 h-64 w-64 rounded-full bg-primary/20 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-accent/20 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-accent/15 blur-3xl" />
         <div className="relative grid gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
           <div>
             <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] text-primary">
               <Sparkles className="h-3.5 w-3.5" />
               Techshop 2026
             </span>
-            <h1 className="mt-6 text-4xl font-black leading-tight text-slate-900 md:text-6xl">
+            <h1 className="mt-6 max-w-3xl text-4xl font-black leading-tight text-slate-900 md:text-6xl">
               Mua sắm công nghệ
               <br />
               theo cách hoàn toàn mới.
@@ -68,18 +68,18 @@ export default function HomePage() {
             </div>
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
-            <article className="card-premium bg-white/80">
+            <article className="card-premium border-white/70 bg-white/85 backdrop-blur-sm">
               <ShieldCheck className="h-6 w-6 text-primary" />
               <h3 className="mt-4 font-display text-xl font-bold">Bảo mật mua hàng</h3>
               <p className="mt-2 text-sm text-slate-600">Luồng thanh toán được kiểm soát và đồng bộ trạng thái giữa các service.</p>
             </article>
-            <article className="card-premium bg-white/80">
+            <article className="card-premium border-white/70 bg-white/85 backdrop-blur-sm">
               <Truck className="h-6 w-6 text-accent" />
               <h3 className="mt-4 font-display text-xl font-bold">Giao vận rõ ràng</h3>
               <p className="mt-2 text-sm text-slate-600">Theo dõi hành trình đơn hàng chi tiết, cập nhật liên tục theo timeline.</p>
             </article>
-            <article className="card-premium bg-white/80 sm:col-span-2 lg:col-span-1">
-              <Bot className="h-6 w-6 text-warning" />
+            <article className="card-premium border-white/70 bg-white/85 backdrop-blur-sm sm:col-span-2 lg:col-span-1">
+              <Bot className="h-6 w-6 text-primary" />
               <h3 className="mt-4 font-display text-xl font-bold">AI tư vấn nhanh</h3>
               <p className="mt-2 text-sm text-slate-600">Gợi ý sản phẩm theo ngân sách, thương hiệu và mục đích sử dụng ngay trong chat.</p>
             </article>

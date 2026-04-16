@@ -5,13 +5,13 @@
 @tailwind utilities;
 
 :root {
-  --background: 30 40% 97%;
-  --foreground: 213 38% 14%;
+  --background: 210 60% 97%;
+  --foreground: 218 44% 14%;
   --card: 0 0% 100%;
-  --muted: 36 33% 92%;
-  --border: 28 25% 84%;
-  --primary: 15 83% 54%;
-  --accent: 174 73% 34%;
+  --muted: 214 40% 93%;
+  --border: 212 30% 84%;
+  --primary: 204 86% 57%;
+  --accent: 193 67% 42%;
   --success: 146 62% 38%;
   --warning: 40 94% 51%;
   --danger: 2 76% 56%;
@@ -25,9 +25,9 @@ body {
   line-height: 1.6;
   background: hsl(var(--background));
   background-image: 
-    radial-gradient(at 0% 0%, hsla(15, 83%, 54%, 0.08) 0, transparent 55%),
-    radial-gradient(at 100% 10%, hsla(174, 73%, 34%, 0.08) 0, transparent 60%),
-    linear-gradient(180deg, hsla(36, 80%, 93%, 0.45), hsla(0, 0%, 100%, 0));
+    radial-gradient(at 0% 0%, hsla(204, 86%, 57%, 0.12) 0, transparent 50%),
+    radial-gradient(at 100% 10%, hsla(193, 67%, 42%, 0.1) 0, transparent 56%),
+    linear-gradient(180deg, hsla(210, 70%, 96%, 0.82), hsla(0, 0%, 100%, 0));
   color: hsl(var(--foreground));
   -webkit-font-smoothing: antialiased;
 }
@@ -39,7 +39,7 @@ h1,h2,h3,h4,h5,h6 {
 }
 
 .glass {
-  background: rgba(255, 250, 244, 0.84);
+  background: rgba(248, 252, 255, 0.8);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border-bottom: 1px solid hsl(var(--border));
@@ -52,7 +52,7 @@ h1,h2,h3,h4,h5,h6 {
 }
 
 .btn-secondary {
-  @apply inline-flex items-center justify-center rounded-2xl border border-border bg-card px-6 py-3 text-sm font-bold transition-all hover:bg-muted active:scale-95 disabled:opacity-50;
+  @apply inline-flex items-center justify-center rounded-2xl border border-border bg-card px-6 py-3 text-sm font-bold text-slate-700 transition-all hover:bg-muted active:scale-95 disabled:opacity-50;
 }
 
 .card-premium {

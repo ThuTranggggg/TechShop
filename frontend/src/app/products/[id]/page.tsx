@@ -66,7 +66,7 @@ export default function ProductDetailPage() {
     <div className="space-y-16 pb-20">
       <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:items-start">
         <div className="sticky top-24 space-y-4">
-          <div className="overflow-hidden rounded-[2.5rem] bg-slate-50 card-premium">
+          <div className="overflow-hidden rounded-[2.5rem] bg-sky-50/70 card-premium">
             <img
               src={galleryImages[0]?.src || data.thumbnail_url || "https://images.unsplash.com/photo-1517336714739-489689fd1ca8?w=1200"}
               alt={galleryImages[0]?.alt || data.name}
@@ -78,7 +78,7 @@ export default function ProductDetailPage() {
               <button
                 key={`${image.src}-${index}`}
                 type="button"
-                className="overflow-hidden rounded-2xl border border-slate-200/50 bg-slate-100 transition-colors hover:border-primary"
+                className="overflow-hidden rounded-2xl border border-slate-200/50 bg-sky-50 transition-colors hover:border-primary"
               >
                 <img src={image.src} alt={image.alt} className="aspect-square h-full w-full object-cover" />
               </button>
@@ -89,11 +89,11 @@ export default function ProductDetailPage() {
         {/* Product Info */}
         <div className="flex flex-col pt-4">
           <div className="mb-6 flex items-center gap-3">
-            <span className="rounded-full bg-slate-100 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-slate-500">
+            <span className="rounded-full bg-primary/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-primary">
               {data.brand_name}
             </span>
             <span className="h-1 w-1 rounded-full bg-slate-300" />
-            <span className="text-sm font-medium text-slate-400">{data.category_name}</span>
+            <span className="text-sm font-medium text-slate-500">{data.category_name}</span>
           </div>
 
           <h1 className="text-4xl font-black tracking-tight text-slate-950 md:text-5xl lg:leading-[1.1]">
@@ -116,7 +116,7 @@ export default function ProductDetailPage() {
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="flex items-start gap-3 rounded-2xl bg-success/5 p-4">
+              <div className="flex items-start gap-3 rounded-2xl bg-sky-50 p-4">
                 <ShieldCheck className="mt-0.5 h-5 w-5 text-success" />
                 <div>
                   <div className="text-sm font-bold text-success">Bảo hành 12 tháng</div>
@@ -148,14 +148,14 @@ export default function ProductDetailPage() {
               <button
                 onClick={() => addMutation.mutate({ product_id: data.id, variant_id: variantId, quantity: 1 })}
                 disabled={addMutation.isPending}
-                className="flex h-16 items-center justify-center rounded-[2rem] border-2 border-slate-950 px-10 text-lg font-bold transition-all hover:bg-slate-950 hover:text-white disabled:opacity-70"
+                className="flex h-16 items-center justify-center rounded-[2rem] border-2 border-primary px-10 text-lg font-bold text-primary transition-all hover:bg-primary hover:text-white disabled:opacity-70"
               >
                 Mua ngay
               </button>
             </div>
           </div>
 
-          <div className="mt-12 flex items-center gap-8 text-sm font-medium text-slate-400">
+          <div className="mt-12 flex items-center gap-8 text-sm font-medium text-slate-500">
             <div className="flex items-center gap-2">
               <Check className="h-4 w-4 text-success" /> {data.status === "active" ? "Sẵn hàng giao nhanh" : "Cần xác nhận tồn kho"}
             </div>

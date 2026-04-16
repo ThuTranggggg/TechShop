@@ -1,13 +1,15 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { config } from "@/lib/config";
 import { askAi, createChatSession, trackAiEvent } from "@/services/api/ai";
 import { ChatMessageBubble } from "@/components/chat/chat-message-bubble";
 import { getAccessToken } from "@/services/auth";
 import { extractUserIdFromJwt } from "@/lib/jwt";
+import { getOrders } from "@/services/api/orders";
 
 export default function ChatPage() {
   const token = getAccessToken();
@@ -23,6 +25,32 @@ export default function ChatPage() {
   >([]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
+  const { data: orders } = useQuery({
+    queryKey: ["chat-orders", userId],
+    queryFn: getOrders,
+    enabled: Boolean(userId),
+  });
+  const latestOrder = useMemo(
+    () => (orders ?? []).slice().sort((a, b) => (String(b.created_at ?? "").localeCompare(String(a.created_at ?? ""))))[0],
+    [orders]
+  );
+
+  const buildContext = (text: string) => {
+    const lowered = text.toLowerCase();
+    if (!latestOrder) return undefined;
+    if (lowered.includes("đơn") || lowered.includes("order") || lowered.includes("trạng thái") || lowered.includes("tình trạng")) {
+      return {
+        order_id: latestOrder.id,
+        order_number: latestOrder.order_number,
+        status: latestOrder.status,
+        payment_status: latestOrder.payment_status,
+        fulfillment_status: latestOrder.fulfillment_status,
+        total: latestOrder.totals?.grand_total,
+        currency: latestOrder.totals?.currency,
+      };
+    }
+    return undefined;
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -39,7 +67,7 @@ export default function ChatPage() {
         sid = s.id;
         setSessionId(sid);
       }
-      const answer = await askAi({ session_id: sid, query: text, user_id: userId });
+      const answer = await askAi({ session_id: sid, query: text, user_id: userId, context: buildContext(text) });
       trackAiEvent({ event_type: "chat_query", user_id: userId, keyword: text, metadata: { session_id: sid } }).catch(() => undefined);
       setMessages((prev) => [
         ...prev,
