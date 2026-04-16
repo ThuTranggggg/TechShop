@@ -27,7 +27,14 @@ export default defineConfig({
           reuseExistingServer: false,
         },
       ]
-    : undefined,
+    : [
+        {
+          command: "docker compose -f ../docker-compose.yml up --build gateway",
+          url: "http://localhost:8080/health/",
+          reuseExistingServer: true,
+          timeout: 900_000,
+        },
+      ],
   projects: [
     {
       name: "chromium",

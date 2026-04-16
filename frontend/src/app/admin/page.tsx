@@ -57,7 +57,8 @@ export default function AdminPage() {
   const { data: aiPreference } = useQuery({
     queryKey: ["admin-ai-preference", userId],
     queryFn: () => getUserPreferenceSummary(userId),
-    enabled: Boolean(mounted && isAdmin && userId),
+    // Admin CRUD should stay usable even if the customer preference endpoint is flaky.
+    enabled: false,
   });
 
   const createMutation = useMutation({

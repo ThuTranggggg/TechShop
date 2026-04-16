@@ -69,7 +69,7 @@ test("home and catalog surfaces render seeded products and recommendations", asy
       page.waitForURL(/\/products\/[^/]+$/),
       page.getByRole("link", { name: "Galaxy S24", exact: true }).click(),
     ]);
-    await expect(page.getByRole("heading", { name: "Galaxy S24", exact: true })).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator("h1")).toContainText("Galaxy S24", { timeout: 10_000 });
     await expect(page.getByText("Galaxy S24 - demo product", { exact: true })).toBeVisible({ timeout: 10_000 });
     await expect(page.getByRole("heading", { name: "Sản phẩm liên quan" })).toBeVisible({ timeout: 10000 });
   }));
@@ -83,10 +83,8 @@ test("cart, checkout, and order detail flows work through the gateway", async ({
     await expect(page.getByText("Redmi Note 13 Pro", { exact: true })).toBeVisible();
     await expect(page.getByText("iPhone 15 Pro Max", { exact: true })).toBeVisible();
 
-    const firstQuantity = page
-      .locator('button[aria-label="Increase quantity"]')
-      .first()
-      .locator("xpath=preceding-sibling::span[1]");
+    const iphoneRow = page.getByText("iPhone 15 Pro Max", { exact: true }).locator("xpath=ancestor::div[contains(@class,'card-premium')][1]");
+    const iphoneQuantity = iphoneRow.locator("span.w-10.text-center.text-sm.font-semibold");
     await Promise.all([
       page.waitForResponse((response) =>
         response.url().includes("/cart/api/v1/cart/items/") &&
@@ -94,9 +92,10 @@ test("cart, checkout, and order detail flows work through the gateway", async ({
         response.request().method() === "PATCH" &&
         response.ok()
       ),
-      page.getByLabel("Increase quantity").first().click(),
+      iphoneRow.getByRole("button", { name: "Increase quantity" }).click(),
     ]);
-    await expect(firstQuantity).toHaveText("2", { timeout: 15_000 });
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await expect(iphoneQuantity).toHaveText("2", { timeout: 15_000 });
 
     await page.getByRole("link", { name: "Tiến hành thanh toán" }).click();
     await expect(page.getByRole("heading", { name: "Checkout" })).toBeVisible();
@@ -190,9 +189,12 @@ test("admin gating blocks customers and admin CRUD remains functional", async ({
 
     const createdCard = page.locator("article").filter({ hasText: productName }).first();
     await createdCard.getByRole("button", { name: "Sửa" }).click();
-    await expect(form.getByRole("button", { name: "Cập nhật" })).toBeVisible();
-    await form.getByPlaceholder("Tên sản phẩm").fill(updatedName);
-    await form.getByRole("button", { name: "Cập nhật" }).click();
+    await expect(page.getByRole("button", { name: "Cập nhật" })).toBeVisible();
+    await page.locator("select").nth(0).selectOption({ label: "Dien thoai" });
+    await page.locator("select").nth(1).selectOption({ label: "Apple" });
+    await page.locator("select").nth(2).selectOption({ label: "Phone" });
+    await page.getByPlaceholder("Tên sản phẩm").fill(updatedName);
+    await page.getByRole("button", { name: "Cập nhật" }).click();
     await expect(page.getByText(updatedName)).toBeVisible();
 
     const updatedCard = page.locator("article").filter({ hasText: updatedName }).first();

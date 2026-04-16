@@ -27,8 +27,8 @@ docker compose up --build frontend gateway
 Truy cập qua gateway: `http://localhost:8080`.
 
 ## Playwright E2E
-- Mặc định `npm run test:e2e` chạy against full Docker Compose stack qua gateway `http://localhost:8080`.
-- Trước khi chạy, bảo đảm `docker compose up -d` đã xong và seed demo data:
+- Mặc định `npm run test:e2e` sẽ kiểm tra gateway `http://localhost:8080` và, nếu chưa có stack chạy, sẽ boot Docker Compose trước khi vào suite.
+- Trước khi chạy suite real-stack, seed demo data:
   ```bash
   python shared/scripts/seed_complete_system.py --verbose
   ```
