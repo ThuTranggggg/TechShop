@@ -41,6 +41,7 @@ class CustomerCartViewSet(viewsets.ViewSet):
     """
     
     permission_classes = [IsAuthenticatedCustomer]
+    authentication_classes = []
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -436,6 +437,7 @@ class InternalCartViewSet(viewsets.ViewSet):
     """
     
     permission_classes = [IsInternal]
+    authentication_classes = []
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

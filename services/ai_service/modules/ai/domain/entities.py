@@ -50,9 +50,13 @@ class BehavioralEvent:
             EventType.PRODUCT_VIEW: 1,
             EventType.PRODUCT_CLICK: 1,
             EventType.SEARCH: 2,
+            EventType.VIEW_CATEGORY: 1,
             EventType.ADD_TO_CART: 3,
+            EventType.REMOVE_FROM_CART: 1,
+            EventType.ADD_TO_WISHLIST: 2,
             EventType.CHECKOUT_STARTED: 4,
             EventType.ORDER_CREATED: 5,
+            EventType.ORDER_CANCEL: 1,
             EventType.PAYMENT_SUCCESS: 6,
             EventType.CHAT_QUERY: 2,
         }

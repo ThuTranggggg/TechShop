@@ -5,7 +5,7 @@ export function AppFooter() {
         <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="font-display text-lg font-bold text-slate-900">TechShop Experience Platform</p>
-            <p className="mt-1 text-xs uppercase tracking-[0.2em] text-slate-500">Microservices Commerce Frontend</p>
+            <p className="mt-1 text-xs uppercase tracking-[0.2em] text-slate-500">Microservices Commerce Frontend + AI RAG Demo</p>
           </div>
           <div className="flex items-center gap-5">
             <span className="rounded-full bg-muted px-3 py-1 text-xs font-semibold">Realtime Inventory</span>
@@ -13,7 +13,7 @@ export function AppFooter() {
             <span className="rounded-full bg-muted px-3 py-1 text-xs font-semibold">Secure Checkout</span>
           </div>
         </div>
-        <p className="mt-8 text-xs text-slate-500">Designed for interactive demo and production-ready service integration.</p>
+        <p className="mt-8 text-xs text-slate-500">Designed for interactive demo, knowledge-base-backed chat, and production-ready service integration.</p>
       </div>
     </footer>
   );

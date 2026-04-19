@@ -4,6 +4,7 @@ Django settings for product_service.
 
 from pathlib import Path
 import os
+import sys
 
 from dotenv import load_dotenv
 
@@ -73,17 +74,28 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("DB_NAME", "product_service"),
-        "USER": os.getenv("DB_USER", "product_service"),
-        "PASSWORD": os.getenv("DB_PASSWORD", "product_service_password"),
-        "HOST": os.getenv("DB_HOST", "product_service_db"),
-        "PORT": os.getenv("DB_PORT", "5432"),
-        "CONN_MAX_AGE": int(os.getenv("DB_CONN_MAX_AGE", "60")),
+DB_ENGINE = os.getenv("DB_ENGINE", "django.db.backends.postgresql")
+USE_SQLITE_FOR_TESTS = env_bool("USE_SQLITE_FOR_TESTS", True)
+
+if USE_SQLITE_FOR_TESTS and any(arg in {"test", "pytest"} for arg in sys.argv):
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "test_db.sqlite3",
+        }
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": DB_ENGINE,
+            "NAME": os.getenv("DB_NAME", "product_service"),
+            "USER": os.getenv("DB_USER", "product_service"),
+            "PASSWORD": os.getenv("DB_PASSWORD", "product_service_password"),
+            "HOST": os.getenv("DB_HOST", "product_service_db"),
+            "PORT": os.getenv("DB_PORT", "5432"),
+            "CONN_MAX_AGE": int(os.getenv("DB_CONN_MAX_AGE", "60")),
+        }
+    }
 
 # Password validation is handled in serializers - no need for auth validators
 # Skip AUTH_PASSWORD_VALIDATORS since we don't use django.contrib.auth

@@ -3,10 +3,17 @@ Management command to seed sample data for testing and demo.
 
 Creates sample users (admin, staff, customers) with addresses.
 """
+import uuid
+
 from django.core.management.base import BaseCommand
 from django.db import transaction
 from modules.identity.infrastructure.models import User, Address
 from modules.identity.domain.enums import UserRole, AddressType
+
+
+def stable_user_id(email: str) -> uuid.UUID:
+    """Generate a deterministic UUID for seeded demo users."""
+    return uuid.uuid5(uuid.NAMESPACE_URL, f"techshop-user:{email.lower().strip()}")
 
 
 class Command(BaseCommand):
@@ -71,6 +78,7 @@ class Command(BaseCommand):
             
             password = "Demo@123456"
             user = User.objects.create_user(
+                id=stable_user_id(user_data["email"]),
                 email=user_data["email"],
                 password=password,
                 full_name=user_data["full_name"],

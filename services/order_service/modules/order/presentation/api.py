@@ -6,26 +6,37 @@ DRF views implementing endpoints.
 
 import logging
 from uuid import UUID
-from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 from rest_framework.permissions import AllowAny
 
-from ..domain import Order
+from ..domain import FulfillmentStatus, OrderStatus
 from ..application import (
     GetUserOrdersService, GetOrderDetailService, GetOrderTimelineService,
     CreateOrderFromCartService, HandlePaymentSuccessService,
     HandlePaymentFailureService, CancelOrderService
 )
+from ..infrastructure import OrderModel, OrderRepositoryImpl, OrderStatusHistoryModel
+from ..domain.services import OrderStateTransitionService
 from .serializers import (
     OrderDetailSerializer, OrderListItemSerializer, CreateOrderFromCartSerializer,
     OrderTimelineSerializer, CancelOrderSerializer
 )
-from .permissions import IsAuthenticated, IsOrderOwner, IsInternalService, IsAdminOrStaff
+from .permissions import IsAuthenticated, IsInternalService, IsAdminOrStaff
 
 logger = logging.getLogger(__name__)
+
+
+def _record_status_history(order_id: UUID, from_status: str | None, to_status: str, note: str = "") -> None:
+    OrderStatusHistoryModel.objects.create(
+        order_id=order_id,
+        from_status=from_status,
+        to_status=to_status,
+        note=note,
+        metadata={},
+    )
 
 
 class OrderViewSet(ViewSet):
@@ -286,6 +297,11 @@ class InternalOrderViewSet(ViewSet):
     def get_permissions(self):
         """Get permissions."""
         return [IsInternalService()]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.order_repo = OrderRepositoryImpl()
+        self.state_service = OrderStateTransitionService(self.order_repo)
     
     @action(detail=False, methods=["POST"], url_path="create-from-cart")
     def create_from_cart(self, request):
@@ -385,3 +401,174 @@ class InternalOrderViewSet(ViewSet):
             "message": "Order retrieved",
             "data": serializer.data
         }, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=["POST"], url_path="shipment-created")
+    def shipment_created(self, request, pk=None):
+        """POST /internal/orders/{id}/shipment-created/ - Record shipment creation."""
+        order_id = UUID(pk)
+        order = self.order_repo.get_by_id(order_id)
+        if not order:
+            return Response({"success": False, "message": "Order not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        shipment_id = request.data.get("shipment_id")
+        shipment_reference = request.data.get("shipment_reference")
+
+        try:
+            if shipment_id and shipment_reference and not order.shipment_id:
+                order.set_shipment_info(UUID(str(shipment_id)), str(shipment_reference))
+                self.order_repo.save(order)
+
+            current_status = order.status.value
+            if order.status == OrderStatus.PAID:
+                self.state_service.transition_to_processing(order)
+                _record_status_history(
+                    order_id=order_id,
+                    from_status=current_status,
+                    to_status=OrderStatus.PROCESSING.value,
+                    note=f"Shipment created: {shipment_reference or shipment_id}",
+                )
+
+            refreshed = GetOrderDetailService().execute(order_id)
+            serializer = OrderDetailSerializer(refreshed)
+            return Response({"success": True, "message": "Shipment created recorded", "data": serializer.data}, status=status.HTTP_200_OK)
+        except Exception as exc:
+            logger.error(f"Failed to record shipment_created for {order_id}: {exc}")
+            return Response({"success": False, "message": "Failed to record shipment creation", "errors": {"detail": str(exc)}}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=["POST"], url_path="shipment-status-updated")
+    def shipment_status_updated(self, request, pk=None):
+        """POST /internal/orders/{id}/shipment-status-updated/ - Sync shipment state into order."""
+        order_id = UUID(pk)
+        order = self.order_repo.get_by_id(order_id)
+        if not order:
+            return Response({"success": False, "message": "Order not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        shipment_id = request.data.get("shipment_id")
+        shipment_reference = request.data.get("shipment_reference")
+        shipping_status = str(request.data.get("status") or "").lower()
+        location = request.data.get("location")
+
+        try:
+            if shipment_id and shipment_reference and not order.shipment_id:
+                order.set_shipment_info(UUID(str(shipment_id)), str(shipment_reference))
+                self.order_repo.save(order)
+
+            current_status = order.status.value
+
+            if shipping_status in {"pending_pickup", "picked_up"} and order.status == OrderStatus.PAID:
+                self.state_service.transition_to_processing(order)
+                _record_status_history(order_id, current_status, OrderStatus.PROCESSING.value, f"Shipment preparing: {shipment_reference or shipment_id}")
+            elif shipping_status in {"in_transit", "out_for_delivery"}:
+                if order.status == OrderStatus.PAID:
+                    self.state_service.transition_to_processing(order)
+                    _record_status_history(order_id, current_status, OrderStatus.PROCESSING.value, f"Shipment preparing: {shipment_reference or shipment_id}")
+                    current_status = OrderStatus.PROCESSING.value
+                    order = self.order_repo.get_by_id(order_id)
+                if order and order.status == OrderStatus.PROCESSING:
+                    self.state_service.transition_to_shipping(order, shipment_reference=str(shipment_reference or order.shipment_reference or ""))
+                    _record_status_history(order_id, current_status, OrderStatus.SHIPPING.value, f"Shipment status updated to {shipping_status}" + (f" @ {location}" if location else ""))
+            elif shipping_status in {"failed_delivery", "returned"}:
+                OrderModel.objects.filter(id=order_id).update(
+                    fulfillment_status=FulfillmentStatus.RETURNED.value,
+                    shipment_reference=str(shipment_reference or order.shipment_reference or ""),
+                )
+                _record_status_history(order_id, order.status.value, order.status.value, f"Shipment status updated to {shipping_status}")
+            elif shipping_status == "cancelled":
+                OrderModel.objects.filter(id=order_id).update(
+                    fulfillment_status=FulfillmentStatus.CANCELLED.value,
+                    shipment_reference=str(shipment_reference or order.shipment_reference or ""),
+                )
+                _record_status_history(order_id, order.status.value, order.status.value, "Shipment cancelled")
+
+            refreshed = GetOrderDetailService().execute(order_id)
+            serializer = OrderDetailSerializer(refreshed)
+            return Response({"success": True, "message": "Shipment status synced", "data": serializer.data}, status=status.HTTP_200_OK)
+        except Exception as exc:
+            logger.error(f"Failed to sync shipment status for {order_id}: {exc}")
+            return Response({"success": False, "message": "Failed to sync shipment status", "errors": {"detail": str(exc)}}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=["POST"], url_path="shipment-delivered")
+    def shipment_delivered(self, request, pk=None):
+        """POST /internal/orders/{id}/shipment-delivered/ - Mark order delivered."""
+        order_id = UUID(pk)
+        order = self.order_repo.get_by_id(order_id)
+        if not order:
+            return Response({"success": False, "message": "Order not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            if order.status == OrderStatus.PAID:
+                self.state_service.transition_to_processing(order)
+                _record_status_history(order_id, OrderStatus.PAID.value, OrderStatus.PROCESSING.value, "Shipment delivery confirmed")
+                order = self.order_repo.get_by_id(order_id)
+            if order and order.status == OrderStatus.PROCESSING:
+                self.state_service.transition_to_shipping(order, shipment_reference=request.data.get("shipment_reference") or order.shipment_reference)
+                _record_status_history(order_id, OrderStatus.PROCESSING.value, OrderStatus.SHIPPING.value, "Shipment moved to shipping")
+                order = self.order_repo.get_by_id(order_id)
+            if order and order.status == OrderStatus.SHIPPING:
+                self.state_service.transition_to_delivered(order)
+                _record_status_history(order_id, OrderStatus.SHIPPING.value, OrderStatus.DELIVERED.value, f"Shipment delivered at {request.data.get('delivered_at') or 'unknown time'}")
+
+            refreshed = GetOrderDetailService().execute(order_id)
+            serializer = OrderDetailSerializer(refreshed)
+            return Response({"success": True, "message": "Shipment delivery recorded", "data": serializer.data}, status=status.HTTP_200_OK)
+        except Exception as exc:
+            logger.error(f"Failed to record shipment delivery for {order_id}: {exc}")
+            return Response({"success": False, "message": "Failed to record shipment delivery", "errors": {"detail": str(exc)}}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=["POST"], url_path="shipment-failed")
+    def shipment_failed(self, request, pk=None):
+        """POST /internal/orders/{id}/shipment-failed/ - Mark shipment failure on order timeline."""
+        order_id = UUID(pk)
+        order = self.order_repo.get_by_id(order_id)
+        if not order:
+            return Response({"success": False, "message": "Order not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        reason = str(request.data.get("failure_reason") or "Shipment failed")
+        OrderModel.objects.filter(id=order_id).update(fulfillment_status=FulfillmentStatus.RETURNED.value)
+        _record_status_history(order_id, order.status.value, order.status.value, reason)
+        refreshed = GetOrderDetailService().execute(order_id)
+        serializer = OrderDetailSerializer(refreshed)
+        return Response({"success": True, "message": "Shipment failure recorded", "data": serializer.data}, status=status.HTTP_200_OK)
+
+
+class OperationsOrderViewSet(ViewSet):
+    """Admin/staff order operations."""
+
+    def get_permissions(self):
+        return [IsAdminOrStaff()]
+
+    def list(self, request):
+        """GET /operations/orders/ - List all orders for staff/admin."""
+        limit = int(request.query_params.get("limit", 50))
+        offset = int(request.query_params.get("offset", 0))
+        queryset = OrderModel.objects.all().order_by("-created_at")
+
+        status_filter = request.query_params.get("status")
+        payment_status_filter = request.query_params.get("payment_status")
+        if status_filter:
+            queryset = queryset.filter(status=status_filter)
+        if payment_status_filter:
+            queryset = queryset.filter(payment_status=payment_status_filter)
+
+        total = queryset.count()
+        order_ids = list(queryset.values_list("id", flat=True)[offset : offset + limit])
+        service = GetOrderDetailService()
+        order_dtos = [service.execute(order_id) for order_id in order_ids]
+        serializer = OrderDetailSerializer([dto for dto in order_dtos if dto], many=True)
+        return Response(
+            {
+                "success": True,
+                "message": "Operations orders retrieved",
+                "data": serializer.data,
+                "pagination": {"total": total, "limit": limit, "offset": offset},
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    def retrieve(self, request, pk=None):
+        """GET /operations/orders/{id}/ - Retrieve order for staff/admin."""
+        order_dto = GetOrderDetailService().execute(UUID(pk))
+        if not order_dto:
+            return Response({"success": False, "message": "Order not found"}, status=status.HTTP_404_NOT_FOUND)
+        serializer = OrderDetailSerializer(order_dto)
+        return Response({"success": True, "message": "Operations order retrieved", "data": serializer.data}, status=status.HTTP_200_OK)

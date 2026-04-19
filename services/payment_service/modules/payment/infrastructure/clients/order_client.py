@@ -26,7 +26,7 @@ class OrderServiceClient:
         self.base_url = getattr(
             settings,
             'ORDER_SERVICE_URL',
-            'http://localhost:8004'
+            'http://order_service:8004'
         )
         self.internal_key = getattr(
             settings,

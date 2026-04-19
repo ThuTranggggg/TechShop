@@ -1,0 +1,80 @@
+{
+  "dataset_path": "/app/data/user_behavior.csv",
+  "sequence_length": 5,
+  "product_to_index": {
+    "ao-blazer-nu-minimal": 1,
+    "ban-chai-dien-sonic": 2,
+    "ca-phe-rang-xay-house-blend": 3,
+    "cushion-natural-glow": 4,
+    "dam-midi-thanh-lich": 5,
+    "day-dan-phan-quang-cho-cho": 6,
+    "hat-cho-meo-truong-thanh-15kg": 7,
+    "hat-dinh-duong-mix-500g": 8,
+    "pin-du-phong-fastcharge-20000": 9,
+    "sach-ky-nang-giao-tiep": 10,
+    "serum-vitamin-c-30ml": 11,
+    "smartphone-nova-5g": 12,
+    "so-tay-planner-a5": 13,
+    "sua-cong-thuc-so-2-800g": 14,
+    "ta-dan-m48": 15,
+    "vitamin-c-1000mg-60-vien": 16
+  },
+  "transition_scores": {
+    "smartphone-nova-5g": {
+      "smartphone-nova-5g": 0.333333,
+      "pin-du-phong-fastcharge-20000": 0.666667
+    },
+    "pin-du-phong-fastcharge-20000": {
+      "smartphone-nova-5g": 1.0
+    },
+    "dam-midi-thanh-lich": {
+      "ao-blazer-nu-minimal": 0.666667,
+      "dam-midi-thanh-lich": 0.333333
+    },
+    "ao-blazer-nu-minimal": {
+      "dam-midi-thanh-lich": 1.0
+    },
+    "serum-vitamin-c-30ml": {
+      "serum-vitamin-c-30ml": 0.333333,
+      "cushion-natural-glow": 0.666667
+    },
+    "cushion-natural-glow": {
+      "serum-vitamin-c-30ml": 1.0
+    },
+    "ta-dan-m48": {
+      "sua-cong-thuc-so-2-800g": 1.0
+    },
+    "sua-cong-thuc-so-2-800g": {
+      "ta-dan-m48": 1.0
+    },
+    "vitamin-c-1000mg-60-vien": {
+      "ban-chai-dien-sonic": 0.5,
+      "hat-cho-meo-truong-thanh-15kg": 0.5
+    },
+    "ban-chai-dien-sonic": {
+      "vitamin-c-1000mg-60-vien": 1.0
+    },
+    "hat-cho-meo-truong-thanh-15kg": {
+      "day-dan-phan-quang-cho-cho": 0.5,
+      "hat-cho-meo-truong-thanh-15kg": 0.5
+    },
+    "day-dan-phan-quang-cho-cho": {
+      "hat-cho-meo-truong-thanh-15kg": 1.0
+    },
+    "sach-ky-nang-giao-tiep": {
+      "so-tay-planner-a5": 1.0
+    },
+    "so-tay-planner-a5": {
+      "hat-dinh-duong-mix-500g": 0.5,
+      "ca-phe-rang-xay-house-blend": 0.5
+    },
+    "hat-dinh-duong-mix-500g": {
+      "ca-phe-rang-xay-house-blend": 1.0
+    },
+    "ca-phe-rang-xay-house-blend": {
+      "sach-ky-nang-giao-tiep": 1.0
+    }
+  },
+  "sample_count": 31,
+  "model_type": "transition_fallback"
+}

@@ -1,80 +1,56 @@
-import type { ReactNode } from "react";
 import Link from "next/link";
+import { AiRelatedProduct, AiSource } from "@/services/api/ai";
 
-function renderInline(text: string) {
-  const parts: Array<{ type: "text" | "strong" | "link"; value: string; href?: string }> = [];
-  const regex = /(\*\*[^*]+\*\*|\[[^\]]+\]\([^)]+\))/g;
-  let last = 0;
-  for (const match of text.matchAll(regex)) {
-    const index = match.index ?? 0;
-    if (index > last) parts.push({ type: "text", value: text.slice(last, index) });
-    const token = match[0];
-    if (token.startsWith("**")) {
-      parts.push({ type: "strong", value: token.slice(2, -2) });
-    } else {
-      const linkMatch = token.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
-      if (linkMatch) parts.push({ type: "link", value: linkMatch[1], href: linkMatch[2] });
-      else parts.push({ type: "text", value: token });
-    }
-    last = index + token.length;
-  }
-  if (last < text.length) parts.push({ type: "text", value: text.slice(last) });
+type ChatMessageBubbleProps = {
+  role: "user" | "assistant";
+  text: string;
+  sources?: AiSource[];
+  relatedProducts?: AiRelatedProduct[];
+};
 
-  return parts.map((part, index) => {
-    if (part.type === "strong") return <strong key={index} className="font-bold text-slate-950">{part.value}</strong>;
-    if (part.type === "link" && part.href) {
-      const isInternal = part.href.startsWith("/");
-      return isInternal ? (
-        <Link key={index} href={part.href} className="font-semibold text-primary underline decoration-primary/40 underline-offset-2">
-          {part.value}
-        </Link>
-      ) : (
-        <a key={index} href={part.href} target="_blank" rel="noreferrer" className="font-semibold text-primary underline decoration-primary/40 underline-offset-2">
-          {part.value}
-        </a>
-      );
-    }
-    return <span key={index}>{part.value}</span>;
-  });
-}
+export function ChatMessageBubble({ role, text, sources, relatedProducts }: ChatMessageBubbleProps) {
+  const isUser = role === "user";
 
-function renderMarkdown(text: string) {
-  const lines = text.split(/\n+/).filter(Boolean);
-  const blocks: ReactNode[] = [];
-  let paragraph: string[] = [];
-
-  const flushParagraph = () => {
-    if (!paragraph.length) return;
-    blocks.push(
-      <p key={`p-${blocks.length}`} className="whitespace-pre-wrap">
-        {renderInline(paragraph.join(" "))}
-      </p>
-    );
-    paragraph = [];
-  };
-
-  lines.forEach((line) => {
-    const trimmed = line.trim();
-    if (!trimmed) return;
-    if (trimmed.startsWith("- ")) {
-      flushParagraph();
-      blocks.push(
-        <li key={`li-${blocks.length}`} className="ml-5 list-disc whitespace-pre-wrap">
-          {renderInline(trimmed.slice(2))}
-        </li>
-      );
-      return;
-    }
-    paragraph.push(trimmed);
-  });
-  flushParagraph();
-  return blocks;
-}
-
-export function ChatMessageBubble({ role, text }: { role: "user" | "assistant"; text: string }) {
   return (
-    <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${role === "user" ? "ml-auto bg-slate-900 text-white" : "bg-white border border-border text-slate-700"}`}>
-      {renderMarkdown(text)}
+    <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm ${isUser ? "ml-auto bg-slate-900 text-white" : "border border-border bg-white"}`}>
+      <p className="whitespace-pre-line leading-6">{text}</p>
+
+      {!isUser && sources?.length ? (
+        <div className="mt-3 border-t border-border/70 pt-3">
+          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Nguon tri thuc RAG</p>
+          <div className="mt-2 space-y-2">
+            {sources.slice(0, 3).map((source) => (
+              <article key={`${source.document_id}-${source.chunk_index ?? "source"}`} className="rounded-2xl bg-slate-50 px-3 py-2">
+                <p className="font-semibold text-slate-900">{source.document_title || "Tai lieu noi bo"}</p>
+                <p className="mt-1 text-xs text-slate-500">
+                  {source.document_type || "knowledge"} {source.source ? `• ${source.source}` : ""}
+                </p>
+                {source.snippet ? <p className="mt-1 text-xs leading-5 text-slate-600">{source.snippet}</p> : null}
+              </article>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      {!isUser && relatedProducts?.length ? (
+        <div className="mt-3 border-t border-border/70 pt-3">
+          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">San pham lien quan</p>
+          <div className="mt-2 grid gap-2">
+            {relatedProducts.slice(0, 3).map((product) => (
+              <Link
+                key={product.id}
+                href={`/products/${product.id}`}
+                className="rounded-2xl border border-border bg-slate-50 px-3 py-2 text-slate-900 transition-colors hover:bg-slate-100"
+              >
+                <p className="font-semibold">{product.name}</p>
+                <p className="mt-1 text-xs text-slate-500">
+                  {product.brand_name || "Nhom product"} {product.base_price ? `• ${new Intl.NumberFormat("vi-VN").format(Number(product.base_price))} đ` : ""}
+                </p>
+              </Link>
+            ))}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

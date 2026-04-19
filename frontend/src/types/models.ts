@@ -11,6 +11,9 @@ export type Product = {
   base_price: number;
   currency: string;
   status?: string;
+  stock?: number;
+  rating?: number;
+  tags?: string[];
   thumbnail_url?: string;
   media?: Array<{ id: string; media_url: string; alt_text?: string; sort_order?: number; is_primary?: boolean }>;
   variants?: Array<{ id: string; name: string; price_override?: number; attributes?: Record<string, string> }>;

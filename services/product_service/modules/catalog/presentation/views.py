@@ -1,525 +1,591 @@
-"""
-Presentation layer views for Catalog API.
+"""Presentation layer views for Catalog API."""
 
-API endpoints for public catalog, admin management, and internal services.
-"""
-from typing import List, Dict, Any
-from django.shortcuts import get_object_or_404
-from django.db.models import Q, Prefetch
-from django.utils import timezone
-from rest_framework import viewsets, status, serializers
+from __future__ import annotations
+
+from decimal import Decimal, InvalidOperation
+
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.http import Http404
+from django.db.models import Q
+from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
-from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_framework.response import Response
 
-from common.responses import success_response, error_response
+from ..application.dtos import ProductQueryDTO
 from ..application.services import (
-    CategoryService,
     BrandService,
-    ProductTypeService,
-    ProductService,
-    ProductVariantService,
+    CategoryCommandService,
+    CategoryQueryService,
+    ProductCommandService,
     ProductMediaService,
+    ProductQueryService,
+    ProductTypeService,
+    ProductVariantService,
 )
 from ..domain.enums import ProductStatus
 from ..infrastructure.models import (
-    CategoryModel,
     BrandModel,
-    ProductTypeModel,
-    ProductModel,
-    ProductVariantModel,
+    CategoryModel,
     ProductMediaModel,
+    ProductModel,
+    ProductTypeModel,
+    ProductVariantModel,
 )
+from .permissions import InternalServicePermission, IsPublicRead, IsStaffOrAdmin
 from .serializers import (
-    CategorySerializer,
-    CategoryCreateUpdateSerializer,
-    BrandSerializer,
     BrandCreateUpdateSerializer,
-    ProductTypeSerializer,
-    ProductTypeCreateUpdateSerializer,
-    ProductListSerializer,
-    ProductDetailSerializer,
-    ProductCreateUpdateSerializer,
-    ProductVariantSerializer,
-    ProductVariantCreateUpdateSerializer,
-    ProductMediaSerializer,
-    ProductMediaCreateUpdateSerializer,
-    ProductSnapshotSerializer,
+    BrandSerializer,
+    CategorySerializer,
+    CategoryWriteSerializer,
     InternalProductBulkSerializer,
     InternalVariantBulkSerializer,
+    ProductDetailSerializer,
+    ProductListSerializer,
+    ProductMediaCreateUpdateSerializer,
+    ProductMediaSerializer,
+    ProductSnapshotSerializer,
+    ProductTypeCreateUpdateSerializer,
+    ProductTypeSerializer,
+    ProductVariantCreateUpdateSerializer,
+    ProductVariantSerializer,
+    ProductWriteSerializer,
 )
-from .permissions import IsStaffOrAdmin, InternalServicePermission, IsPublicRead
 
 
 class StandardPagination(PageNumberPagination):
     """Standard pagination for catalog APIs."""
+
     page_size = 20
-    page_size_query_param = 'page_size'
+    page_size_query_param = "page_size"
     max_page_size = 100
 
 
-# ============================================================================
-# PUBLIC CATALOG APIs
-# ============================================================================
+class LookupByIdOrSlugMixin:
+    """Resolve detail resources by UUID or slug from the same route."""
 
-class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
-    """Public category browsing - read-only."""
-    queryset = CategoryModel.objects.filter(is_active=True)
-    serializer_class = CategorySerializer
-    lookup_field = 'id'
-    pagination_class = StandardPagination
-    filter_backends = [SearchFilter, OrderingFilter]
-    search_fields = ['name', 'slug', 'description']
-    ordering_fields = ['name', 'sort_order', 'created_at']
-    ordering = ['sort_order', 'name']
+    lookup_field = "lookup"
+    lookup_url_kwarg = "lookup"
+
+    def get_lookup_value(self) -> str:
+        return self.kwargs.get(self.lookup_url_kwarg)
+
+
+def _parse_decimal(value: str | None) -> Decimal | None:
+    if value in (None, ""):
+        return None
+    try:
+        return Decimal(str(value))
+    except (InvalidOperation, TypeError) as exc:
+        raise DjangoValidationError("Invalid decimal value") from exc
+
+
+def _parse_bool(value: str | None) -> bool | None:
+    if value in (None, ""):
+        return None
+    normalized = str(value).strip().lower()
+    if normalized in {"1", "true", "yes", "on"}:
+        return True
+    if normalized in {"0", "false", "no", "off"}:
+        return False
+    raise DjangoValidationError("Invalid boolean value")
+
+
+def _apply_ordering(queryset, ordering_param: str | None, allowed: list[str], default: list[str]):
+    ordering_values = [item.strip() for item in (ordering_param or "").split(",") if item.strip()]
+    if not ordering_values:
+        return queryset.order_by(*default)
+
+    invalid = [item for item in ordering_values if item.lstrip("-") not in allowed]
+    if invalid:
+        raise DjangoValidationError(f"Unsupported ordering fields: {', '.join(invalid)}")
+    return queryset.order_by(*ordering_values)
+
+
+def _build_product_filters(request, *, include_status: bool = False) -> ProductQueryDTO:
+    query_params = request.query_params
+    status_value = query_params.get("status") if include_status else None
+    return ProductQueryDTO(
+        category_id=query_params.get("category") or query_params.get("category_id"),
+        category_slug=query_params.get("category_slug"),
+        brand_id=query_params.get("brand"),
+        product_type_id=query_params.get("product_type"),
+        status=status_value,
+        is_active=_parse_bool(query_params.get("is_active")) if include_status else None,
+        is_featured=_parse_bool(query_params.get("is_featured")),
+        min_price=_parse_decimal(query_params.get("min_price") or query_params.get("base_price__gte")),
+        max_price=_parse_decimal(query_params.get("max_price") or query_params.get("base_price__lte")),
+        search=query_params.get("search") or query_params.get("q", ""),
+    )
+
+
+def _product_payload_response(product, detail: bool = False):
+    serializer_class = ProductDetailSerializer if detail else ProductListSerializer
+    return serializer_class(product).data
+
+
+@extend_schema_view(
+    retrieve=extend_schema(parameters=[OpenApiParameter("lookup", str, OpenApiParameter.PATH)]),
+    products=extend_schema(parameters=[OpenApiParameter("lookup", str, OpenApiParameter.PATH)]),
+)
+class CategoryViewSet(LookupByIdOrSlugMixin, viewsets.ReadOnlyModelViewSet):
+    """Public category browsing APIs."""
+
+    queryset = CategoryModel.objects.none()
     permission_classes = [IsPublicRead]
+    pagination_class = StandardPagination
+    serializer_class = CategorySerializer
+    ordering_fields = ["name", "sort_order", "created_at", "updated_at"]
+    default_ordering = ["sort_order", "name"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.query_service = CategoryQueryService()
+        self.product_query_service = ProductQueryService()
 
     def get_queryset(self):
-        """Filter active categories only."""
-        return self.queryset.filter(is_active=True).select_related('parent')
+        queryset = self.query_service.list_categories(include_inactive=False)
+        search = self.request.query_params.get("search", "").strip()
+        if search:
+            queryset = queryset.filter(
+                Q(name__icontains=search)
+                | Q(slug__icontains=search)
+                | Q(description__icontains=search)
+            )
+        return _apply_ordering(
+            queryset,
+            self.request.query_params.get("ordering"),
+            self.ordering_fields,
+            self.default_ordering,
+        )
+
+    def get_object(self):
+        lookup = self.get_lookup_value()
+        try:
+            return self.query_service.get_category(lookup, include_inactive=False)
+        except DjangoValidationError as exc:
+            raise Http404(str(exc)) from exc
+
+    @action(detail=True, methods=["get"], permission_classes=[IsPublicRead])
+    def products(self, request, lookup=None):
+        category = self.get_object()
+        filters = _build_product_filters(request, include_status=False)
+        filters = ProductQueryDTO(
+            category_id=str(category.id),
+            category_slug=filters.category_slug,
+            brand_id=filters.brand_id,
+            product_type_id=filters.product_type_id,
+            is_featured=filters.is_featured,
+            min_price=filters.min_price,
+            max_price=filters.max_price,
+            search=filters.search,
+        )
+        queryset = self.product_query_service.list_public_products(filters)
+        queryset = _apply_ordering(
+            queryset,
+            request.query_params.get("ordering"),
+            ["name", "base_price", "created_at", "published_at"],
+            ["-published_at", "name"],
+        )
+        page = self.paginate_queryset(queryset)
+        serializer = ProductListSerializer(page or queryset, many=True)
+        if page is not None:
+            return self.get_paginated_response(serializer.data)
+        return Response(serializer.data)
 
 
 class BrandViewSet(viewsets.ReadOnlyModelViewSet):
     """Public brand browsing - read-only."""
+
     queryset = BrandModel.objects.filter(is_active=True)
     serializer_class = BrandSerializer
-    lookup_field = 'id'
+    lookup_field = "id"
     pagination_class = StandardPagination
-    filter_backends = [SearchFilter, OrderingFilter]
-    search_fields = ['name', 'slug', 'description']
-    ordering_fields = ['name', 'created_at']
-    ordering = ['name']
     permission_classes = [IsPublicRead]
 
 
 class ProductTypeViewSet(viewsets.ReadOnlyModelViewSet):
     """Public product type browsing - read-only."""
+
     queryset = ProductTypeModel.objects.filter(is_active=True)
     serializer_class = ProductTypeSerializer
-    lookup_field = 'id'
+    lookup_field = "id"
     pagination_class = StandardPagination
-    filter_backends = [SearchFilter]
-    search_fields = ['name', 'code', 'description']
     permission_classes = [IsPublicRead]
 
 
-class PublicProductViewSet(viewsets.ReadOnlyModelViewSet):
-    """Public product catalog - browse, search, filter."""
-    queryset = ProductModel.objects.filter(
-        status=ProductStatus.ACTIVE.value,
-        is_active=True,
-        published_at__isnull=False
-    )
-    lookup_field = 'id'
-    pagination_class = StandardPagination
-    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    search_fields = [
-        'name',
-        'slug',
-        'short_description',
-        'description',
-        'category__name',
-        'brand__name',
-    ]
-    ordering_fields = ['name', 'base_price', 'created_at', 'published_at']
-    ordering = ['-published_at', 'name']
+@extend_schema_view(
+    retrieve=extend_schema(parameters=[OpenApiParameter("lookup", str, OpenApiParameter.PATH)]),
+    variants=extend_schema(parameters=[OpenApiParameter("lookup", str, OpenApiParameter.PATH)]),
+)
+class PublicProductViewSet(LookupByIdOrSlugMixin, viewsets.ReadOnlyModelViewSet):
+    """Public product catalog APIs."""
+
+    queryset = ProductModel.objects.none()
     permission_classes = [IsPublicRead]
-    filterset_fields = {
-        'category': ['exact'],
-        'brand': ['exact'],
-        'product_type': ['exact'],
-        'is_featured': ['exact'],
-        'base_price': ['gte', 'lte'],
-    }
+    pagination_class = StandardPagination
+    ordering_fields = ["name", "base_price", "created_at", "published_at"]
+    default_ordering = ["-published_at", "name"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.query_service = ProductQueryService()
 
     def get_serializer_class(self):
-        """Use detail serializer for retrieve, list for list."""
-        if self.action == 'retrieve':
-            return ProductDetailSerializer
-        return ProductListSerializer
+        return ProductDetailSerializer if self.action == "retrieve" else ProductListSerializer
 
     def get_queryset(self):
-        """Optimize with select_related and prefetch."""
-        qs = self.queryset.select_related(
-            'category', 'brand', 'product_type'
-        ).prefetch_related('variants', 'media')
-        return qs
+        filters = _build_product_filters(self.request, include_status=False)
+        queryset = self.query_service.list_public_products(filters)
+        return _apply_ordering(
+            queryset,
+            self.request.query_params.get("ordering"),
+            self.ordering_fields,
+            self.default_ordering,
+        )
 
-    @action(detail=False, methods=['get'], permission_classes=[IsPublicRead])
+    def get_object(self):
+        lookup = self.get_lookup_value()
+        try:
+            return self.query_service.get_product(lookup, public_only=True)
+        except DjangoValidationError as exc:
+            raise Http404(str(exc)) from exc
+
+    @action(detail=False, methods=["get"], permission_classes=[IsPublicRead])
     def search(self, request):
-        """Search products with advanced filtering."""
-        query = request.query_params.get('q', '').strip()
-        category_slug = request.query_params.get('category_slug')
-        brand_slug = request.query_params.get('brand_slug')
-        min_price = request.query_params.get('min_price')
-        max_price = request.query_params.get('max_price')
-        is_featured = request.query_params.get('is_featured')
-        
-        qs = self.get_queryset()
-        
-        if query:
-            qs = qs.filter(
-                Q(name__icontains=query) |
-                Q(short_description__icontains=query) |
-                Q(description__icontains=query) |
-                Q(category__name__icontains=query) |
-                Q(brand__name__icontains=query)
-            )
-        
-        if category_slug:
-            qs = qs.filter(category__slug=category_slug)
-        
-        if brand_slug:
-            qs = qs.filter(brand__slug=brand_slug)
-        
-        if min_price:
-            qs = qs.filter(base_price__gte=min_price)
-        
-        if max_price:
-            qs = qs.filter(base_price__lte=max_price)
-        
-        if is_featured and is_featured.lower() == 'true':
-            qs = qs.filter(is_featured=True)
-        
-        page = self.paginate_queryset(qs)
+        queryset = self.get_queryset()
+        page = self.paginate_queryset(queryset)
+        serializer = ProductListSerializer(page or queryset, many=True)
         if page is not None:
-            serializer = ProductListSerializer(page, many=True)
             return self.get_paginated_response(serializer.data)
-        
-        serializer = ProductListSerializer(qs, many=True)
         return Response(serializer.data)
 
-    @action(detail=True, methods=['get'], permission_classes=[IsPublicRead])
-    def variants(self, request, id=None):
-        """Get product variants."""
+    @action(detail=True, methods=["get"], permission_classes=[IsPublicRead])
+    def variants(self, request, lookup=None):
         product = self.get_object()
         variants = product.variants.filter(is_active=True)
         serializer = ProductVariantSerializer(variants, many=True)
         return Response(serializer.data)
 
 
-# ============================================================================
-# ADMIN/STAFF CATALOG MANAGEMENT APIs
-# ============================================================================
-
-class AdminCategoryViewSet(viewsets.ModelViewSet):
+@extend_schema_view(
+    retrieve=extend_schema(parameters=[OpenApiParameter("lookup", str, OpenApiParameter.PATH)]),
+    update=extend_schema(parameters=[OpenApiParameter("lookup", str, OpenApiParameter.PATH)]),
+    partial_update=extend_schema(parameters=[OpenApiParameter("lookup", str, OpenApiParameter.PATH)]),
+    destroy=extend_schema(parameters=[OpenApiParameter("lookup", str, OpenApiParameter.PATH)]),
+    products=extend_schema(parameters=[OpenApiParameter("lookup", str, OpenApiParameter.PATH)]),
+)
+class AdminCategoryViewSet(LookupByIdOrSlugMixin, viewsets.ModelViewSet):
     """Admin category management."""
-    queryset = CategoryModel.objects.all()
-    lookup_field = 'id'
-    pagination_class = StandardPagination
+
+    queryset = CategoryModel.objects.none()
     permission_classes = [IsStaffOrAdmin]
+    pagination_class = StandardPagination
+    serializer_class = CategorySerializer
+    ordering_fields = ["name", "sort_order", "created_at", "updated_at"]
+    default_ordering = ["sort_order", "name"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.query_service = CategoryQueryService()
+        self.command_service = CategoryCommandService()
+        self.product_query_service = ProductQueryService()
 
     def get_serializer_class(self):
-        """Use different serializer for create/update."""
-        if self.action in ['create', 'update', 'partial_update']:
-            return CategoryCreateUpdateSerializer
+        if self.action in {"create", "update", "partial_update"}:
+            return CategoryWriteSerializer
         return CategorySerializer
 
-    def create(self, request, *args, **kwargs):
-        """Create new category."""
+    def get_queryset(self):
+        queryset = self.query_service.list_categories(include_inactive=True)
+        search = self.request.query_params.get("search", "").strip()
+        if search:
+            queryset = queryset.filter(
+                Q(name__icontains=search)
+                | Q(slug__icontains=search)
+                | Q(description__icontains=search)
+            )
+        return _apply_ordering(
+            queryset,
+            self.request.query_params.get("ordering"),
+            self.ordering_fields,
+            self.default_ordering,
+        )
+
+    def get_object(self):
+        lookup = self.get_lookup_value()
         try:
-            serializer = self.get_serializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            instance = serializer.save()
-            response_serializer = CategorySerializer(instance)
-            return StandardResponse(
-                data=response_serializer.data,
-                message="Category created successfully",
-                status_code=status.HTTP_201_CREATED
-            ).to_response()
-        except Exception as e:
-            return ErrorResponse(
-                error="Failed to create category",
-                details=str(e),
-                status_code=status.HTTP_400_BAD_REQUEST
-            ).to_response()
+            return self.query_service.get_category(lookup, include_inactive=True)
+        except DjangoValidationError as exc:
+            raise Http404(str(exc)) from exc
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        category = self.command_service.create_category(serializer.to_dto())
+        return Response(CategorySerializer(category).data, status=status.HTTP_201_CREATED)
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance=instance, data=request.data, partial=kwargs.get("partial", False))
+        serializer.is_valid(raise_exception=True)
+        category = self.command_service.update_category(self.get_lookup_value(), serializer.to_dto())
+        return Response(CategorySerializer(category).data)
+
+    def destroy(self, request, *args, **kwargs):
+        self.command_service.delete_category(self.get_lookup_value())
+        return Response({"message": "Category deleted successfully"}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=["get"], permission_classes=[IsStaffOrAdmin])
+    def products(self, request, lookup=None):
+        category = self.get_object()
+        filters = _build_product_filters(request, include_status=True)
+        filters = ProductQueryDTO(
+            category_id=str(category.id),
+            category_slug=filters.category_slug,
+            brand_id=filters.brand_id,
+            product_type_id=filters.product_type_id,
+            status=filters.status,
+            is_active=filters.is_active,
+            is_featured=filters.is_featured,
+            min_price=filters.min_price,
+            max_price=filters.max_price,
+            search=filters.search,
+        )
+        queryset = self.product_query_service.list_admin_products(filters)
+        queryset = _apply_ordering(
+            queryset,
+            request.query_params.get("ordering"),
+            ["name", "base_price", "created_at", "published_at"],
+            ["-created_at"],
+        )
+        page = self.paginate_queryset(queryset)
+        serializer = ProductListSerializer(page or queryset, many=True)
+        if page is not None:
+            return self.get_paginated_response(serializer.data)
+        return Response(serializer.data)
 
 
 class AdminBrandViewSet(viewsets.ModelViewSet):
     """Admin brand management."""
+
     queryset = BrandModel.objects.all()
-    lookup_field = 'id'
+    lookup_field = "id"
     pagination_class = StandardPagination
     permission_classes = [IsStaffOrAdmin]
 
     def get_serializer_class(self):
-        if self.action in ['create', 'update', 'partial_update']:
+        if self.action in {"create", "update", "partial_update"}:
             return BrandCreateUpdateSerializer
         return BrandSerializer
 
 
 class AdminProductTypeViewSet(viewsets.ModelViewSet):
     """Admin product type management."""
+
     queryset = ProductTypeModel.objects.all()
-    lookup_field = 'id'
+    lookup_field = "id"
     pagination_class = StandardPagination
     permission_classes = [IsStaffOrAdmin]
 
     def get_serializer_class(self):
-        if self.action in ['create', 'update', 'partial_update']:
+        if self.action in {"create", "update", "partial_update"}:
             return ProductTypeCreateUpdateSerializer
         return ProductTypeSerializer
 
 
-class AdminProductViewSet(viewsets.ModelViewSet):
+@extend_schema_view(
+    retrieve=extend_schema(parameters=[OpenApiParameter("lookup", str, OpenApiParameter.PATH)]),
+    update=extend_schema(parameters=[OpenApiParameter("lookup", str, OpenApiParameter.PATH)]),
+    partial_update=extend_schema(parameters=[OpenApiParameter("lookup", str, OpenApiParameter.PATH)]),
+    destroy=extend_schema(parameters=[OpenApiParameter("lookup", str, OpenApiParameter.PATH)]),
+    publish=extend_schema(parameters=[OpenApiParameter("lookup", str, OpenApiParameter.PATH)]),
+    unpublish=extend_schema(parameters=[OpenApiParameter("lookup", str, OpenApiParameter.PATH)]),
+    activate=extend_schema(parameters=[OpenApiParameter("lookup", str, OpenApiParameter.PATH)]),
+    deactivate=extend_schema(parameters=[OpenApiParameter("lookup", str, OpenApiParameter.PATH)]),
+    variants=extend_schema(parameters=[OpenApiParameter("lookup", str, OpenApiParameter.PATH)]),
+    media=extend_schema(parameters=[OpenApiParameter("lookup", str, OpenApiParameter.PATH)]),
+)
+class AdminProductViewSet(LookupByIdOrSlugMixin, viewsets.ModelViewSet):
     """Admin product management."""
-    queryset = ProductModel.objects.all()
-    lookup_field = 'id'
-    pagination_class = StandardPagination
-    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    search_fields = ['name', 'slug', 'short_description']
-    ordering_fields = ['name', 'base_price', 'created_at', 'published_at']
-    ordering = ['-created_at']
+
+    queryset = ProductModel.objects.none()
     permission_classes = [IsStaffOrAdmin]
-    filterset_fields = {
-        'status': ['exact'],
-        'is_active': ['exact'],
-        'is_featured': ['exact'],
-        'category': ['exact'],
-        'brand': ['exact'],
-    }
+    pagination_class = StandardPagination
+    ordering_fields = ["name", "base_price", "created_at", "published_at"]
+    default_ordering = ["-created_at"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.query_service = ProductQueryService()
+        self.command_service = ProductCommandService()
 
     def get_serializer_class(self):
-        if self.action in ['create', 'update', 'partial_update']:
-            return ProductCreateUpdateSerializer
-        if self.action == 'retrieve':
+        if self.action in {"create", "update", "partial_update"}:
+            return ProductWriteSerializer
+        if self.action == "retrieve":
             return ProductDetailSerializer
         return ProductListSerializer
 
     def get_queryset(self):
-        """Optimize queries."""
-        return self.queryset.select_related(
-            'category', 'brand', 'product_type'
-        ).prefetch_related('variants', 'media')
+        filters = _build_product_filters(self.request, include_status=True)
+        queryset = self.query_service.list_admin_products(filters)
+        return _apply_ordering(
+            queryset,
+            self.request.query_params.get("ordering"),
+            self.ordering_fields,
+            self.default_ordering,
+        )
 
-    @action(detail=True, methods=['post'], permission_classes=[IsStaffOrAdmin])
-    def publish(self, request, id=None):
-        """Publish product."""
-        product = self.get_object()
+    def get_object(self):
+        lookup = self.get_lookup_value()
         try:
-            ProductService.publish_product(product.id)
-            product.refresh_from_db()
-            serializer = ProductDetailSerializer(product)
-            return StandardResponse(
-                data=serializer.data,
-                message="Product published successfully",
-                status_code=status.HTTP_200_OK
-            ).to_response()
-        except Exception as e:
-            return ErrorResponse(
-                error="Failed to publish product",
-                details=str(e),
-                status_code=status.HTTP_400_BAD_REQUEST
-            ).to_response()
+            return self.query_service.get_product(lookup, public_only=False)
+        except DjangoValidationError as exc:
+            raise Http404(str(exc)) from exc
 
-    @action(detail=True, methods=['post'], permission_classes=[IsStaffOrAdmin])
-    def unpublish(self, request, id=None):
-        """Unpublish product."""
-        product = self.get_object()
-        try:
-            ProductService.unpublish_product(product.id)
-            product.refresh_from_db()
-            serializer = ProductDetailSerializer(product)
-            return StandardResponse(
-                data=serializer.data,
-                message="Product unpublished successfully",
-                status_code=status.HTTP_200_OK
-            ).to_response()
-        except Exception as e:
-            return ErrorResponse(
-                error="Failed to unpublish product",
-                details=str(e),
-                status_code=status.HTTP_400_BAD_REQUEST
-            ).to_response()
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        product = self.command_service.create_product(serializer.to_dto())
+        return Response(ProductDetailSerializer(product).data, status=status.HTTP_201_CREATED)
 
-    @action(detail=True, methods=['post'], permission_classes=[IsStaffOrAdmin])
-    def activate(self, request, id=None):
-        """Activate product."""
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance=instance, data=request.data, partial=kwargs.get("partial", False))
+        serializer.is_valid(raise_exception=True)
+        product = self.command_service.update_product(self.get_lookup_value(), serializer.to_dto())
+        return Response(ProductDetailSerializer(product).data)
+
+    def destroy(self, request, *args, **kwargs):
         product = self.get_object()
-        ProductService.activate_product(product.id)
+        product.delete()
+        return Response({"message": "Product deleted successfully"}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=["post"], permission_classes=[IsStaffOrAdmin])
+    def publish(self, request, lookup=None):
+        product = self.get_object()
+        ProductCommandService.publish_product(product.id)
         product.refresh_from_db()
-        serializer = ProductDetailSerializer(product)
-        return StandardResponse(
-            data=serializer.data,
-            message="Product activated",
-            status_code=status.HTTP_200_OK
-        ).to_response()
+        return Response(ProductDetailSerializer(product).data)
 
-    @action(detail=True, methods=['post'], permission_classes=[IsStaffOrAdmin])
-    def deactivate(self, request, id=None):
-        """Deactivate product."""
+    @action(detail=True, methods=["post"], permission_classes=[IsStaffOrAdmin])
+    def unpublish(self, request, lookup=None):
         product = self.get_object()
-        ProductService.deactivate_product(product.id)
+        ProductCommandService.unpublish_product(product.id)
         product.refresh_from_db()
-        serializer = ProductDetailSerializer(product)
-        return StandardResponse(
-            data=serializer.data,
-            message="Product deactivated",
-            status_code=status.HTTP_200_OK
-        ).to_response()
+        return Response(ProductDetailSerializer(product).data)
 
-    @action(detail=True, methods=['get', 'post'], permission_classes=[IsStaffOrAdmin])
-    def variants(self, request, id=None):
-        """Manage product variants."""
+    @action(detail=True, methods=["post"], permission_classes=[IsStaffOrAdmin])
+    def activate(self, request, lookup=None):
         product = self.get_object()
-        if request.method == 'GET':
-            variants = product.variants.all()
-            serializer = ProductVariantSerializer(variants, many=True)
-            return Response(serializer.data)
-        else:
-            # POST - create variant
-            serializer = ProductVariantCreateUpdateSerializer(
-                data=request.data,
-                context={'product_id': product.id}
-            )
-            serializer.is_valid(raise_exception=True)
-            variant = ProductVariantService.create_variant(
-                product_id=product.id,
-                **serializer.validated_data
-            )
-            result_serializer = ProductVariantSerializer(variant)
-            return StandardResponse(
-                data=result_serializer.data,
-                message="Variant created",
-                status_code=status.HTTP_201_CREATED
-            ).to_response()
+        ProductCommandService.activate_product(product.id)
+        product.refresh_from_db()
+        return Response(ProductDetailSerializer(product).data)
 
-    @action(detail=True, methods=['get', 'post'], permission_classes=[IsStaffOrAdmin])
-    def media(self, request, id=None):
-        """Manage product media."""
+    @action(detail=True, methods=["post"], permission_classes=[IsStaffOrAdmin])
+    def deactivate(self, request, lookup=None):
         product = self.get_object()
-        if request.method == 'GET':
-            media = product.media.all()
-            serializer = ProductMediaSerializer(media, many=True)
+        ProductCommandService.deactivate_product(product.id)
+        product.refresh_from_db()
+        return Response(ProductDetailSerializer(product).data)
+
+    @action(detail=True, methods=["get", "post"], permission_classes=[IsStaffOrAdmin])
+    def variants(self, request, lookup=None):
+        product = self.get_object()
+        if request.method == "GET":
+            serializer = ProductVariantSerializer(product.variants.all(), many=True)
             return Response(serializer.data)
-        else:
-            # POST - create media
-            serializer = ProductMediaCreateUpdateSerializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            media = ProductMediaService.create_media(
-                product_id=product.id,
-                **serializer.validated_data
-            )
-            result_serializer = ProductMediaSerializer(media)
-            return StandardResponse(
-                data=result_serializer.data,
-                message="Media created",
-                status_code=status.HTTP_201_CREATED
-            ).to_response()
+
+        serializer = ProductVariantCreateUpdateSerializer(data=request.data, context={"product_id": product.id})
+        serializer.is_valid(raise_exception=True)
+        variant = ProductVariantService.create_variant(product_id=product.id, **serializer.validated_data)
+        return Response(ProductVariantSerializer(variant).data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=["get", "post"], permission_classes=[IsStaffOrAdmin])
+    def media(self, request, lookup=None):
+        product = self.get_object()
+        if request.method == "GET":
+            serializer = ProductMediaSerializer(product.media.all(), many=True)
+            return Response(serializer.data)
+
+        serializer = ProductMediaCreateUpdateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        media = ProductMediaService.create_media(product_id=product.id, **serializer.validated_data)
+        return Response(ProductMediaSerializer(media).data, status=status.HTTP_201_CREATED)
 
 
 class AdminVariantViewSet(viewsets.ModelViewSet):
     """Admin variant management."""
+
     queryset = ProductVariantModel.objects.all()
-    lookup_field = 'id'
+    lookup_field = "id"
     permission_classes = [IsStaffOrAdmin]
 
     def get_serializer_class(self):
-        if self.action in ['create', 'update', 'partial_update']:
+        if self.action in {"create", "update", "partial_update"}:
             return ProductVariantCreateUpdateSerializer
         return ProductVariantSerializer
 
-    @action(detail=True, methods=['post'], permission_classes=[IsStaffOrAdmin])
+    @action(detail=True, methods=["post"], permission_classes=[IsStaffOrAdmin])
     def set_default(self, request, id=None):
-        """Set as default variant."""
         variant = self.get_object()
         ProductVariantService.set_default_variant(variant.id)
         variant.refresh_from_db()
-        serializer = ProductVariantSerializer(variant)
-        return StandardResponse(
-            data=serializer.data,
-            message="Variant set as default",
-            status_code=status.HTTP_200_OK
-        ).to_response()
+        return Response(ProductVariantSerializer(variant).data)
 
 
 class AdminMediaViewSet(viewsets.ModelViewSet):
     """Admin media management."""
+
     queryset = ProductMediaModel.objects.all()
-    lookup_field = 'id'
+    lookup_field = "id"
     permission_classes = [IsStaffOrAdmin]
 
     def get_serializer_class(self):
-        if self.action in ['create', 'update', 'partial_update']:
+        if self.action in {"create", "update", "partial_update"}:
             return ProductMediaCreateUpdateSerializer
         return ProductMediaSerializer
 
 
-# ============================================================================
-# INTERNAL SERVICE APIs
-# ============================================================================
-
+@extend_schema_view(
+    snapshot=extend_schema(parameters=[OpenApiParameter("id", str, OpenApiParameter.PATH)]),
+)
 class InternalProductViewSet(viewsets.ViewSet):
     """Internal APIs for service-to-service communication."""
+
+    serializer_class = ProductSnapshotSerializer
     permission_classes = [InternalServicePermission]
 
-    @action(detail=False, methods=['post'], permission_classes=[InternalServicePermission])
+    @action(detail=False, methods=["post"], permission_classes=[InternalServicePermission])
     def bulk(self, request):
-        """Get multiple products by IDs."""
         serializer = InternalProductBulkSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        product_ids = serializer.validated_data['product_ids']
-        include_variants = serializer.validated_data.get('include_variants', False)
-        include_media = serializer.validated_data.get('include_media', False)
+        result = [
+            ProductCommandService.get_product_snapshot(product_id)
+            for product_id in serializer.validated_data["product_ids"]
+        ]
+        return Response(result)
 
-        products = ProductModel.objects.filter(id__in=product_ids).select_related(
-            'category', 'brand', 'product_type'
-        )
-        if include_variants:
-            products = products.prefetch_related('variants')
-        if include_media:
-            products = products.prefetch_related('media')
-
-        result = []
-        for product in products:
-            snapshot = ProductService.get_product_snapshot(product.id)
-            result.append(snapshot)
-
-        return StandardResponse(
-            data=result,
-            message="Products retrieved",
-            status_code=status.HTTP_200_OK
-        ).to_response()
-
-    @action(detail=True, methods=['get'], url_path='snapshot',
-            permission_classes=[InternalServicePermission])
+    @action(detail=True, methods=["get"], url_path="snapshot", permission_classes=[InternalServicePermission])
     def snapshot(self, request, pk=None):
-        """Get product snapshot for order/cart."""
-        try:
-            product = ProductModel.objects.get(id=pk)
-            snapshot = ProductService.get_product_snapshot(product.id)
-            serializer = ProductSnapshotSerializer(snapshot)
-            return StandardResponse(
-                data=serializer.data,
-                message="Product snapshot retrieved",
-                status_code=status.HTTP_200_OK
-            ).to_response()
-        except ProductModel.DoesNotExist:
-            return ErrorResponse(
-                error="Product not found",
-                status_code=status.HTTP_404_NOT_FOUND
-            ).to_response()
+        snapshot = ProductCommandService.get_product_snapshot(pk)
+        serializer = ProductSnapshotSerializer(snapshot)
+        return Response(serializer.data)
 
 
 class InternalVariantViewSet(viewsets.ViewSet):
     """Internal variant APIs."""
+
+    serializer_class = ProductVariantSerializer
     permission_classes = [InternalServicePermission]
 
-    @action(detail=False, methods=['post'], permission_classes=[InternalServicePermission])
+    @action(detail=False, methods=["post"], permission_classes=[InternalServicePermission])
     def bulk(self, request):
-        """Get multiple variants by IDs."""
         serializer = InternalVariantBulkSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        variant_ids = serializer.validated_data['variant_ids']
-        variants = ProductVariantModel.objects.filter(id__in=variant_ids).select_related('product')
-
-        result_serializer = ProductVariantSerializer(variants, many=True)
-        return StandardResponse(
-            data=result_serializer.data,
-            message="Variants retrieved",
-            status_code=status.HTTP_200_OK
-        ).to_response()
+        variants = ProductVariantModel.objects.filter(id__in=serializer.validated_data["variant_ids"]).select_related("product")
+        return Response(ProductVariantSerializer(variants, many=True).data)

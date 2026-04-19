@@ -480,6 +480,48 @@ class MarkFailedDeliveryService:
             return False, "Internal server error", None
 
 
+class MarkReturnedService:
+    """Use case: Mark shipment as returned"""
+
+    def __init__(
+        self,
+        shipment_repo: Optional[object] = None,
+        order_client: Optional[object] = None,
+    ):
+        self.shipment_repo = shipment_repo or ShipmentRepositoryImpl()
+        self.order_client = order_client or OrderServiceClient()
+
+    @transaction.atomic
+    def execute(
+        self,
+        shipment_reference: str,
+        location: Optional[str] = None,
+    ) -> Tuple[bool, Optional[str], Optional[ShipmentDetailDTO]]:
+        """Mark shipment as returned."""
+        try:
+            shipment = self.shipment_repo.get_by_reference(shipment_reference)
+            if not shipment:
+                return False, "Shipment not found", None
+
+            ShipmentStateService.mark_returned(shipment, location=location)
+            shipment = self.shipment_repo.save(shipment)
+
+            self.order_client.notify_shipment_status_updated(
+                order_id=shipment.order_id,
+                shipment_id=shipment.id,
+                shipment_reference=shipment.shipment_reference,
+                status=shipment.status.value,
+                location=location,
+            )
+
+            return True, None, shipment_to_detail_dto(shipment)
+        except ValueError as e:
+            return False, str(e), None
+        except Exception as e:
+            logger.error(f"Error marking returned: {str(e)}")
+            return False, "Internal server error", None
+
+
 class CancelShipmentService:
     """Use case: Cancel shipment"""
 

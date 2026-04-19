@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from datetime import datetime
 import uuid
 
-from .enums import ProductStatus, Currency
+from .enums import CategoryStatus, ProductStatus, Currency
 
 
 @dataclass
@@ -70,6 +70,7 @@ class Category:
         parent_id: Optional[uuid.UUID] = None,
         description: Optional[str] = None,
         image_url: Optional[str] = None,
+        status: CategoryStatus = CategoryStatus.ACTIVE,
         is_active: bool = True,
         sort_order: int = 0,
         created_at: datetime = None,
@@ -81,7 +82,8 @@ class Category:
         self.parent_id = parent_id
         self.description = description
         self.image_url = image_url
-        self.is_active = is_active
+        self.status = status
+        self.is_active = is_active and status == CategoryStatus.ACTIVE
         self.sort_order = sort_order
         self.created_at = created_at or datetime.utcnow()
         self.updated_at = updated_at or datetime.utcnow()

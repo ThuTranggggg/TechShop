@@ -43,11 +43,21 @@ export function AuthForm({
           type="button"
           className="rounded-xl bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-950 hover:text-white"
           onClick={() => {
-            setValue("email", "admin@example.com");
+            setValue("email", "admin@techshop.com");
             setValue("password", "Demo@123456");
           }}
         >
           Admin demo
+        </button>
+        <button
+          type="button"
+          className="rounded-xl bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-950 hover:text-white"
+          onClick={() => {
+            setValue("email", "staff@techshop.com");
+            setValue("password", "Demo@123456");
+          }}
+        >
+          Staff demo
         </button>
       </div>
       <div>

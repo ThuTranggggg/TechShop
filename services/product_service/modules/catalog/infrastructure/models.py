@@ -7,7 +7,7 @@ import uuid
 from django.db import models
 from django.core.exceptions import ValidationError
 
-from ..domain.enums import ProductStatus, Currency, AttributeType, MediaType
+from ..domain.enums import CategoryStatus, ProductStatus, Currency, AttributeType, MediaType
 
 
 class CategoryModel(models.Model):
@@ -25,6 +25,12 @@ class CategoryModel(models.Model):
     )
     description = models.TextField(blank=True, default="")
     image_url = models.URLField(blank=True, default="")
+    status = models.CharField(
+        max_length=20,
+        choices=[(status.value, status.name) for status in CategoryStatus],
+        default=CategoryStatus.ACTIVE.value,
+        db_index=True,
+    )
     is_active = models.BooleanField(default=True, db_index=True)
     sort_order = models.IntegerField(default=0, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -34,6 +40,7 @@ class CategoryModel(models.Model):
         db_table = "catalog_category"
         indexes = [
             models.Index(fields=["slug"]),
+            models.Index(fields=["status"]),
             models.Index(fields=["is_active", "sort_order"]),
             models.Index(fields=["parent"]),
         ]
@@ -46,6 +53,8 @@ class CategoryModel(models.Model):
 
     def clean(self):
         """Prevent circular parent references."""
+        self.is_active = self.status == CategoryStatus.ACTIVE.value
+
         if self.parent_id and self.id:
             if self.parent_id == self.id:
                 raise ValidationError("Category cannot be its own parent")
@@ -59,6 +68,35 @@ class CategoryModel(models.Model):
                     raise ValidationError("Circular category reference detected")
                 visited.add(current.id)
                 current = current.parent
+
+    def save(self, *args, **kwargs):
+        """Keep status and legacy is_active flag synchronized."""
+        update_fields = kwargs.get("update_fields")
+
+        if update_fields:
+            update_fields = set(update_fields)
+            if "status" in update_fields and "is_active" not in update_fields:
+                self.is_active = self.status == CategoryStatus.ACTIVE.value
+                update_fields.add("is_active")
+            elif "is_active" in update_fields and "status" not in update_fields:
+                self.status = (
+                    CategoryStatus.ACTIVE.value
+                    if self.is_active
+                    else CategoryStatus.INACTIVE.value
+                )
+                update_fields.add("status")
+            else:
+                self.is_active = self.status == CategoryStatus.ACTIVE.value
+            kwargs["update_fields"] = list(update_fields)
+        else:
+            self.status = (
+                CategoryStatus.ACTIVE.value
+                if self.is_active
+                else CategoryStatus.INACTIVE.value
+            )
+            self.is_active = self.status == CategoryStatus.ACTIVE.value
+
+        super().save(*args, **kwargs)
 
     def get_all_children(self):
         """Get all descendant categories."""
@@ -198,6 +236,17 @@ class ProductModel(models.Model):
 
     def __str__(self):
         return self.name
+
+    @property
+    def default_variant(self):
+        """Return the current default variant if present."""
+        cached_variants = getattr(self, "_prefetched_objects_cache", {}).get("variants")
+        if cached_variants is not None:
+            for variant in cached_variants:
+                if variant.is_default:
+                    return variant
+            return None
+        return self.variants.filter(is_default=True).first()
 
     @property
     def is_published(self) -> bool:

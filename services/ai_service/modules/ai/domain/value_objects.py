@@ -13,10 +13,13 @@ class EventType(str, Enum):
     SEARCH = "search"
     PRODUCT_VIEW = "product_view"
     PRODUCT_CLICK = "product_click"
+    VIEW_CATEGORY = "view_category"
     ADD_TO_CART = "add_to_cart"
     REMOVE_FROM_CART = "remove_from_cart"
+    ADD_TO_WISHLIST = "add_to_wishlist"
     CHECKOUT_STARTED = "checkout_started"
     ORDER_CREATED = "order_created"
+    ORDER_CANCEL = "order_cancel"
     PAYMENT_SUCCESS = "payment_success"
     CHAT_QUERY = "chat_query"
 

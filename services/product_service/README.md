@@ -3,7 +3,7 @@
 ## Purpose
 Owns the catalog bounded context for products, categories, attributes, media, and discovery metadata.
 
-This repository is only the foundation skeleton for the service. Business use cases, aggregates, repositories, and workflows will be implemented in later phases.
+This service owns the product catalog bounded context end-to-end, including categories, products, validation, query/filter logic, migrations, and seed data.
 
 ## Local Run
 1. Copy `.env.example` to `.env`.
@@ -18,6 +18,10 @@ This repository is only the foundation skeleton for the service. Business use ca
 4. Start the server:
    ```bash
    python manage.py runserver 0.0.0.0:8002
+   ```
+5. Seed sample catalog data:
+   ```bash
+   python manage.py seed_catalog
    ```
 
 ## Environment Variables
@@ -39,6 +43,13 @@ This repository is only the foundation skeleton for the service. Business use ca
 - `GET /health/`
 - `GET /ready/`
 - `GET /api/v1/health/`
+- `GET /api/v1/catalog/categories/`
+- `GET /api/v1/catalog/categories/{id|slug}/`
+- `GET /api/v1/catalog/categories/{id|slug}/products/`
+- `GET /api/v1/catalog/products/`
+- `GET /api/v1/catalog/products/{id|slug}/`
+- `GET /api/v1/catalog/admin/categories/`
+- `GET|POST|PATCH|DELETE /api/v1/catalog/admin/products/`
 - `GET /api/schema/`
 - `GET /api/docs/`
 
@@ -48,6 +59,6 @@ This repository is only the foundation skeleton for the service. Business use ca
 
 ## DDD Structure
 - `modules/catalog/domain`: entities, value objects, repository contracts
-- `modules/catalog/application`: commands, queries, application services
-- `modules/catalog/infrastructure`: ORM models, repository implementations, querysets
+- `modules/catalog/application`: commands, queries, DTOs, seed definitions, application services
+- `modules/catalog/infrastructure`: ORM models and repository implementations
 - `modules/catalog/presentation`: API serializers/views/controllers

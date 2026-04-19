@@ -2,18 +2,16 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { getCartSummary } from "@/services/api/cart";
-import { ShoppingBag } from "lucide-react";
 import { getAccessToken } from "@/services/auth";
-import { useMounted } from "@/hooks/use-mounted";
+import { ShoppingBag } from "lucide-react";
 
 export function CartBadge() {
-  const mounted = useMounted();
   const token = getAccessToken();
   const { data } = useQuery({
-    queryKey: ["cart-summary"],
+    queryKey: ["cart-summary", Boolean(token)],
     queryFn: getCartSummary,
     staleTime: 30000,
-    enabled: mounted && Boolean(token),
+    enabled: Boolean(token),
   });
   const count = data?.item_count ?? 0;
   return (
