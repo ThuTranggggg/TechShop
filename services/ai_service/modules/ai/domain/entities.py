@@ -5,6 +5,7 @@ Core business concepts.
 from dataclasses import dataclass, field
 from typing import Optional, List, Dict, Any
 from datetime import datetime
+from datetime import timezone as dt_timezone
 from uuid import UUID
 
 from modules.ai.domain.value_objects import (
@@ -159,7 +160,7 @@ class ChatSession:
         if not self.updated_at:
             return False
         from datetime import timedelta
-        return (datetime.now() - self.updated_at) > timedelta(days=30)
+        return (datetime.now(dt_timezone.utc) - self.updated_at) > timedelta(days=30)
 
 
 @dataclass

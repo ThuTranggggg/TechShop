@@ -1,0 +1,242 @@
+[
+  {
+    "product_id": "ac8776cb-d270-56b6-8909-6901d0e37f8d",
+    "slug": "iphone-15",
+    "name": "iPhone 15",
+    "brand": "Apple",
+    "category": "Phone",
+    "price": 19990000,
+    "price_bucket": "from_10m_to_20m",
+    "description": "Flagship phone with A16 performance and solid camera."
+  },
+  {
+    "product_id": "0e79d6b4-a0ad-50f9-8cc8-75eeb1b599d0",
+    "slug": "iphone-15-pro",
+    "name": "iPhone 15 Pro",
+    "brand": "Apple",
+    "category": "Phone",
+    "price": 26990000,
+    "price_bucket": "above_20m",
+    "description": "Pro-grade iPhone for creators and heavy users."
+  },
+  {
+    "product_id": "40c64ccd-7858-5a1e-bf52-a228521f6d43",
+    "slug": "iphone-15-pro-max",
+    "name": "iPhone 15 Pro Max",
+    "brand": "Apple",
+    "category": "Phone",
+    "price": 32990000,
+    "price_bucket": "above_20m",
+    "description": "Large screen and top-end camera system."
+  },
+  {
+    "product_id": "27eac5a9-d3b4-5b05-8754-5341be75a21c",
+    "slug": "macbook-air-m3",
+    "name": "MacBook Air M3",
+    "brand": "Apple",
+    "category": "Laptop",
+    "price": 27990000,
+    "price_bucket": "above_20m",
+    "description": "Lightweight laptop for students and professionals."
+  },
+  {
+    "product_id": "4973df0d-4865-5345-b844-f54319bab8f2",
+    "slug": "ipad-air-m2",
+    "name": "iPad Air M2",
+    "brand": "Apple",
+    "category": "Tablet",
+    "price": 15990000,
+    "price_bucket": "from_10m_to_20m",
+    "description": "Portable tablet for notes, media and sketching."
+  },
+  {
+    "product_id": "d7f7293f-ffe9-5f17-a312-c612516c86da",
+    "slug": "airpods-pro-2",
+    "name": "AirPods Pro 2",
+    "brand": "Apple",
+    "category": "Audio",
+    "price": 6990000,
+    "price_bucket": "from_5m_to_10m",
+    "description": "ANC earbuds with spatial audio."
+  },
+  {
+    "product_id": "9763ee37-85e7-526a-b5ea-791e92050b28",
+    "slug": "galaxy-s24",
+    "name": "Galaxy S24",
+    "brand": "Samsung",
+    "category": "Phone",
+    "price": 18990000,
+    "price_bucket": "from_10m_to_20m",
+    "description": "Balanced flagship with smart AI features."
+  },
+  {
+    "product_id": "14510b6d-dbe7-5e15-9849-c547b5294898",
+    "slug": "galaxy-s24-ultra",
+    "name": "Galaxy S24 Ultra",
+    "brand": "Samsung",
+    "category": "Phone",
+    "price": 29990000,
+    "price_bucket": "above_20m",
+    "description": "Ultra flagship with S Pen and premium zoom."
+  },
+  {
+    "product_id": "12487ce5-d03b-5784-8e69-95e61591bba8",
+    "slug": "galaxy-a55",
+    "name": "Galaxy A55",
+    "brand": "Samsung",
+    "category": "Phone",
+    "price": 9990000,
+    "price_bucket": "from_5m_to_10m",
+    "description": "Mid-range phone with strong battery life."
+  },
+  {
+    "product_id": "f6308b54-f43f-5848-8cd4-eb08a5c380d6",
+    "slug": "galaxy-tab-s9",
+    "name": "Galaxy Tab S9",
+    "brand": "Samsung",
+    "category": "Tablet",
+    "price": 21990000,
+    "price_bucket": "above_20m",
+    "description": "Premium Android tablet for work and entertainment."
+  },
+  {
+    "product_id": "661ac824-7de7-5c73-85cc-f3178db2e048",
+    "slug": "galaxy-watch7",
+    "name": "Galaxy Watch7",
+    "brand": "Samsung",
+    "category": "Wearable",
+    "price": 7990000,
+    "price_bucket": "from_5m_to_10m",
+    "description": "Fitness and health-focused smartwatch."
+  },
+  {
+    "product_id": "6911ff98-2b82-5040-9d56-963ddc77fb1c",
+    "slug": "galaxy-buds3-pro",
+    "name": "Galaxy Buds3 Pro",
+    "brand": "Samsung",
+    "category": "Audio",
+    "price": 4990000,
+    "price_bucket": "from_3m_to_5m",
+    "description": "ANC earbuds for Galaxy ecosystem users."
+  },
+  {
+    "product_id": "716f4a9c-9cfa-5230-b97d-27a76e846421",
+    "slug": "xiaomi-14",
+    "name": "Xiaomi 14",
+    "brand": "Xiaomi",
+    "category": "Phone",
+    "price": 17990000,
+    "price_bucket": "from_10m_to_20m",
+    "description": "Compact flagship with Leica-inspired imaging."
+  },
+  {
+    "product_id": "6408b503-fc6f-5208-baf7-4240b82b82dd",
+    "slug": "redmi-note-13-pro",
+    "name": "Redmi Note 13 Pro",
+    "brand": "Xiaomi",
+    "category": "Phone",
+    "price": 7990000,
+    "price_bucket": "from_5m_to_10m",
+    "description": "Value-focused phone with large battery."
+  },
+  {
+    "product_id": "7c957288-e130-5ff0-88e6-0bb1ab23f079",
+    "slug": "xiaomi-pad-6",
+    "name": "Xiaomi Pad 6",
+    "brand": "Xiaomi",
+    "category": "Tablet",
+    "price": 10990000,
+    "price_bucket": "from_10m_to_20m",
+    "description": "Slim Android tablet for study and media."
+  },
+  {
+    "product_id": "bdd67b3d-22f9-5685-9ff4-a1b56baf075d",
+    "slug": "xiaomi-watch-2",
+    "name": "Xiaomi Watch 2",
+    "brand": "Xiaomi",
+    "category": "Wearable",
+    "price": 4990000,
+    "price_bucket": "from_3m_to_5m",
+    "description": "Wearable with fitness and sleep tracking."
+  },
+  {
+    "product_id": "ba368449-7c30-5902-853e-c39c5ce4112f",
+    "slug": "oppo-reno11",
+    "name": "Oppo Reno11",
+    "brand": "Oppo",
+    "category": "Phone",
+    "price": 12990000,
+    "price_bucket": "from_10m_to_20m",
+    "description": "Portrait-centric phone with polished design."
+  },
+  {
+    "product_id": "8a28c26b-0b74-5a2a-bff0-2eb9338a09b7",
+    "slug": "oppo-pad-2",
+    "name": "Oppo Pad 2",
+    "brand": "Oppo",
+    "category": "Tablet",
+    "price": 14990000,
+    "price_bucket": "from_10m_to_20m",
+    "description": "Large-screen tablet for productivity."
+  },
+  {
+    "product_id": "bfe84f0f-0a85-5e4e-9b46-0e0bd28ec6f4",
+    "slug": "realme-12-pro-plus",
+    "name": "Realme 12 Pro+",
+    "brand": "Realme",
+    "category": "Phone",
+    "price": 10990000,
+    "price_bucket": "from_10m_to_20m",
+    "description": "Camera-first mid-range device."
+  },
+  {
+    "product_id": "8fc72082-318d-59ff-b24d-5f0777f5b529",
+    "slug": "asus-rog-zephyrus-g14",
+    "name": "ASUS ROG Zephyrus G14",
+    "brand": "ASUS",
+    "category": "Laptop",
+    "price": 36990000,
+    "price_bucket": "above_20m",
+    "description": "Portable gaming laptop with high-end GPU."
+  },
+  {
+    "product_id": "b356bf39-2370-598c-bf1b-b54a299964bb",
+    "slug": "asus-tuf-gaming-a15",
+    "name": "ASUS TUF Gaming A15",
+    "brand": "ASUS",
+    "category": "Laptop",
+    "price": 24990000,
+    "price_bucket": "above_20m",
+    "description": "Durable gaming laptop with great value."
+  },
+  {
+    "product_id": "b47b0a7f-c042-58ea-a7f6-175d73848bb5",
+    "slug": "asus-zenbook-14",
+    "name": "ASUS Zenbook 14",
+    "brand": "ASUS",
+    "category": "Laptop",
+    "price": 28990000,
+    "price_bucket": "above_20m",
+    "description": "Ultrabook for work and travel."
+  },
+  {
+    "product_id": "2e898e70-60ed-5fab-af12-192433007b6d",
+    "slug": "sony-wh-1000xm5",
+    "name": "Sony WH-1000XM5",
+    "brand": "Sony",
+    "category": "Audio",
+    "price": 8990000,
+    "price_bucket": "from_5m_to_10m",
+    "description": "Reference ANC headphones."
+  },
+  {
+    "product_id": "74176ee6-b3e7-56fe-861d-691c60040829",
+    "slug": "playstation-5",
+    "name": "PlayStation 5",
+    "brand": "Sony",
+    "category": "Gaming",
+    "price": 13990000,
+    "price_bucket": "from_10m_to_20m",
+    "description": "Console for living-room gaming."
+  }
+]

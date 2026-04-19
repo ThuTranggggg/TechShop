@@ -5,6 +5,7 @@ import logging
 from typing import List, Optional, Dict, Any
 from uuid import UUID, uuid4
 from datetime import datetime
+from django.utils import timezone
 from django.db import transaction
 
 from modules.ai.domain.entities import (
@@ -52,9 +53,9 @@ from modules.ai.infrastructure.domain_services import (
     DefaultPriceRangeNormalizer,
     EventBasedPreferenceProfileBuilder,
     SimpleRecommendationScorer,
-    MockGraphService,
     SemanticRetrievalService,
 )
+from modules.ai.infrastructure.neo4j_graph import Neo4jGraphService
 from modules.ai.infrastructure.providers import (
     get_ai_provider,
 )
@@ -76,7 +77,7 @@ class TrackBehavioralEventUseCase:
         self.event_repo = event_repo or DjangoBehavioralEventRepository()
         self.profile_repo = profile_repo or DjangoUserPreferenceProfileRepository()
         self.preference_builder = preference_builder or EventBasedPreferenceProfileBuilder()
-        self.graph_service = graph_service or MockGraphService()
+        self.graph_service = graph_service or Neo4jGraphService()
         self.price_normalizer = price_normalizer or DefaultPriceRangeNormalizer()
 
     def execute(
@@ -92,6 +93,7 @@ class TrackBehavioralEventUseCase:
         keyword: Optional[str] = None,
         source_service: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
+        occurred_at: Optional[datetime] = None,
     ) -> BehavioralEvent:
         """Execute behavioral event tracking."""
 
@@ -114,7 +116,7 @@ class TrackBehavioralEventUseCase:
             price_range=price_range,
             keyword=keyword,
             source_service=source_service,
-            occurred_at=datetime.now(),
+            occurred_at=occurred_at or timezone.now(),
             metadata=metadata or {},
         )
 
@@ -127,7 +129,7 @@ class TrackBehavioralEventUseCase:
             try:
                 profile = self.profile_repo.get_or_create(user_id)
                 profile = self.preference_builder.update_profile_with_event(profile, event)
-                profile.last_interaction_at = datetime.now()
+                profile.last_interaction_at = timezone.now()
                 self.profile_repo.save(profile)
                 logger.info(f"Profile updated for user {user_id}")
             except Exception as e:

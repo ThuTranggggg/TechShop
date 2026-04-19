@@ -1,4 +1,5 @@
 from uuid import UUID, uuid4
+from datetime import datetime, timezone as dt_timezone
 
 from modules.ai.application.services import (
     GenerateRecommendationsUseCase,
@@ -88,6 +89,35 @@ def test_track_behavioral_event_normalizes_zero_price():
     assert event_repo.saved is event
     assert graph_service.synced is event
     assert profile_repo.saved.purchase_intent_score == 1
+    assert event.occurred_at.tzinfo is not None
+    assert profile_repo.saved.last_interaction_at.tzinfo is not None
+
+
+def test_track_behavioral_event_uses_supplied_timestamp():
+    event_repo = FakeEventRepo()
+    profile_repo = FakeProfileRepo()
+    fixed_time = datetime(2026, 4, 20, 12, 0, tzinfo=dt_timezone.utc)
+
+    use_case = TrackBehavioralEventUseCase(
+        event_repo=event_repo,
+        profile_repo=profile_repo,
+        preference_builder=FakePreferenceBuilder(),
+        graph_service=FakeGraphService(),
+        price_normalizer=FakePriceNormalizer(),
+    )
+
+    event = use_case.execute(
+        event_type="product_click",
+        user_id=uuid4(),
+        price_amount=0,
+        brand_name="Samsung",
+        category_name="Phone",
+        occurred_at=fixed_time,
+    )
+
+    assert event.occurred_at == fixed_time
+    assert profile_repo.saved.last_interaction_at is not None
+    assert profile_repo.saved.last_interaction_at.tzinfo is not None
 
 
 def test_generate_recommendations_sorts_by_score():

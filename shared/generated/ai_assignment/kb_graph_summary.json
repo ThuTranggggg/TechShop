@@ -1,0 +1,9 @@
+{
+  "rows": 23109,
+  "users": 500,
+  "products": 24,
+  "profiles": 8,
+  "brands": 7,
+  "categories": 6,
+  "neo4j_import": "skipped: Couldn't connect to localhost:7687 (resolved to ('127.0.0.1:7687',)):\nFailed to establish connection to ResolvedIPv4Address(('127.0.0.1', 7687)) (reason [Errno 111] Connection refused)"
+}

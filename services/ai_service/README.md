@@ -36,15 +36,15 @@ Comprehensive AI/Recommendation service for TechShop e-commerce microservices. P
 ### 4. RAG Chat Engine
 - Intent classification: product_search, order_status, shipment_status, policy_question, payment_status, general_support
 - Knowledge base: FAQs, policies, guides, articles
-- Keyword-based retrieval (vector search ready)
-- Mock LLM provider (no hallucinations) + real provider abstraction
+- Semantic retrieval over pgvector-backed chunks
+- Real OpenAI-compatible provider client for chat and embeddings
 - Multi-turn session management
 
-### 5. Graph Intelligence (Neo4j Ready)
-- Mock implementation with full interface
-- Node types: User, Product, Brand, Category, PriceRange
-- Relationship types: VIEWED, CLICKED, PREFERS_BRAND, etc.
-- Placeholder for advanced graph queries
+### 5. Graph Intelligence (Neo4j-backed)
+- Event sync writes to Neo4j through `Neo4jGraphService`
+- Node types: User, Product, Brand, Category, BehaviorProfile
+- Relationship types: VIEWED, CLICKED, SEARCHED, ADDED_TO_CART, EXHIBITS, IN_BRAND, IN_CATEGORY
+- Offline import script exists for assignment KB_Graph generation
 
 ## Architecture
 
@@ -62,8 +62,9 @@ modules/ai/
 ├── infrastructure/          # DDD Infrastructure Layer
 │   ├── models.py            # Django ORM models
 │   ├── repositories.py      # Repository implementations
-│   ├── providers.py         # LLM provider abstraction + Mock
-│   └── domain_services.py   # Domain service implementations
+│   ├── providers.py         # LLM provider client + embeddings
+│   ├── domain_services.py   # Domain service implementations
+│   └── neo4j_graph.py       # Neo4j graph sync/import owner
 │
 ├── presentation/            # DDD Presentation Layer
 │   ├── views.py            # API endpoints
@@ -278,14 +279,18 @@ DB_PORT=5432
 # Redis (optional)
 REDIS_URL=redis://redis:6379/0
 
-# Neo4j (for future graph integration)
+# Neo4j (required for graph sync and KB_Graph imports)
 NEO4J_URI=bolt://neo4j:7687
 NEO4J_USER=neo4j
 NEO4J_PASSWORD=neo4jpassword
 
-# LLM Provider
-LLM_PROVIDER=mock  # mock|openai|anthropic
-LLM_API_KEY=placeholder
+# Provider
+AI_PROVIDER=yescale
+AI_API_KEY=your-secret-key
+AI_CHAT_COMPLETIONS_URL=https://api.yescale.io/v1/chat/completions
+AI_EMBEDDINGS_URL=https://api.yescale.io/v1/embeddings
+AI_CHAT_MODEL=gpt-5.4-nano
+AI_EMBEDDING_MODEL=text-embedding-3-small
 
 # Logging
 LOG_LEVEL=INFO
@@ -353,9 +358,19 @@ answer_data = chat.execute(
     query="Bao lâu tôi nhận hàng?",
     user_id=user_id,
 )
-print(answer_data["answer"])  # Answer from knowledge base + mock LLM
+print(answer_data["answer"])  # Answer from knowledge base + provider-grounded generation
 print(answer_data["sources"])  # Source documents
 ```
+
+### Assignment Pipeline
+
+For the weekly submission artefacts, run:
+
+```bash
+python shared/scripts/ai_assignment_pipeline.py all
+```
+
+The generated files live in `shared/generated/ai_assignment/` and are documented in [shared/docs/AI_ASSIGNMENT_WORKFLOW.md](../../shared/docs/AI_ASSIGNMENT_WORKFLOW.md).
 
 ## Database Indexes
 
@@ -414,7 +429,7 @@ coverage report
 ### Phase 2: Advanced Features
 - [ ] Real LLM integration (OpenAI, Anthropic,local models)
 - [ ] Vector database (Chromadb, Weaviate, Pinecone)
-- [ ] Neo4j real graph integration
+- [x] Neo4j real graph integration
 - [ ] Collaborative filtering
 - [ ] A/B testing framework
 - [ ] Advanced chat memory/reasoning

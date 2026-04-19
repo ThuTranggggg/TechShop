@@ -59,7 +59,7 @@ TechShop/
 - Infra: Docker Compose, Nginx, PostgreSQL, Redis, Neo4j
 - API docs: OpenAPI via `drf-spectacular`
 
-The AI service currently includes recommendation, event tracking, document ingestion, and chat-oriented APIs. Parts of that stack are implemented as MVP or mock components, so treat "AI", "graph", or "RAG" claims in older notes as implementation targets unless verified in code.
+The AI service currently includes recommendation, event tracking, document ingestion, graph sync, and chat-oriented APIs. Some provider and infrastructure dependencies remain environment-specific, so treat "AI" claims in older notes as implementation targets unless verified in code.
 
 ## Local Setup
 

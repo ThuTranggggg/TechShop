@@ -1,0 +1,28 @@
+{
+  "users": 500,
+  "events": 23109,
+  "profile_counts": {
+    "window_shopper": 63,
+    "brand_loyalist": 63,
+    "spec_researcher": 63,
+    "deal_hunter": 63,
+    "cart_ready": 62,
+    "impulse_buyer": 62,
+    "premium_upgrade": 62,
+    "gaming_spree": 62
+  },
+  "action_counts": {
+    "view": 12755,
+    "click": 6134,
+    "add_to_cart": 4220
+  },
+  "price_bucket_counts": {
+    "above_20m": 7995,
+    "from_5m_to_10m": 5235,
+    "from_10m_to_20m": 8571,
+    "from_3m_to_5m": 1308
+  },
+  "product_catalog_size": 24,
+  "first_timestamp": "2026-01-01T01:04:00Z",
+  "last_timestamp": "2026-01-30T23:12:00Z"
+}

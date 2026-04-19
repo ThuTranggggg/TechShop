@@ -244,39 +244,6 @@ class SimpleRecommendationScorer(RecommendationScorer):
         return reasons
 
 
-class MockGraphService(GraphService):
-    """Mock graph service (Neo4j integration placeholder)."""
-
-    def sync_event_to_graph(self, event: BehavioralEvent) -> None:
-        """
-        In real implementation, would sync to Neo4j.
-        For now, just log.
-        """
-        if event.user_id and event.has_product_context():
-            logger.debug(
-                f"Mock: Syncing {event.event_type} to graph for user {event.user_id}"
-            )
-
-    def get_user_top_brands(self, user_id: UUID, limit: int = 5) -> List[Tuple[str, int]]:
-        """Get top brands from graph."""
-        # Mock implementation - returns empty
-        return []
-
-    def get_user_top_categories(self, user_id: UUID, limit: int = 5) -> List[Tuple[str, int]]:
-        """Get top categories from graph."""
-        # Mock implementation - returns empty
-        return []
-
-    def get_related_products(
-        self,
-        product_id: UUID,
-        limit: int = 5,
-    ) -> List[UUID]:
-        """Get related products."""
-        # Mock implementation - returns empty
-        return []
-
-
 class SemanticRetrievalService(RetrievalService):
     """Semantic retrieval over pgvector-backed knowledge chunks."""
 

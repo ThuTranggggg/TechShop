@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700">
+      <rect width="100%" height="100%" fill="#ffffff" />
+      <text x="90" y="36" font-size="28" font-weight="800" fill="#0f172a">RNN learning curve</text>
+      <line x1="90" y1="610" x2="1110" y2="610" stroke="#94a3b8" stroke-width="2" /><line x1="90" y1="90" x2="90" y2="610" stroke="#94a3b8" stroke-width="2" />
+      <rect x="90" y="58" width="18" height="18" rx="4" fill="#0ea5e9" /><text x="116" y="73" font-size="18" fill="#334155">train loss</text><rect x="310" y="58" width="18" height="18" rx="4" fill="#f97316" /><text x="336" y="73" font-size="18" fill="#334155">val loss</text><rect x="530" y="58" width="18" height="18" rx="4" fill="#10b981" /><text x="556" y="73" font-size="18" fill="#334155">val acc</text><rect x="750" y="58" width="18" height="18" rx="4" fill="#8b5cf6" /><text x="776" y="73" font-size="18" fill="#334155">val macro F1</text>
+      <polyline points="90.0,97.1 430.0,97.5 770.0,96.0 1110.0,96.8" fill="none" stroke="#0ea5e9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+      <polyline points="90.0,103.0 430.0,114.2 770.0,96.2 1110.0,90.0" fill="none" stroke="#f97316" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+      <polyline points="90.0,380.9 430.0,434.3 770.0,475.3 1110.0,475.3" fill="none" stroke="#10b981" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+      <polyline points="90.0,453.1 430.0,480.1 770.0,538.7 1110.0,538.7" fill="none" stroke="#8b5cf6" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+    </svg>

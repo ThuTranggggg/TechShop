@@ -228,6 +228,7 @@ TRACKING:
                     keyword=f"search {brand.lower()}" if event_type == "search" else None,
                     source_service="demo",
                     metadata={"demo": True, "scenario": "samsung_preference"},
+                    occurred_at=timestamp,
                 )
 
             self.stdout.write(f"  Created {events_per_user} events")
