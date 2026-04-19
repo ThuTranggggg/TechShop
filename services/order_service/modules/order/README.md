@@ -626,7 +626,7 @@ SERVICE_NAME=order_service
 CART_SERVICE_URL=http://cart_service:8003
 INVENTORY_SERVICE_URL=http://inventory_service:8007
 PAYMENT_SERVICE_URL=http://payment_service:8005
-SHIPPING_SERVICE_URL=http://shipping_service:8008
+SHIPPING_SERVICE_URL=http://shipping_service:8006
 
 # Auth
 INTERNAL_SERVICE_KEY=your-secret-key

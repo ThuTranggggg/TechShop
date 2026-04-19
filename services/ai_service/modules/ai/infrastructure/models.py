@@ -3,8 +3,8 @@ Infrastructure layer - Django ORM models.
 Database persistence layer.
 """
 from django.db import models
-from django.contrib.postgres.fields import ArrayField
 from uuid import uuid4
+from pgvector.django import VectorField
 
 from modules.ai.domain.value_objects import (
     EventType,
@@ -165,6 +165,7 @@ class KnowledgeChunkModel(models.Model):
         blank=True,
         help_text="Reference to external embedding or vector store"
     )
+    embedding = VectorField(dimensions=1536, null=True, blank=True)
     metadata = models.JSONField(default=dict, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

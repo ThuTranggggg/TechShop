@@ -97,7 +97,7 @@ See [CART_SERVICE.md](CART_SERVICE.md) for full architecture documentation.
 ## Environment Variables
 
 Key variables in `.env.example`:
-- `PRODUCT_SERVICE_URL=http://product_service:8006`
+- `PRODUCT_SERVICE_URL=http://product_service:8002`
 - `INVENTORY_SERVICE_URL=http://inventory_service:8007`
 - `INTERNAL_SERVICE_KEY=your-internal-key`
 - `UPSTREAM_TIMEOUT=5`

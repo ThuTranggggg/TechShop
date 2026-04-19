@@ -21,14 +21,22 @@ class DjangoCartRepository(CartRepository):
     
     def save(self, cart: Cart) -> Cart:
         """Persist a cart."""
-        cart_model, _ = CartModel.objects.get_or_create(
-            id=cart.id,
-            defaults={
-                "user_id": cart.user_id,
-                "status": cart.status.value,
-                "currency": cart.currency,
-            }
-        )
+        cart_model = None
+        if cart.status == CartStatus.ACTIVE:
+            existing_active = self.get_active_cart_by_user(cart.user_id)
+            if existing_active:
+                cart_model = CartModel.objects.get(id=existing_active.id)
+                cart.id = cart_model.id
+
+        if cart_model is None:
+            cart_model, _ = CartModel.objects.get_or_create(
+                id=cart.id,
+                defaults={
+                    "user_id": cart.user_id,
+                    "status": cart.status.value,
+                    "currency": cart.currency,
+                }
+            )
         
         # Update fields
         cart_model.status = cart.status.value
@@ -51,10 +59,12 @@ class DjangoCartRepository(CartRepository):
     def get_active_cart_by_user(self, user_id: UUID) -> Optional[Cart]:
         """Get active cart for a user."""
         try:
-            cart_model = CartModel.objects.get(
+            cart_model = CartModel.objects.filter(
                 user_id=user_id,
                 status=CartStatus.ACTIVE.value
-            )
+            ).order_by("-updated_at", "-created_at").first()
+            if not cart_model:
+                return None
             return self._model_to_entity(cart_model)
         except CartModel.DoesNotExist:
             return None

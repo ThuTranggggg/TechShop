@@ -26,8 +26,21 @@ docker compose up --build frontend gateway
 ```
 Truy cập qua gateway: `http://localhost:8080`.
 
+## Playwright E2E
+- Mặc định `npm run test:e2e` sẽ kiểm tra gateway `http://localhost:8080` và, nếu chưa có stack chạy, sẽ boot Docker Compose trước khi vào suite.
+- Trước khi chạy suite real-stack, seed demo data:
+  ```bash
+  python shared/scripts/seed_complete_system.py --verbose
+  ```
+- Nếu cần smoke mode nhẹ hơn trong lúc debug frontend riêng, dùng:
+  ```bash
+  PLAYWRIGHT_USE_MOCK_BACKEND=1 npm run test:e2e
+  ```
+- Suite hiện bao phủ auth, catalog, cart/checkout/orders, chat, profile, và admin flows.
+
 ## Env
-- `NEXT_PUBLIC_API_BASE_URL`: base URL gateway (vd `http://localhost:8080`)
+- `NEXT_PUBLIC_API_BASE_URL`: base URL gateway (mặc định `http://localhost:8080`; Docker Compose ghi đè thành `/api/proxy` cho môi trường container)
+- `API_PROXY_BASE_URL`: target cho route `/api/proxy/*` phía server (mặc định `http://localhost:8080`; Docker Compose ghi đè thành `http://gateway`)
 - `NEXT_PUBLIC_APP_NAME`: tên app
 
 ## Cấu trúc thư mục
@@ -72,6 +85,7 @@ Truy cập qua gateway: `http://localhost:8080`.
 - Chat widget chưa render rich cards từ `related_products` nâng cao.
 - Payment mock đang dùng endpoint webhook đơn giản cho demo.
 - Chưa có SSR auth hydration vì ưu tiên thin frontend.
+- Nếu chạy `npm run dev` trực tiếp, frontend gọi gateway tại `http://localhost:8080`; Docker Compose dùng proxy same-origin `/api/proxy` và route handler forward sang service nội bộ `gateway`.
 
 ## Hướng mở rộng
 - Thêm shadcn component primitives đầy đủ.

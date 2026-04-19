@@ -142,7 +142,7 @@ class CartItemEntityTests(TestCase):
         self.cart_id = uuid4()
         self.product_ref = ProductReference("prod-1")
         self.price = Price(Decimal("99.99"))
-        self.snap shot = ProductSnapshot(
+        self.snapshot = ProductSnapshot(
             product_id="prod-1",
             name="Samsung Phone",
             slug="samsung-phone",

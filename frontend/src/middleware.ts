@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const protectedPaths = ["/cart", "/checkout", "/orders", "/chat", "/profile", "/admin"];
+const protectedPaths = ["/checkout", "/orders", "/chat", "/profile", "/admin"];
 
 export function middleware(request: NextRequest) {
   const token = request.cookies.get("techshop_access")?.value;
@@ -14,5 +14,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/cart/:path*", "/checkout/:path*", "/orders/:path*", "/chat/:path*", "/profile/:path*", "/admin/:path*"],
+  matcher: ["/checkout/:path*", "/orders/:path*", "/chat/:path*", "/profile/:path*", "/admin/:path*"],
 };

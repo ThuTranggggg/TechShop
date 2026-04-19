@@ -33,7 +33,9 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
     }
   }
 
-  const response = await fetch(`${config.apiBaseUrl}${path}`, { ...init, headers });
+  const base = config.apiBaseUrl.endsWith("/") ? config.apiBaseUrl.slice(0, -1) : config.apiBaseUrl;
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  const response = await fetch(`${base}${normalizedPath}`, { ...init, headers });
   const contentType = response.headers.get("content-type") ?? "";
   const json = (contentType.includes("application/json")
     ? ((await response.json()) as ApiResult<T>)

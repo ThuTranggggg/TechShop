@@ -3,12 +3,16 @@
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { clearAuth } from "@/services/auth";
+import { getAccessToken } from "@/services/auth";
 import { getAddresses, me } from "@/services/api/user";
+import { useMounted } from "@/hooks/use-mounted";
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { data: profile } = useQuery({ queryKey: ["me"], queryFn: me });
-  const { data: addresses } = useQuery({ queryKey: ["addresses"], queryFn: getAddresses });
+  const mounted = useMounted();
+  const token = getAccessToken();
+  const { data: profile } = useQuery({ queryKey: ["me"], queryFn: me, enabled: mounted && Boolean(token) });
+  const { data: addresses } = useQuery({ queryKey: ["addresses"], queryFn: getAddresses, enabled: mounted && Boolean(token) });
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">

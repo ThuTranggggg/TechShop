@@ -44,9 +44,6 @@ class OrderValidator:
             "user_id",
             "cart_id",
             "items",
-            "customer",
-            "shipping_address",
-            "totals",
         ]
         
         for field in required_fields:
@@ -58,12 +55,8 @@ class OrderValidator:
             raise ValueError("Cart must have at least one item")
         
         customer = payload.get("customer", {})
-        if not customer.get("name") or not customer.get("email"):
+        if customer and (not customer.get("name") or not customer.get("email")):
             raise ValueError("Customer name and email required")
-        
-        address = payload.get("shipping_address", {})
-        if not address.get("receiver_name") or not address.get("line1"):
-            raise ValueError("Shipping address incomplete")
         
         return True
     

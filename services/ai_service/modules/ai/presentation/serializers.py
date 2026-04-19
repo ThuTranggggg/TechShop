@@ -192,9 +192,9 @@ class ChatAnswerSerializer(serializers.Serializer):
     session_id = serializers.UUIDField(required=False)
     answer = serializers.CharField()
     intent = serializers.CharField()
-    sources = serializers.ListField()
+    sources = serializers.ListField(child=serializers.DictField())
     mode = serializers.CharField()
-    related_products = serializers.ListField(required=False)
+    related_products = serializers.ListField(child=serializers.DictField(), required=False)
     confidence = serializers.FloatField(required=False)
 
 
