@@ -13,10 +13,13 @@ class BehavioralEventSerializer(serializers.Serializer):
             "search",
             "product_view",
             "product_click",
+            "view_category",
             "add_to_cart",
             "remove_from_cart",
+            "add_to_wishlist",
             "checkout_started",
             "order_created",
+            "order_cancel",
             "payment_success",
             "chat_query",
         ]
@@ -35,6 +38,7 @@ class BehavioralEventSerializer(serializers.Serializer):
     )
     keyword = serializers.CharField(required=False, allow_blank=True, max_length=255)
     source_service = serializers.CharField(required=False, allow_blank=True, max_length=50)
+    occurred_at = serializers.DateTimeField(required=False, allow_null=True)
     metadata = serializers.JSONField(required=False, allow_null=True)
 
 
@@ -55,24 +59,27 @@ class BrandPreferenceSerializer(serializers.Serializer):
     """Serializer for brand preferences."""
 
     brand_name = serializers.CharField()
-    score = serializers.FloatField(min_value=0, max_value=100)
-    interaction_count = serializers.IntegerField(min_value=0)
+    score = serializers.FloatField(min_value=0)
+    interaction_count = serializers.IntegerField(min_value=0, required=False)
+    count = serializers.IntegerField(min_value=0, required=False)
 
 
 class CategoryPreferenceSerializer(serializers.Serializer):
     """Serializer for category preferences."""
 
     category_name = serializers.CharField()
-    score = serializers.FloatField(min_value=0, max_value=100)
-    interaction_count = serializers.IntegerField(min_value=0)
+    score = serializers.FloatField(min_value=0)
+    interaction_count = serializers.IntegerField(min_value=0, required=False)
+    count = serializers.IntegerField(min_value=0, required=False)
 
 
 class PriceRangePreferenceSerializer(serializers.Serializer):
     """Serializer for price range preferences."""
 
     price_range = serializers.CharField()
-    score = serializers.FloatField(min_value=0, max_value=100)
-    interaction_count = serializers.IntegerField(min_value=0)
+    score = serializers.FloatField(min_value=0)
+    interaction_count = serializers.IntegerField(min_value=0, required=False)
+    count = serializers.IntegerField(min_value=0, required=False)
 
 
 class UserPreferenceSummarySerializer(serializers.Serializer):
@@ -85,6 +92,8 @@ class UserPreferenceSummarySerializer(serializers.Serializer):
     recent_keywords = serializers.ListField(child=serializers.CharField())
     purchase_intent_score = serializers.FloatField()
     last_interaction_at = serializers.DateTimeField(allow_null=True)
+    graph_top_brands = BrandPreferenceSerializer(many=True, required=False)
+    graph_top_categories = CategoryPreferenceSerializer(many=True, required=False)
 
 
 class ProductSerializer(serializers.Serializer):
@@ -180,6 +189,7 @@ class ChatAskSerializer(serializers.Serializer):
 class ChatAnswerSerializer(serializers.Serializer):
     """Serializer for chat answer response."""
 
+    session_id = serializers.UUIDField(required=False)
     answer = serializers.CharField()
     intent = serializers.CharField()
     sources = serializers.ListField()
@@ -194,6 +204,9 @@ class SourceSerializer(serializers.Serializer):
     document_id = serializers.CharField()
     chunk_index = serializers.IntegerField(required=False)
     document_title = serializers.CharField(required=False)
+    document_type = serializers.CharField(required=False)
+    source = serializers.CharField(required=False)
+    snippet = serializers.CharField(required=False)
 
 
 class GraphInsightSerializer(serializers.Serializer):
@@ -203,3 +216,45 @@ class GraphInsightSerializer(serializers.Serializer):
     top_brands = serializers.ListField()
     top_categories = serializers.ListField()
     top_price_ranges = serializers.ListField()
+
+
+class BehaviorSummarySerializer(serializers.Serializer):
+    """Serializer for aggregated behavior analytics."""
+
+    total_events = serializers.IntegerField()
+    unique_users = serializers.IntegerField()
+    event_breakdown = serializers.ListField()
+    top_viewed_categories = serializers.ListField()
+    top_viewed_products = serializers.ListField()
+    conversion_funnel = serializers.DictField()
+    abandoned_cart_sessions = serializers.IntegerField()
+    co_viewed_products = serializers.ListField()
+    co_purchased_products = serializers.ListField()
+    low_intent_users = serializers.IntegerField()
+    user_segments = serializers.ListField()
+    timeline = serializers.ListField()
+
+
+class BehaviorUserSerializer(serializers.Serializer):
+    """Serializer for per-user behavior analytics."""
+
+    user_id = serializers.CharField()
+    total_events = serializers.IntegerField()
+    event_breakdown = serializers.ListField()
+    dominant_categories = serializers.ListField()
+    recent_searches = serializers.ListField()
+    recent_timeline = serializers.ListField()
+    current_intent = serializers.CharField()
+    next_likely_actions = serializers.ListField()
+    next_likely_products = serializers.ListField(required=False)
+
+
+class BehaviorFunnelSerializer(serializers.Serializer):
+    """Serializer for funnel analytics."""
+
+    search_sessions = serializers.IntegerField()
+    view_sessions = serializers.IntegerField()
+    cart_sessions = serializers.IntegerField()
+    checkout_sessions = serializers.IntegerField()
+    order_sessions = serializers.IntegerField()
+    payment_success_sessions = serializers.IntegerField()

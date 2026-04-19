@@ -9,6 +9,7 @@ from typing import List, Dict, Any, Optional, Tuple
 from uuid import UUID, uuid4
 from decimal import Decimal
 from datetime import datetime
+from copy import deepcopy
 
 from django.db import transaction
 
@@ -73,7 +74,7 @@ class GetOrderTimelineService:
     def execute(self, order_id: UUID) -> Optional[OrderTimelineDTO]:
         """Get order timeline from status history."""
         try:
-            from ...infrastructure.models import OrderModel, OrderStatusHistoryModel
+            from ..infrastructure.models import OrderModel, OrderStatusHistoryModel
             
             order = OrderModel.objects.get(id=order_id)
             history_models = OrderStatusHistoryModel.objects.filter(order_id=order_id).order_by("created_at")
@@ -125,6 +126,7 @@ class CreateOrderFromCartService:
         cart_client: CartServiceClient = None,
         inventory_client: InventoryServiceClient = None,
         payment_client: PaymentServiceClient = None,
+        product_client = None,
         user_client = None,
     ):
         self.order_repo = order_repo or OrderRepositoryImpl()
@@ -134,9 +136,13 @@ class CreateOrderFromCartService:
         self.cart_client = cart_client or CartServiceClient()
         self.inventory_client = inventory_client or InventoryServiceClient()
         self.payment_client = payment_client or PaymentServiceClient()
+        if product_client is None:
+            from ..infrastructure.clients import ProductServiceClient
+            product_client = ProductServiceClient()
+        self.product_client = product_client
         # Lazy import to avoid circular dependencies
         if user_client is None:
-            from ...infrastructure.clients import UserServiceClient
+            from ..infrastructure.clients import UserServiceClient
             user_client = UserServiceClient()
         self.user_client = user_client
     
@@ -158,6 +164,11 @@ class CreateOrderFromCartService:
             logger.info(f"Creating order from cart {cart_id} for user {user_id}")
             
             checkout_payload = self.cart_client.build_checkout_payload(cart_id, user_id)
+            checkout_payload = self._enrich_checkout_payload(
+                user_id=user_id,
+                checkout_payload=checkout_payload,
+                shipping_address=shipping_address,
+            )
             logger.debug(f"Checkout payload: {checkout_payload}")
             
             # 2. Validate payload
@@ -232,6 +243,62 @@ class CreateOrderFromCartService:
             logger.error(f"Failed to create order from cart: {e}")
             # TODO: Rollback reservations if partial failure
             raise
+
+    def _enrich_checkout_payload(
+        self,
+        user_id: UUID,
+        checkout_payload: Dict[str, Any],
+        shipping_address: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """Fill contract gaps between cart payload and order requirements."""
+        payload = deepcopy(checkout_payload)
+
+        user_info = self.user_client.get_user_basic_info(user_id)
+        receiver_name = shipping_address.get("receiver_name", "")
+        receiver_phone = shipping_address.get("receiver_phone")
+        customer_name = user_info.get("full_name") or receiver_name
+        customer_email = user_info.get("email", "")
+
+        payload.setdefault(
+            "customer",
+            {
+                "name": customer_name,
+                "email": customer_email,
+                "phone": receiver_phone,
+            },
+        )
+        payload.setdefault("shipping_address", deepcopy(shipping_address))
+
+        subtotal_amount = Decimal(str(payload.get("subtotal_amount", "0")))
+        currency = str(payload.get("currency", Currency.VND.value) or Currency.VND.value)
+        payload.setdefault(
+            "totals",
+            {
+                "subtotal": str(subtotal_amount),
+                "shipping_fee": "0.00",
+                "discount": "0.00",
+                "tax": "0.00",
+                "grand_total": str(subtotal_amount),
+                "currency": currency,
+            },
+        )
+
+        enriched_items = []
+        for item in payload.get("items", []):
+            enriched_item = deepcopy(item)
+            product_id = item.get("product_id")
+            if product_id:
+                product_snapshot = self.product_client.get_product_snapshot(
+                    UUID(str(product_id)),
+                    UUID(str(item["variant_id"])) if item.get("variant_id") else None,
+                )
+                for key, value in product_snapshot.items():
+                    if value is not None and not enriched_item.get(key):
+                        enriched_item[key] = value
+            enriched_items.append(enriched_item)
+        payload["items"] = enriched_items
+
+        return payload
     
     def _build_order_from_payload(
         self,
@@ -412,7 +479,7 @@ class CreateOrderFromCartService:
         Used when address validation fails (non-blocking).
         """
         try:
-            from ...infrastructure.models import OrderModel
+            from ..infrastructure.models import OrderModel
             OrderModel.objects.filter(id=order_id).update(
                 address_requires_verification=requires_verification,
                 address_verification_note=note,
@@ -456,7 +523,7 @@ class HandlePaymentSuccessService:
         self.shipping_client = shipping_client or ShippingServiceClient()
         # Lazy import to avoid circular dependencies
         if ai_client is None:
-            from ...infrastructure.clients import AIServiceClient
+            from ..infrastructure.clients import AIServiceClient
             ai_client = AIServiceClient()
         self.ai_client = ai_client
     
@@ -515,9 +582,61 @@ class HandlePaymentSuccessService:
             # Update order to PAID
             logger.info(f"Payment {payment_id} confirmed, marking order {order_id} as PAID")
             self.state_service.handle_payment_success(order)
+
+            # Create shipment immediately after payment success for end-to-end demo flow.
+            if not order.shipment_id:
+                shipment_payload = self.shipping_client.create_shipment(
+                    order_id=order.id,
+                    user_id=order.user_id,
+                    order_number=order.order_number.value,
+                    items=[
+                        {
+                            "order_item_id": str(item.id),
+                            "product_id": str(item.product_reference.product_id),
+                            "variant_id": str(item.product_reference.variant_id) if item.product_reference.variant_id else None,
+                            "sku": item.product_reference.sku,
+                            "quantity": item.quantity,
+                            "product_name_snapshot": item.product_snapshot.name,
+                            "variant_name_snapshot": item.product_snapshot.variant_name,
+                        }
+                        for item in order.items
+                    ],
+                    shipping_address={
+                        "receiver_name": order.address_snapshot.receiver_name,
+                        "receiver_phone": order.address_snapshot.receiver_phone,
+                        "line1": order.address_snapshot.line1,
+                        "line2": order.address_snapshot.line2,
+                        "ward": order.address_snapshot.ward,
+                        "district": order.address_snapshot.district,
+                        "city": order.address_snapshot.city,
+                        "country": order.address_snapshot.country,
+                        "postal_code": order.address_snapshot.postal_code,
+                    },
+                    shipping_fee_amount=order.shipping_fee.amount,
+                    currency=order.currency.value,
+                    metadata={"source": "payment_success"},
+                )
+
+                if shipment_payload.get("id") and shipment_payload.get("shipment_reference"):
+                    order.set_shipment_info(
+                        shipment_id=UUID(str(shipment_payload["id"])),
+                        shipment_reference=str(shipment_payload["shipment_reference"]),
+                    )
+                    self.order_repo.save(order)
+
+                current_status = order.status.value
+                if order.status == OrderStatus.PAID:
+                    self.state_service.transition_to_processing(order)
+                    self._record_status_history(
+                        order_id=order_id,
+                        from_status=current_status,
+                        to_status=OrderStatus.PROCESSING.value,
+                        note=f"Shipment created: {shipment_payload.get('shipment_reference') or 'pending'}",
+                    )
+                    order = self.order_repo.get_by_id(order_id)
             
             # Mark payment_success as processed (for idempotency)
-            from ...infrastructure.models import OrderModel
+            from ..infrastructure.models import OrderModel
             OrderModel.objects.filter(id=order_id).update(
                 payment_success_processed_at=timezone.now()
             )

@@ -124,6 +124,9 @@ NEO4J_USER = os.getenv("NEO4J_USER", "neo4j")
 NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "neo4jpassword")
 LLM_PROVIDER = os.getenv("LLM_PROVIDER", "placeholder")
 LLM_API_KEY = os.getenv("LLM_API_KEY", "placeholder")
+AI_DATA_DIR = Path(os.getenv("AI_DATA_DIR", BASE_DIR / "data"))
+LSTM_MODEL_PATH = Path(os.getenv("LSTM_MODEL_PATH", AI_DATA_DIR / "models" / "lstm_recommender.pt"))
+LSTM_METADATA_PATH = Path(os.getenv("LSTM_METADATA_PATH", AI_DATA_DIR / "models" / "sequence_model_metadata.json"))
 
 LOGGING = {
     "version": 1,

@@ -26,6 +26,7 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
     const userId = extractUserIdFromJwt(token);
     const role = extractUserRoleFromJwt(token);
     if (userId) headers.set("X-User-ID", userId);
+    if (role) headers.set("X-User-Role", role);
     if (role === "admin" || role === "staff") headers.set("X-Admin", "true");
     if (path.startsWith("/user/")) {
       headers.set("Authorization", `Bearer ${token}`);

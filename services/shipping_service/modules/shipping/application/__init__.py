@@ -16,6 +16,7 @@ from .services import (
     MarkOutForDeliveryService,
     MarkDeliveredService,
     MarkFailedDeliveryService,
+    MarkReturnedService,
     CancelShipmentService,
     MockAdvanceShipmentStatusService,
 )
@@ -38,6 +39,7 @@ __all__ = [
     "MarkOutForDeliveryService",
     "MarkDeliveredService",
     "MarkFailedDeliveryService",
+    "MarkReturnedService",
     "CancelShipmentService",
     "MockAdvanceShipmentStatusService",
     "CreateShipmentRequestDTO",

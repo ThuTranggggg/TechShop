@@ -6,6 +6,16 @@ Defines immutable business concepts like ProductStatus, Currency, etc.
 from enum import Enum
 
 
+class CategoryStatus(str, Enum):
+    """Category availability status."""
+    ACTIVE = "active"
+    INACTIVE = "inactive"
+
+    def choices(self):
+        """Return Django choices format."""
+        return [(member.value, member.name) for member in self.__class__]
+
+
 class ProductStatus(str, Enum):
     """Product publication status."""
     DRAFT = "draft"

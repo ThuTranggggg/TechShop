@@ -14,7 +14,7 @@ import { me } from "@/services/api/user";
 const links = [
   { href: "/products", label: "Sản phẩm" },
   { href: "/orders", label: "Đơn hàng" },
-  { href: "/chat", label: "AI Assistant" },
+  { href: "/chat", label: "AI Demo" },
 ];
 
 export function AppHeader() {
@@ -41,6 +41,7 @@ export function AppHeader() {
             <Link 
               key={link.href} 
               href={link.href} 
+              prefetch={false}
               className={cn(
                 "rounded-full px-4 py-2.5 transition-all",
                 pathname.startsWith(link.href)
@@ -54,7 +55,7 @@ export function AppHeader() {
         </nav>
         <div className="flex items-center gap-4">
           {isAdmin ? (
-            <Link href="/admin" className="hidden sm:inline-flex items-center gap-2 rounded-full border border-border bg-card px-3.5 py-2 text-xs font-semibold text-slate-600 hover:bg-muted">
+            <Link href="/admin" prefetch={false} className="hidden sm:inline-flex items-center gap-2 rounded-full border border-border bg-card px-3.5 py-2 text-xs font-semibold text-slate-600 hover:bg-muted">
               <LayoutDashboard className="h-3.5 w-3.5" />
               Admin
             </Link>
@@ -63,12 +64,16 @@ export function AppHeader() {
             <Compass className="h-3.5 w-3.5" />
             Browse
           </Link>
-          <Link href="/cart" className="relative transition-transform hover:scale-110 active:scale-90" aria-label="Cart">
+          <Link href="/chat" className="hidden md:inline-flex items-center gap-2 rounded-full border border-border bg-card px-3.5 py-2 text-xs font-semibold text-slate-600 hover:bg-muted">
+            <Sparkles className="h-3.5 w-3.5" />
+            RAG Demo
+          </Link>
+          <Link href="/cart" prefetch={false} className="relative transition-transform hover:scale-110 active:scale-90" aria-label="Cart">
             <CartBadge />
           </Link>
           {token ? (
             <div className="flex items-center gap-2">
-              <Link href="/profile" className="btn-primary py-2.5 shadow-soft">
+              <Link href="/profile" prefetch={false} className="btn-primary py-2.5 shadow-soft">
                 <UserCircle2 className="mr-2 h-4 w-4" />
                 <span className="hidden sm:inline">{profile?.full_name || "Tài khoản"}</span>
               </Link>

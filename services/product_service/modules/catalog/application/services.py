@@ -1,87 +1,107 @@
-"""
-Application services for Catalog context.
+"""Application services for catalog use cases."""
 
-Orchestrates use cases and domain logic.
-"""
-from typing import Optional, List, Dict, Any
+from __future__ import annotations
+
 from datetime import datetime
+from typing import Any, Dict, Optional
 import uuid
 
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db import transaction
-from django.core.exceptions import ValidationError
+from django.db.models import QuerySet
+from django.utils import timezone
 
-from ..domain.enums import ProductStatus, Currency
-from ..domain.entities import Slug, Money, SKU
+from ..application.dtos import CategoryUpsertDTO, ProductQueryDTO, ProductUpsertDTO
+from ..domain.enums import CategoryStatus, ProductStatus
 from ..infrastructure.models import (
-    CategoryModel,
     BrandModel,
-    ProductTypeModel,
-    ProductModel,
-    ProductVariantModel,
+    CategoryModel,
     ProductMediaModel,
+    ProductModel,
+    ProductTypeModel,
+    ProductVariantModel,
 )
+from ..infrastructure.repositories import CategoryRepository, ProductRepository
 
 
-class CategoryService:
-    """Service for category operations."""
+class CategoryQueryService:
+    """Read-only category queries."""
 
-    @staticmethod
-    def create_category(
-        name: str,
-        slug: str,
-        parent_id: Optional[uuid.UUID] = None,
-        description: str = "",
-        image_url: str = "",
-        is_active: bool = True,
-        sort_order: int = 0,
-    ) -> CategoryModel:
-        """Create a new category."""
-        # Validate slug
-        if CategoryModel.objects.filter(slug=slug).exists():
-            raise ValidationError(f"Category with slug '{slug}' already exists")
+    def __init__(self, repository: Optional[CategoryRepository] = None):
+        self.repository = repository or CategoryRepository()
 
-        # Prevent circular reference
-        if parent_id:
-            parent = CategoryModel.objects.get(id=parent_id)
-            # Check if parent exists in descendants
-            category_to_check = parent
-            visited = set()
-            while category_to_check:
-                if category_to_check.id in visited:
-                    raise ValidationError("Circular category reference")
-                visited.add(category_to_check.id)
-                category_to_check = category_to_check.parent
+    def list_categories(self, include_inactive: bool = False) -> QuerySet[CategoryModel]:
+        return self.repository.get_queryset(include_inactive=include_inactive)
 
-        category = CategoryModel.objects.create(
-            name=name,
-            slug=slug,
-            parent_id=parent_id,
-            description=description,
-            image_url=image_url,
-            is_active=is_active,
-            sort_order=sort_order,
+    def get_category(self, lookup: str, include_inactive: bool = False) -> CategoryModel:
+        try:
+            return self.repository.get_by_lookup(lookup, include_inactive=include_inactive)
+        except CategoryModel.DoesNotExist as exc:
+            raise ValidationError("Category not found") from exc
+
+
+class CategoryCommandService:
+    """Write operations for categories."""
+
+    def __init__(self, repository: Optional[CategoryRepository] = None):
+        self.repository = repository or CategoryRepository()
+
+    @transaction.atomic
+    def create_category(self, payload: CategoryUpsertDTO) -> CategoryModel:
+        parent = self._resolve_parent(payload.parent_id)
+        self._validate_unique_slug(payload.slug)
+        category = CategoryModel(
+            name=payload.name,
+            slug=payload.slug,
+            parent=parent,
+            description=payload.description,
+            image_url=payload.image_url,
+            status=payload.status,
+            is_active=payload.status == CategoryStatus.ACTIVE.value,
+            sort_order=payload.sort_order,
         )
-        return category
+        category.full_clean()
+        return self.repository.save(category)
+
+    @transaction.atomic
+    def update_category(self, lookup: str, payload: CategoryUpsertDTO) -> CategoryModel:
+        category = self.repository.get_by_lookup(lookup, include_inactive=True)
+        parent = self._resolve_parent(payload.parent_id)
+        self._validate_unique_slug(payload.slug, exclude_id=category.id)
+
+        category.name = payload.name
+        category.slug = payload.slug
+        category.parent = parent
+        category.description = payload.description
+        category.image_url = payload.image_url
+        category.status = payload.status
+        category.is_active = payload.status == CategoryStatus.ACTIVE.value
+        category.sort_order = payload.sort_order
+        category.full_clean()
+        return self.repository.save(category)
+
+    @transaction.atomic
+    def delete_category(self, lookup: str) -> None:
+        category = self.repository.get_by_lookup(lookup, include_inactive=True)
+        if category.products.exists():
+            raise ValidationError("Cannot delete category while products still belong to it")
+        category.delete()
+
+    def _resolve_parent(self, parent_id: Optional[str]) -> Optional[CategoryModel]:
+        if not parent_id:
+            return None
+        try:
+            return CategoryModel.objects.get(id=parent_id)
+        except CategoryModel.DoesNotExist as exc:
+            raise ValidationError("Parent category does not exist") from exc
 
     @staticmethod
-    def update_category(
-        category_id: uuid.UUID,
-        **kwargs
-    ) -> CategoryModel:
-        """Update category."""
-        category = CategoryModel.objects.get(id=category_id)
-        
-        # Check for slug uniqueness if changing slug
-        if "slug" in kwargs and kwargs["slug"] != category.slug:
-            if CategoryModel.objects.filter(slug=kwargs["slug"]).exists():
-                raise ValidationError(f"Slug '{kwargs['slug']}' already exists")
-
-        for field, value in kwargs.items():
-            setattr(category, field, value)
-        
-        category.full_clean()
-        category.save()
-        return category
+    def _validate_unique_slug(slug: str, exclude_id: Optional[uuid.UUID] = None) -> None:
+        queryset = CategoryModel.objects.filter(slug=slug)
+        if exclude_id:
+            queryset = queryset.exclude(id=exclude_id)
+        if queryset.exists():
+            raise ValidationError(f"Category with slug '{slug}' already exists")
 
 
 class BrandService:
@@ -95,7 +115,6 @@ class BrandService:
         logo_url: str = "",
         is_active: bool = True,
     ) -> BrandModel:
-        """Create a new brand."""
         if BrandModel.objects.filter(slug=slug).exists():
             raise ValidationError(f"Brand with slug '{slug}' already exists")
 
@@ -110,9 +129,8 @@ class BrandService:
 
     @staticmethod
     def update_brand(brand_id: uuid.UUID, **kwargs) -> BrandModel:
-        """Update brand."""
         brand = BrandModel.objects.get(id=brand_id)
-        
+
         if "slug" in kwargs and kwargs["slug"] != brand.slug:
             if BrandModel.objects.filter(slug=kwargs["slug"]).exists():
                 raise ValidationError(f"Slug '{kwargs['slug']}' already exists")
@@ -134,7 +152,6 @@ class ProductTypeService:
         description: str = "",
         is_active: bool = True,
     ) -> ProductTypeModel:
-        """Create a new product type."""
         if ProductTypeModel.objects.filter(code=code).exists():
             raise ValidationError(f"Product type with code '{code}' already exists")
 
@@ -148,9 +165,8 @@ class ProductTypeService:
 
     @staticmethod
     def update_product_type(product_type_id: uuid.UUID, **kwargs) -> ProductTypeModel:
-        """Update product type."""
         product_type = ProductTypeModel.objects.get(id=product_type_id)
-        
+
         if "code" in kwargs and kwargs["code"] != product_type.code:
             if ProductTypeModel.objects.filter(code=kwargs["code"]).exists():
                 raise ValidationError(f"Code '{kwargs['code']}' already exists")
@@ -162,128 +178,149 @@ class ProductTypeService:
         return product_type
 
 
-class ProductService:
-    """Service for product operations."""
+class ProductQueryService:
+    """Read-only product queries."""
 
-    @staticmethod
+    def __init__(self, repository: Optional[ProductRepository] = None):
+        self.repository = repository or ProductRepository()
+
+    def list_public_products(self, filters: Optional[ProductQueryDTO] = None) -> QuerySet[ProductModel]:
+        queryset = self.repository.get_public_queryset()
+        return self.repository.apply_filters(queryset, filters or ProductQueryDTO())
+
+    def list_admin_products(self, filters: Optional[ProductQueryDTO] = None) -> QuerySet[ProductModel]:
+        queryset = self.repository.get_admin_queryset()
+        return self.repository.apply_filters(queryset, filters or ProductQueryDTO())
+
+    def get_product(self, lookup: str, public_only: bool = True) -> ProductModel:
+        try:
+            return self.repository.get_by_lookup(lookup, public_only=public_only)
+        except ProductModel.DoesNotExist as exc:
+            raise ValidationError("Product not found") from exc
+
+    def list_products_for_category(self, category_lookup: str, public_only: bool = True) -> QuerySet[ProductModel]:
+        category = CategoryRepository().get_by_lookup(category_lookup, include_inactive=not public_only)
+        filters = ProductQueryDTO(category_id=str(category.id))
+        if public_only:
+            return self.list_public_products(filters)
+        return self.list_admin_products(filters)
+
+
+class ProductCommandService:
+    """Write operations for products."""
+
+    def __init__(self, repository: Optional[ProductRepository] = None):
+        self.repository = repository or ProductRepository()
+
     @transaction.atomic
-    def create_product(
-        name: str,
-        slug: str,
-        category_id: uuid.UUID,
-        product_type_id: uuid.UUID,
-        base_price: float,
-        currency: str = "VND",
-        brand_id: Optional[uuid.UUID] = None,
-        short_description: str = "",
-        description: str = "",
-        attributes: Dict[str, Any] = None,
-        status: str = "draft",
-        is_active: bool = True,
-        is_featured: bool = False,
-        thumbnail_url: str = "",
-        seo_title: str = "",
-        seo_description: str = "",
-    ) -> ProductModel:
-        """Create a new product."""
-        # Validate slug uniqueness
-        if ProductModel.objects.filter(slug=slug).exists():
-            raise ValidationError(f"Product with slug '{slug}' already exists")
+    def create_product(self, payload: ProductUpsertDTO) -> ProductModel:
+        self._validate_unique_slug(payload.slug)
+        category = self._resolve_category(payload.category_id)
+        product_type = self._resolve_product_type(payload.product_type_id)
+        brand = self._resolve_brand(payload.brand_id)
 
-        # Validate category and product_type exist
-        category = CategoryModel.objects.get(id=category_id)
-        product_type = ProductTypeModel.objects.get(id=product_type_id)
-
-        if brand_id:
-            brand = BrandModel.objects.get(id=brand_id)
-
-        product = ProductModel.objects.create(
-            name=name,
-            slug=slug,
-            short_description=short_description,
-            description=description,
+        product = ProductModel(
+            name=payload.name,
+            slug=payload.slug,
+            short_description=payload.short_description,
+            description=payload.description,
             category=category,
-            brand_id=brand_id,
+            brand=brand,
             product_type=product_type,
-            base_price=base_price,
-            currency=currency,
-            attributes=attributes or {},
-            status=status,
-            is_active=is_active,
-            is_featured=is_featured,
-            thumbnail_url=thumbnail_url,
-            seo_title=seo_title,
-            seo_description=seo_description,
+            base_price=payload.base_price,
+            currency=payload.currency,
+            attributes=payload.attributes,
+            status=payload.status,
+            is_active=payload.is_active,
+            is_featured=payload.is_featured,
+            thumbnail_url=payload.thumbnail_url,
+            seo_title=payload.seo_title,
+            seo_description=payload.seo_description,
+            published_at=timezone.now() if payload.status == ProductStatus.ACTIVE.value else None,
         )
-        return product
+        product.full_clean()
+        return self.repository.save(product)
 
-    @staticmethod
-    def update_product(product_id: uuid.UUID, **kwargs) -> ProductModel:
-        """Update product."""
-        product = ProductModel.objects.get(id=product_id)
-        
-        # Can't change slug to existing one
-        if "slug" in kwargs and kwargs["slug"] != product.slug:
-            if ProductModel.objects.filter(slug=kwargs["slug"]).exists():
-                raise ValidationError(f"Slug '{kwargs['slug']}' already exists")
+    @transaction.atomic
+    def update_product(self, lookup: str, payload: ProductUpsertDTO) -> ProductModel:
+        product = self.repository.get_by_lookup(lookup, public_only=False)
+        self._validate_unique_slug(payload.slug, exclude_id=product.id)
 
-        for field, value in kwargs.items():
-            setattr(product, field, value)
-
-        product.save()
-        return product
+        product.name = payload.name
+        product.slug = payload.slug
+        product.category = self._resolve_category(payload.category_id)
+        product.product_type = self._resolve_product_type(payload.product_type_id)
+        product.brand = self._resolve_brand(payload.brand_id)
+        product.short_description = payload.short_description
+        product.description = payload.description
+        product.base_price = payload.base_price
+        product.currency = payload.currency
+        product.attributes = payload.attributes
+        product.status = payload.status
+        product.is_active = payload.is_active
+        product.is_featured = payload.is_featured
+        product.thumbnail_url = payload.thumbnail_url
+        product.seo_title = payload.seo_title
+        product.seo_description = payload.seo_description
+        if payload.status == ProductStatus.ACTIVE.value and product.published_at is None:
+            product.published_at = timezone.now()
+        if payload.status != ProductStatus.ACTIVE.value:
+            product.published_at = None
+        product.full_clean()
+        return self.repository.save(product)
 
     @staticmethod
     @transaction.atomic
     def publish_product(product_id: uuid.UUID) -> ProductModel:
-        """Publish product."""
         product = ProductModel.objects.select_for_update().get(id=product_id)
-        
+
         if product.status != ProductStatus.DRAFT.value:
             raise ValidationError("Only draft products can be published")
 
         product.status = ProductStatus.ACTIVE.value
-        product.published_at = datetime.utcnow()
-        product.save()
+        product.published_at = timezone.now()
+        product.save(update_fields=["status", "published_at", "updated_at"])
         return product
 
     @staticmethod
     @transaction.atomic
     def unpublish_product(product_id: uuid.UUID) -> ProductModel:
-        """Unpublish product."""
         product = ProductModel.objects.select_for_update().get(id=product_id)
-        
+
         if product.status != ProductStatus.ACTIVE.value:
             raise ValidationError("Only active products can be unpublished")
 
         product.status = ProductStatus.DRAFT.value
-        product.save()
+        product.published_at = None
+        product.save(update_fields=["status", "published_at", "updated_at"])
         return product
 
     @staticmethod
     def activate_product(product_id: uuid.UUID) -> ProductModel:
-        """Activate product."""
         product = ProductModel.objects.get(id=product_id)
         product.is_active = True
-        product.save()
+        product.save(update_fields=["is_active", "updated_at"])
         return product
 
     @staticmethod
     def deactivate_product(product_id: uuid.UUID) -> ProductModel:
-        """Deactivate product."""
         product = ProductModel.objects.get(id=product_id)
         product.is_active = False
-        product.save()
+        product.save(update_fields=["is_active", "updated_at"])
         return product
 
     @staticmethod
     def get_product_snapshot(product_id: uuid.UUID) -> Dict[str, Any]:
-        """Get product snapshot for internal APIs (cart, order, etc)."""
-        product = ProductModel.objects.select_related(
-            "category", "brand", "product_type"
-        ).prefetch_related("variants", "media").get(id=product_id)
+        try:
+            product = (
+                ProductModel.objects.select_related("category", "brand", "product_type")
+                .prefetch_related("variants", "media")
+                .get(id=product_id)
+            )
+        except ProductModel.DoesNotExist as exc:
+            raise ValidationError("Product not found") from exc
 
-        default_variant = product.variants.filter(is_default=True).first()
+        default_variant = product.default_variant
 
         return {
             "id": str(product.id),
@@ -291,6 +328,7 @@ class ProductService:
             "slug": product.slug,
             "category_id": str(product.category.id),
             "category_name": product.category.name,
+            "category_slug": product.category.slug,
             "brand_id": str(product.brand.id) if product.brand else None,
             "brand_name": product.brand.name if product.brand else None,
             "product_type": product.product_type.code,
@@ -310,6 +348,40 @@ class ProductService:
             } if default_variant else None,
         }
 
+    @staticmethod
+    def _validate_unique_slug(slug: str, exclude_id: Optional[uuid.UUID] = None) -> None:
+        queryset = ProductModel.objects.filter(slug=slug)
+        if exclude_id:
+            queryset = queryset.exclude(id=exclude_id)
+        if queryset.exists():
+            raise ValidationError(f"Product with slug '{slug}' already exists")
+
+    @staticmethod
+    def _resolve_category(category_id: str) -> CategoryModel:
+        try:
+            category = CategoryModel.objects.get(id=category_id)
+        except CategoryModel.DoesNotExist as exc:
+            raise ValidationError("Category does not exist") from exc
+        if category.status != CategoryStatus.ACTIVE.value:
+            raise ValidationError("Products can only be assigned to active categories")
+        return category
+
+    @staticmethod
+    def _resolve_product_type(product_type_id: str) -> ProductTypeModel:
+        try:
+            return ProductTypeModel.objects.get(id=product_type_id)
+        except ProductTypeModel.DoesNotExist as exc:
+            raise ValidationError("Product type does not exist") from exc
+
+    @staticmethod
+    def _resolve_brand(brand_id: Optional[str]) -> Optional[BrandModel]:
+        if not brand_id:
+            return None
+        try:
+            return BrandModel.objects.get(id=brand_id)
+        except BrandModel.DoesNotExist as exc:
+            raise ValidationError("Brand does not exist") from exc
+
 
 class ProductVariantService:
     """Service for product variant operations."""
@@ -328,20 +400,13 @@ class ProductVariantService:
         is_default: bool = False,
         is_active: bool = True,
     ) -> ProductVariantModel:
-        """Create a new product variant."""
         product = ProductModel.objects.get(id=product_id)
-        
-        # Check SKU uniqueness
+
         if ProductVariantModel.objects.filter(sku=sku).exists():
             raise ValidationError(f"SKU '{sku}' already exists")
 
-        # Check for default variant
-        if is_default:
-            existing_default = ProductVariantModel.objects.filter(
-                product=product, is_default=True
-            ).exists()
-            if existing_default:
-                raise ValidationError("Product already has a default variant")
+        if is_default and ProductVariantModel.objects.filter(product=product, is_default=True).exists():
+            raise ValidationError("Product already has a default variant")
 
         variant = ProductVariantModel.objects.create(
             product=product,
@@ -360,26 +425,21 @@ class ProductVariantService:
     @staticmethod
     @transaction.atomic
     def set_default_variant(variant_id: uuid.UUID) -> ProductVariantModel:
-        """Set variant as default."""
         variant = ProductVariantModel.objects.select_for_update().get(id=variant_id)
-        
-        # Clear current default
+
         ProductVariantModel.objects.filter(
             product=variant.product,
-            is_default=True
+            is_default=True,
         ).exclude(id=variant.id).update(is_default=False)
 
-        # Set new default
         variant.is_default = True
-        variant.save()
+        variant.save(update_fields=["is_default", "updated_at"])
         return variant
 
     @staticmethod
     def update_variant(variant_id: uuid.UUID, **kwargs) -> ProductVariantModel:
-        """Update variant."""
         variant = ProductVariantModel.objects.get(id=variant_id)
-        
-        # Check SKU uniqueness if changing
+
         if "sku" in kwargs and kwargs["sku"] != variant.sku:
             if ProductVariantModel.objects.filter(sku=kwargs["sku"]).exists():
                 raise ValidationError(f"SKU '{kwargs['sku']}' already exists")
@@ -404,7 +464,6 @@ class ProductMediaService:
         sort_order: int = 0,
         is_primary: bool = False,
     ) -> ProductMediaModel:
-        """Create product media."""
         if not product_id and not variant_id:
             raise ValidationError("Either product_id or variant_id must be provided")
 
@@ -423,12 +482,16 @@ class ProductMediaService:
 
     @staticmethod
     def update_media(media_id: uuid.UUID, **kwargs) -> ProductMediaModel:
-        """Update media."""
         media = ProductMediaModel.objects.get(id=media_id)
-        
+
         for field, value in kwargs.items():
             setattr(media, field, value)
 
         media.full_clean()
         media.save()
         return media
+
+
+# Backward-compatible aliases for earlier service names.
+CategoryService = CategoryCommandService
+ProductService = ProductCommandService

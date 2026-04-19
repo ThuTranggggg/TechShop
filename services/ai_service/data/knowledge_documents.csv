@@ -1,0 +1,94 @@
+slug,title,document_type,source,content,metadata
+guide-accessories,Product Guide - accessories,product_guide,csv_dataset,"Danh muc accessories hien co 4 san pham de demo.
+San pham noi bat:
+- Balo Commute Flex (carry-all), gia 899000 VND, tags: balo|backpack|travel.
+- Kinh mat SunFrame (carry-all), gia 559000 VND, tags: kinh|eyewear|summer.
+- Op lung MagSafe Clear (carry-all), gia 249000 VND, tags: phone-case|accessory|magsafe.
+- That lung Leather Line (carry-all), gia 399000 VND, tags: belt|leather|men.","{""category_name"": ""accessories"", ""document_type"": ""product_guide""}"
+guide-books,Product Guide - books,product_guide,csv_dataset,"Danh muc books hien co 4 san pham de demo.
+San pham noi bat:
+- Book Brand Design Systems (mindforge), gia 219000 VND, tags: book|design|branding.
+- Book Deep Work Playbook (mindforge), gia 179000 VND, tags: book|productivity|focus.
+- Book Lean Business Notes (mindforge), gia 199000 VND, tags: book|business|strategy.
+- Book ML for Builders (mindforge), gia 249000 VND, tags: book|machine-learning|engineering.","{""category_name"": ""books"", ""document_type"": ""product_guide""}"
+guide-cosmetics,Product Guide - cosmetics,product_guide,csv_dataset,"Danh muc cosmetics hien co 7 san pham de demo.
+San pham noi bat:
+- Kem chong nang Daily Shield SPF50 (velvet-glow), gia 349000 VND, tags: kem-chong-nang|spf50|uv.
+- Kem nen AirFit Cushion (velvet-glow), gia 469000 VND, tags: cushion|kem-nen|glow.
+- Kem nen Second Skin (velvet-glow), gia 429000 VND, tags: kem-nen|foundation|base.
+- Serum Niacinamide 10% (velvet-glow), gia 389000 VND, tags: serum|skincare|brightening.
+- Son Lip Dewy Rose (velvet-glow), gia 259000 VND, tags: son|gloss|makeup.
+- Son Lip Velvet Maple (velvet-glow), gia 289000 VND, tags: son|lipstick|makeup.","{""category_name"": ""cosmetics"", ""document_type"": ""product_guide""}"
+guide-electronics,Product Guide - electronics,product_guide,csv_dataset,"Danh muc electronics hien co 7 san pham de demo.
+San pham noi bat:
+- Headphones WaveBuds Pro (nova-tech), gia 2490000 VND, tags: audio|wireless|noise-cancelling.
+- Laptop Aero 14 (nova-tech), gia 28990000 VND, tags: laptop|ultrabook|office.
+- Laptop Studio Pro 16 (nova-tech), gia 35990000 VND, tags: laptop|creator|performance.
+- Mobile Aurora Lite 5G (aurora-mobile), gia 7990000 VND, tags: mobile|budget|5g.
+- Mobile Aurora X5 (aurora-mobile), gia 12990000 VND, tags: mobile|5g|camera.
+- Smartwatch Pulse S2 (aurora-mobile), gia 3190000 VND, tags: smartwatch|fitness|wearable.","{""category_name"": ""electronics"", ""document_type"": ""product_guide""}"
+guide-fashion,Product Guide - fashion,product_guide,csv_dataset,"Danh muc fashion hien co 8 san pham de demo.
+San pham noi bat:
+- Ao khoac Urban Shell (urban-vogue), gia 799000 VND, tags: ao|jacket|streetwear.
+- Ao thun Essential Cotton (urban-vogue), gia 249000 VND, tags: ao|tshirt|cotton.
+- Dam midi SoftLine (urban-vogue), gia 899000 VND, tags: dress|women|office.
+- Dep sandal Coastline (urban-vogue), gia 359000 VND, tags: dep|sandal|summer.
+- Giay sneaker Cloud Runner (urban-vogue), gia 1199000 VND, tags: giay|sneaker|lifestyle.
+- Mu bucket Weekend (urban-vogue), gia 199000 VND, tags: mu|bucket|accessory.","{""category_name"": ""fashion"", ""document_type"": ""product_guide""}"
+guide-groceries,Product Guide - groceries,product_guide,csv_dataset,"Danh muc groceries hien co 4 san pham de demo.
+San pham noi bat:
+- Coffee Single Origin Da Lat (green-basket), gia 189000 VND, tags: coffee|beans|dalat.
+- Granola Honey Almond (green-basket), gia 165000 VND, tags: granola|healthy|breakfast.
+- Matcha Latte Starter Kit (green-basket), gia 229000 VND, tags: matcha|drink|starter-kit.
+- Nuts Premium Mix 500g (green-basket), gia 175000 VND, tags: nuts|healthy|snack.","{""category_name"": ""groceries"", ""document_type"": ""product_guide""}"
+guide-home_appliances,Product Guide - home_appliances,product_guide,csv_dataset,"Danh muc home_appliances hien co 6 san pham de demo.
+San pham noi bat:
+- Air Conditioner CoolBreeze Inverter (polar-home), gia 13490000 VND, tags: air-conditioner|inverter|cooling.
+- Air Purifier BreezeGuard 300 (polar-home), gia 6290000 VND, tags: air-purifier|home|wellness.
+- Refrigerator FrostMax 360L (polar-home), gia 15990000 VND, tags: refrigerator|family|inverter.
+- Rice Cooker SmartPot 1.8L (polar-home), gia 1490000 VND, tags: rice-cooker|kitchen|daily.
+- Vacuum Robot CleanSphere Mini (polar-home), gia 5490000 VND, tags: robot-vacuum|smart-home|cleaning.
+- Washing Machine CleanWave 10kg (polar-home), gia 9990000 VND, tags: washing-machine|laundry|home.","{""category_name"": ""home_appliances"", ""document_type"": ""product_guide""}"
+guide-sports,Product Guide - sports,product_guide,csv_dataset,"Danh muc sports hien co 5 san pham de demo.
+San pham noi bat:
+- Binh nuoc Trail Steel 1L (trailblaze), gia 329000 VND, tags: water-bottle|hiking|outdoor.
+- Giay running Skyline 2 (trailblaze), gia 1599000 VND, tags: giay|running|sport.
+- Leu cam trai Weekender 4P (trailblaze), gia 2399000 VND, tags: camping|tent|outdoor.
+- Ta tay Hex 10kg Pair (trailblaze), gia 1299000 VND, tags: dumbbell|strength|home-gym.
+- Tham yoga Align Mat (trailblaze), gia 699000 VND, tags: yoga|fitness|mat.","{""category_name"": ""sports"", ""document_type"": ""product_guide""}"
+shipping-policy,Shipping Policy,shipping_policy,csv_dataset,"# Shipping Policy
+
+TechShop giao hang toan quoc bang nha van chuyen mock de demo.
+
+- Don hang truoc 16:00 duoc tao shipment trong ngay.
+- Trang thai demo: pending -> preparing -> in_transit -> delivered -> returned.
+- Don gia tri cao duoc uu tien dong goi ky va co tracking.
+- Staff co the cap nhat shipment status tu trang admin.
+","{""document_type"": ""shipping_policy""}"
+payment-policy,Payment Policy,payment_policy,csv_dataset,"# Payment Policy
+
+TechShop su dung mock payment de demo end-to-end checkout.
+
+- Trang thai ho tro: unpaid, pending, paid, failed, refunded.
+- Sau payment success he thong tao shipment mock tu dong.
+- Neu xac nhan ton kho that bai, payment duoc danh dau refund/failed phu hop.
+","{""document_type"": ""payment_policy""}"
+return-policy,Return Policy,return_policy,csv_dataset,"# Return Policy
+
+Khach hang co the yeu cau ho tro doi tra trong giai doan demo.
+
+- San pham bi loi van chuyen co the bi danh dau returned.
+- Staff co the cap nhat trang thai shipment ve returned de mo phong van hanh.
+- Chatbot RAG se truy hoi chinh sach nay khi nguoi dung hoi ve doi tra.
+","{""document_type"": ""return_policy""}"
+faq-techshop,TechShop FAQ,faq,csv_dataset,"# FAQ
+
+## TechShop co nhung nganh hang nao?
+Electronics, fashion, cosmetics, home_appliances, accessories, books, groceries, sports va nhieu nhom mo rong khac.
+
+## AI assistant co the lam gi?
+Goi y san pham, search, add to cart, tao order, chat tra loi policy, va phan tich hanh vi.
+
+## Recommendation duoc xay dung tu dau?
+Tu behavioral events, LSTM sequence model, product co-occurrence, live catalog va Neo4j knowledge graph.
+","{""document_type"": ""faq""}"

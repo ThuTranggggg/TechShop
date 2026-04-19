@@ -7,6 +7,14 @@ import logging
 from abc import ABC, abstractmethod
 from typing import Optional, List, Dict, Any
 
+from modules.ai.infrastructure.taxonomy import (
+    CATEGORY_ALIASES,
+    PRICE_FILTER_PATTERNS,
+    PRODUCT_GROUP_ALIASES,
+    extract_alias_matches,
+    normalize_text,
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -39,7 +47,10 @@ class MockLLMProvider(BaseLLMProvider):
     """Mock LLM provider for development/testing."""
 
     # Intent classification rules
-    PRODUCT_KEYWORDS = ["sản phẩm", "điện thoại", "laptop", "máy tính", "camera", "nào"]
+    PRODUCT_KEYWORDS = [
+        "sản phẩm", "product", "điện thoại", "laptop", "quần áo", "mỹ phẩm", "gia dụng",
+        "mẹ và bé", "thực phẩm", "đồ uống", "sức khỏe", "đồ chơi", "thú cưng", "nào",
+    ]
     ORDER_KEYWORDS = ["đơn hàng", "order", "when", "khi nào"]
     SHIPMENT_KEYWORDS = ["vận chuyển", "giao", "tracking", "ở đâu", "chưa nhận"]
     POLICY_KEYWORDS = ["chính sách", "policy", "đổi", "trả", "return", "exchange"]
@@ -51,21 +62,26 @@ class MockLLMProvider(BaseLLMProvider):
         Returns: product_search, order_status, shipment_status, policy_question, general_support, unknown
         """
         query_lower = query.lower()
+        query_normalized = self._normalize_text(query)
+        entities = self.maybe_extract_entities(query)
 
-        if any(kw in query_lower for kw in self.ORDER_KEYWORDS):
-            if "status" in query_lower or "tình trạng" in query_lower:
+        if any(self._normalize_text(kw) in query_normalized for kw in self.ORDER_KEYWORDS):
+            if "status" in query_normalized or "tinh trang" in query_normalized:
                 return "order_status"
 
-        if any(kw in query_lower for kw in self.SHIPMENT_KEYWORDS):
+        if any(self._normalize_text(kw) in query_normalized for kw in self.SHIPMENT_KEYWORDS):
             return "shipment_status"
 
-        if any(kw in query_lower for kw in self.POLICY_KEYWORDS):
+        if any(self._normalize_text(kw) in query_normalized for kw in self.POLICY_KEYWORDS):
             return "policy_question"
 
-        if any(kw in query_lower for kw in self.PAYMENT_KEYWORDS):
+        if any(self._normalize_text(kw) in query_normalized for kw in self.PAYMENT_KEYWORDS):
             return "payment_status"
 
-        if any(kw in query_lower for kw in self.PRODUCT_KEYWORDS):
+        if any(self._normalize_text(kw) in query_normalized for kw in self.PRODUCT_KEYWORDS):
+            return "product_search"
+
+        if entities["brands"] or entities["categories"] or entities["price_filters"]:
             return "product_search"
 
         return "general_support"
@@ -110,28 +126,25 @@ class MockLLMProvider(BaseLLMProvider):
         }
 
         query_lower = query.lower()
+        query_normalized = normalize_text(query)
 
-        # Simple brand extraction
-        brands = ["samsung", "apple", "iphone", "nokia", "xiaomi", "oppo", "vivo", "realme"]
-        for brand in brands:
-            if brand in query_lower:
-                entities["brands"].append(brand)
+        entities["brands"] = extract_alias_matches(query, PRODUCT_GROUP_ALIASES)
+        entities["categories"] = extract_alias_matches(query, CATEGORY_ALIASES)
 
-        # Simple category extraction
-        categories = ["smartphone", "laptop", "camera", "máy tính", "điện thoại", "xe"]
-        for cat in categories:
-            if cat in query_lower:
-                entities["categories"].append(cat)
+        for canonical, patterns in PRICE_FILTER_PATTERNS.items():
+            if any(normalize_text(pattern) in query_normalized for pattern in patterns):
+                entities["price_filters"].append(canonical)
 
-        # Simple price extraction
-        if "dưới 10 triệu" in query_lower or "under 10m" in query_lower:
-            entities["price_filters"].append("under_10m")
-        elif "dưới 5 triệu" in query_lower or "under 5m" in query_lower:
-            entities["price_filters"].append("under_5m")
-        elif "trên 20 triệu" in query_lower or "above 20m" in query_lower:
-            entities["price_filters"].append("above_20m")
+        for token in query_lower.split():
+            normalized = normalize_text(token.strip(" ?!,.:;"))
+            if normalized and normalized not in {"toi", "can", "muon", "tim", "cho", "gia"}:
+                entities["keywords"].append(normalized)
 
         return entities
+
+    @staticmethod
+    def _normalize_text(text: str) -> str:
+        return normalize_text(text)
 
     def _generate_no_context_answer(self, intent: str, query: str) -> str:
         """Generate answer when context is unavailable."""

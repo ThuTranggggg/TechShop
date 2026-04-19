@@ -8,3 +8,5 @@ export const getOrders = () => apiFetch<Order[]>("/order/api/v1/orders/");
 export const getOrderDetail = (id: string) => apiFetch<Order>(`/order/api/v1/orders/${id}/`);
 export const getOrderTimeline = (id: string) =>
   apiFetch<{ status_history: Array<{ to_status: string; note?: string; created_at?: string }> }>(`/order/api/v1/orders/${id}/timeline/`);
+export const getOperationsOrders = () => apiFetch<Order[]>("/order/api/v1/operations/orders/");
+export const getOperationsOrderDetail = (id: string) => apiFetch<Order>(`/order/api/v1/operations/orders/${id}/`);

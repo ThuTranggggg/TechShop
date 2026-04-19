@@ -19,10 +19,10 @@ class OrderServiceClient:
     def __init__(self):
         self.base_url = os.getenv(
             "ORDER_SERVICE_URL",
-            "http://order_service:8003/api/v1/internal"
+            "http://order_service:8004/api/v1/internal"
         )
         self.timeout = float(os.getenv("SERVICE_TIMEOUT", "5"))
-        self.auth_token = os.getenv("INTERNAL_SERVICE_AUTH_TOKEN", "")
+        self.auth_token = os.getenv("INTERNAL_SERVICE_KEY", "") or os.getenv("INTERNAL_SERVICE_AUTH_TOKEN", "")
 
     def _get_headers(self) -> dict:
         """Get request headers"""

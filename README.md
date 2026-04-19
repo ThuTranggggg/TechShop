@@ -1,256 +1,298 @@
-# TechShop - Production-Ready Django Microservices E-Commerce Platform
+# TechShop
 
-A modern, production-grade e-commerce platform built with **Django**, **Django REST Framework**, and **PostgreSQL**. Complete microservices architecture with 8 independent services, end-to-end order processing, AI-powered recommendations, and real-time inventory management.
+TechShop là hệ thống e-commerce microservices gồm frontend Next.js, backend Django/DRF, PostgreSQL theo từng service, Redis, Neo4j và `ai_service` phục vụ recommendation, behavior analytics, LSTM, Knowledge Graph và RAG chat.
 
-**Status**: ✅ **PRODUCTION-READY MVP** - Fully Integrated & Demo-Ready
+## Stack hiện tại
 
-### Key Stats
-- **8 Microservices** (User, Product, Cart, Order, Payment, Shipping, Inventory, AI)
-- **8 End-to-End Flows** Verified and Working
-- **300+ Lines** of Integration Tests
-- **45+ Products** Pre-seeded with Demo Data
-- **Real Inventory** Reservation & Confirmation System
-- **AI Recommendations** with Neo4j Graph Database (Mock)
-- **Mock Payment & Shipping** Providers for Testing
+- Frontend: Next.js 14, TypeScript, Tailwind, React Query
+- Backend: Django 5 + Django REST Framework cho `user`, `product`, `cart`, `order`, `payment`, `shipping`, `inventory`, `ai`
+- Database: PostgreSQL riêng cho từng service
+- Infra: Redis, Neo4j, Nginx gateway, Docker Compose
+- Auth/RBAC: JWT + roles `admin`, `staff`, `customer`
+- AI: behavioral events, recommendation hybrid, PyTorch LSTM fallback, Neo4j KG, local keyword/vector-lite RAG fallback
 
-## 🚀 Quick Start
+## Những gì đã có sau khi cập nhật
+
+- Roles đầy đủ: `Admin`, `Staff`, `Customer`
+- Catalog seed 45 sản phẩm, đa category:
+  - `electronics`
+  - `fashion`
+  - `cosmetics`
+  - `home_appliances`
+  - `accessories`
+  - `books`
+  - `groceries`
+  - `sports`
+  - và thêm `baby_kids`, `furniture`, `office`, `toys`
+- Flow chạy end-to-end:
+  - search/view product
+  - add to cart / update cart
+  - checkout
+  - create order
+  - mock payment success/failure
+  - auto create shipment sau payment success
+  - staff/admin update shipping status
+- AI service:
+  - recommendations
+  - search
+  - add-to-cart action
+  - create-order action
+  - chat + RAG
+  - behavior analytics
+  - KG rebuild
+  - LSTM training endpoint/script
+- Dữ liệu AI:
+  - `data_100users.csv`
+  - hơn 3.000 behavior events
+  - tối thiểu 10 loại hành vi
+
+## Cấu trúc quan trọng
+
+```text
+frontend/                               Next.js app demo
+gateway/                                Nginx gateway
+services/
+  user_service/                         auth + users + roles
+  product_service/                      catalog + categories + brands
+  cart_service/                         cart
+  order_service/                        orders + orchestration
+  payment_service/                      mock payment
+  shipping_service/                     shipping + tracking + staff ops
+  inventory_service/                    stock + reservations
+  ai_service/                           recommendations + behavior + KG + RAG + LSTM
+scripts/
+  generate_demo_ai_assets.py            sinh data_100users + AI assets
+  seed_demo_data.sh                     seed demo toàn hệ thống
+  train_models.sh                       train LSTM
+  build_knowledge_graph.sh              rebuild Neo4j KG
+  build_rag_index.sh                    rebuild RAG index
+  smoke_test.py                         smoke test end-to-end
+data/
+  data_100users.csv                     dữ liệu behavior 100 users
+  faq/                                  tài liệu FAQ cho RAG
+  policies/                             shipping/payment/return policy
+```
+
+## Tài khoản demo
+
+- Admin: `admin@techshop.com` / `Demo@123456`
+- Staff: `staff@techshop.com` / `Demo@123456`
+- Customer: `john@example.com` / `Demo@123456`
+
+## Chạy bằng Docker
 
 ```bash
-# 1. Start all services (one command)
-docker-compose up --build -d
-
-# 2. Seed demo data (pre-populated)
-python shared/scripts/seed_complete_system.py --verbose
-
-# 3. Run end-to-end tests
-python shared/scripts/e2e_integration_test.py --verbose
-
-# 4. Open demo page
-open http://localhost:80/
-```
-
-**Time to running system: ~5 minutes** ⚡
-
-## 🏗️ Architecture
-
-### Why Microservices?
-
-- **Service Independence**: Each service is a separate Django project with independent deployment
-- **Database Autonomy**: Each service owns its database (no shared schemas)
-- **Clear Boundaries**: Domain-driven design with bounded contexts per service
-- **Team Ownership**: Each team owns complete lifecycle of their service
-- **Technology Freedom**: Each service can evolve tech stack independently
-- **Production-Grade**: Proven patterns for scale-out, reliability, and maintainability
-
-### Service Ecosystem
-
-| Service | Port | Purpose | State |
-|---------|------|---------|-------|
-| **User Service** | 8001 | Auth, user profiles, addresses | ✅ Complete |
-| **Product Service** | 8002 | Catalog, products, categories, brands | ✅ Complete |
-| **Cart Service** | 8003 | Shopping cart management | ✅ Complete |
-| **Order Service** | 8004 | Order creation, orchestration | ✅ Complete |
-| **Payment Service** | 8005 | Payment processing (mock provider) | ✅ Complete |
-| **Inventory Service** | 8007 | Stock, reservations, availability | ✅ Complete |
-| **Shipping Service** | 8008 | Shipment tracking (mock provider) | ✅ Complete |
-| **AI Service** | 8000 | Recommendations, behavioral tracking, RAG Chat | ✅ Complete |
-| **API Gateway** | 80 | Nginx routing and load balancing | ✅ Ready |
-
-## 📋 Repository Structure
-
-```
-TechShop/
-├── gateway/
-│   └── nginx/
-│       └── default.conf              # API Gateway routing rules
-├── services/
-│   ├── user_service/                 # User & authentication service
-│   │   ├── config/
-│   │   │   ├── settings.py           # Django settings (env-based)
-│   │   │   ├── asgi.py
-│   │   │   ├── wsgi.py
-│   │   │   └── urls.py               # URL patterns (health, schema, etc.)
-│   │   ├── common/
-│   │   │   ├── responses.py          # Standardized response helpers
-│   │   │   ├── exceptions.py         # Custom exceptions & DRF handler
-│   │   │   ├── health.py             # Health & readiness endpoints
-│   │   │   └── logging.py            # Structured logging
-│   │   ├── modules/
-│   │   │   └── user/                 # User domain logic (TODO)
-│   │   ├── tests/
-│   │   │   └── test_health.py
-│   │   ├── manage.py
-│   │   ├── Dockerfile
-│   │   ├── requirements.txt
-│   │   ├── .env.example
-│   │   └── README.md
-│   ├── product_service/              # Product catalog service
-│   ├── cart_service/                 # Shopping cart service
-│   ├── order_service/                # Order management service
-│   ├── payment_service/              # Payment processing service
-│   ├── shipping_service/             # Shipping & logistics service
-│   ├── inventory_service/            # Inventory management service
-│   └── ai_service/                   # AI recommendations service
-├── shared/
-│   ├── docs/
-│   ├── postman/
-│   └── scripts/
-├── docker-compose.yml                # Container orchestration
-├── .env.example                       # Environment variables template
-├── Makefile                           # Convenience commands
-├── FOUNDATION_STANDARDIZATION_GUIDE.md  # Technical standards & setup
-└── README.md                          # This file
-```
-
-## 📋 Service Inventory
-
-| Service | App Port | DB Port | Database | Status |
-|---------|----------|---------|----------|--------|
-| **user_service** | 8001 | 5433 | user_service | ✅ Ready |
-| **product_service** | 8002 | 5434 | product_service | ✅ Ready |
-| **cart_service** | 8003 | 5435 | cart_service | ✅ Ready |
-| **order_service** | 8004 | 5436 | order_service | ✅ Ready |
-| **payment_service** | 8005 | 5437 | payment_service | ✅ Ready |
-| **shipping_service** | 8006 | 5438 | shipping_service | ✅ Ready |
-| **inventory_service** | 8007 | 5439 | inventory_service | ✅ Ready |
-| **ai_service** | 8008 | 5440 | ai_service | ✅ Ready |
-| **gateway (Nginx)** | 8080 | — | — | ✅ Ready |
-| **Redis Cache** | 6379 | — | — | ✅ Ready |
-| **Neo4j Graph** | 7474/7687 | — | — | ✅ Ready |
-
-## 🚀 Quick Start
-
-### Prerequisites
-
-- Docker & Docker Compose installed
-- Git
-- ~2GB disk space
-- 4GB+ RAM recommended
-
-### 1. Clone & Navigate
-
-```bash
-git clone <repository>
-cd TechShop
-```
-
-### 2. Environment Setup
-
-```bash
-# Create .env from template
 cp .env.example .env
-
-# Or use defaults (already configured in docker-compose)
+docker compose up --build -d
 ```
 
-### 3. Start Everything
+Sau khi các container lên xong:
 
 ```bash
-# Build images and start all services
-docker-compose up --build
-
-# Expected output
-# - All 8 services will start
-# - Databases will initialize
-# - Migrations will run automatically
-# - Nginx gateway will route requests
+python scripts/generate_demo_ai_assets.py
+sh scripts/seed_demo_data.sh
 ```
 
-### 4. Verify All Services
+Truy cập:
+
+- Frontend: `http://localhost:3000`
+- Gateway: `http://localhost:8080`
+- Swagger docs:
+  - `http://localhost:8001/api/docs/`
+  - `http://localhost:8002/api/docs/`
+  - `http://localhost:8008/api/docs/`
+- Neo4j Browser: `http://localhost:7474`
+
+## Seed dữ liệu
+
+### 1. Sinh file AI demo
 
 ```bash
-# Check all services are running
-docker-compose ps
-
-# Test health endpoint
-curl http://localhost:8080/health
-
-# Detailed health check each service
-for i in {1..8}; do
-  port=$((8000 + i))
-  echo "=== Port $port ==="
-  curl -s http://localhost:$port/health/ | jq .
-done
+python scripts/generate_demo_ai_assets.py
 ```
 
-### 5. Access Services
+Sinh ra:
 
-- **Gateway**: http://localhost:8080/health
-- **user_service**: http://localhost:8001/api/docs/
-- **product_service**: http://localhost:8002/api/docs/
-- **cart_service**: http://localhost:8003/api/docs/
-- etc.
+- `data_100users.csv`
+- `data/data_100users.csv`
+- `services/ai_service/data/data_100users.csv`
+- `services/ai_service/data/user_behavior.csv`
+- `services/ai_service/data/product_catalog.csv`
+- `services/ai_service/data/product_relations.csv`
+- `services/ai_service/data/knowledge_documents.csv`
 
-## Shared Technical Stack
+### 2. Seed toàn hệ thống
 
-- **Language**: Python 3.12
-- **Web Framework**: Django 5.1+
-- **API Framework**: Django REST Framework 3.15+
-- **API Documentation**: drf-spectacular (OpenAPI 3.0)
-- **Database**: PostgreSQL 16
-- **Cache**: Redis 7
-- **Graph DB**: Neo4j 5
-- **Containerization**: Docker & Docker Compose
-- **API Gateway**: Nginx 1.27
-- **Package Mgmt**: pip
-- Django + Django REST Framework
-- `django-filter`
-- `drf-spectacular` for OpenAPI schema/docs
-- PostgreSQL per service using `psycopg`
-- Gunicorn for service runtime
-- Redis and Celery-ready configuration placeholders
-- Neo4j provisioned for future graph / AI workflows
-- Nginx as the initial gateway
-
-## DDD-Ready Service Layout
-Each service contains a primary module with these placeholders:
-- `domain`: entities, value objects, repository contracts
-- `application`: commands, queries, application services
-- `infrastructure`: ORM models, repository implementations, querysets
-- `presentation`: API serializers, views, transport adapters
-
-## Quick Start
-1. Optional: copy `.env.example` to `.env` at repo root and adjust values if needed.
-2. Build and start the stack:
-   ```bash
-   docker compose up --build
-   ```
-3. Verify selected endpoints:
-   ```bash
-   curl http://localhost:8001/health/
-   curl http://localhost:8002/api/v1/health/
-   curl http://localhost:8080/user/health/
-   curl http://localhost:8080/product/api/docs/
-   ```
-
-## Common Endpoints
-Every service exposes:
-- `/health/`
-- `/ready/`
-- `/api/v1/health/`
-- `/api/schema/`
-- `/api/docs/`
-
-## Running Individual Services
-Example for `user_service` without Docker:
 ```bash
-cd services/user_service
+sh scripts/seed_demo_data.sh
+```
+
+Script này sẽ:
+
+1. sinh AI assets
+2. seed users / products / carts / orders / inventory
+3. load AI behavior dataset vào `ai_service`
+4. build RAG index
+5. train LSTM
+
+## Train LSTM
+
+```bash
+sh scripts/train_models.sh
+```
+
+Hoặc gọi trực tiếp:
+
+```bash
+docker compose exec -T ai_service python manage.py train_lstm_recommender --dataset /app/data/data_100users.csv
+```
+
+Artifacts:
+
+- `/app/data/models/lstm_recommender.pt`
+- `/app/data/models/sequence_model_metadata.json`
+
+## Build Knowledge Graph
+
+```bash
+sh scripts/build_knowledge_graph.sh
+```
+
+Hoặc:
+
+```bash
+docker compose exec -T ai_service python manage.py rebuild_knowledge_graph --clear
+```
+
+Neo4j nodes/relations được build từ:
+
+- live product catalog
+- behavioral events
+- order links từ metadata trong `data_100users.csv`
+- product similarity edges từ `product_relations.csv`
+
+## Build RAG Index
+
+```bash
+sh scripts/build_rag_index.sh
+```
+
+Hoặc:
+
+```bash
+docker compose exec -T ai_service python manage.py build_rag_index --replace
+```
+
+Nguồn tri thức:
+
+- `data/faq/*.md`
+- `data/policies/*.md`
+- `services/ai_service/data/knowledge_documents.csv`
+- live catalog grouped by category
+
+## Smoke test nhanh
+
+```bash
+python scripts/smoke_test.py
+```
+
+Script kiểm tra các bước:
+
+1. login role customer
+2. list/search products
+3. add to cart
+4. create order
+5. mock payment success
+6. staff update shipping status
+7. recommendations
+8. behavior summary
+9. KG rebuild
+10. LSTM train
+11. RAG rebuild
+12. chat trả lời được
+
+## API chính
+
+### Auth / User
+
+- `POST /user/api/v1/auth/register/`
+- `POST /user/api/v1/auth/login/`
+- `GET /user/api/v1/auth/me/`
+
+### Products
+
+- `GET /product/api/v1/catalog/products/`
+- `GET /product/api/v1/catalog/products/{id}/`
+- `GET /product/api/v1/catalog/categories/`
+
+### Cart
+
+- `GET /cart/api/v1/cart/current/`
+- `POST /cart/api/v1/cart/items/`
+- `PATCH /cart/api/v1/cart/items/{id}/quantity/`
+- `DELETE /cart/api/v1/cart/items/{id}/`
+
+### Orders
+
+- `POST /order/api/v1/orders/from-cart/`
+- `GET /order/api/v1/orders/`
+- `GET /order/api/v1/orders/{id}/`
+- `GET /order/api/v1/operations/orders/` (`staff/admin`)
+
+### Payments
+
+- `POST /payment/api/v1/payments/`
+- `POST /payment/api/v1/webhooks/mock/`
+- `GET /payment/api/v1/payments/{reference}/status/`
+
+### Shipping
+
+- `GET /shipping/api/v1/shipments/{reference}/tracking/`
+- `GET /shipping/api/v1/operations/shipments/order/{orderId}/`
+- `PATCH /shipping/api/v1/operations/shipments/order/{orderId}/status/` (`staff/admin`)
+
+### AI
+
+- `GET /ai/api/v1/ai/recommendations/{userId}/`
+- `POST /ai/api/v1/ai/recommendations/`
+- `GET /ai/api/v1/ai/search/?q=...`
+- `GET /ai/api/v1/ai/behavior/summary/`
+- `GET /ai/api/v1/ai/behavior/users/{userId}/`
+- `GET /ai/api/v1/ai/behavior/funnel/`
+- `POST /ai/api/v1/ai/actions/add-to-cart/`
+- `POST /ai/api/v1/ai/actions/create-order/`
+- `POST /ai/api/v1/ai/chat/`
+- `POST /ai/api/v1/ai/kg/rebuild/`
+- `POST /ai/api/v1/ai/lstm/train/`
+- `POST /ai/api/v1/ai/rag/rebuild/`
+
+## Frontend demo path
+
+1. `/login` hoặc `/register`
+2. `/products` để search/filter catalog
+3. `/products/{id}` để xem chi tiết và add to cart
+4. `/cart` -> `/checkout` -> `/orders/{id}`
+5. `/chat` để demo RAG
+6. `/admin` với admin/staff để:
+   - quản lý products
+   - xem behavior analytics
+   - trigger KG/RAG/LSTM
+   - cập nhật shipping status
+
+## Chạy local từng service nếu cần
+
+Ví dụ `ai_service`:
+
+```bash
+cd services/ai_service
 cp .env.example .env
 pip install -r requirements.txt
 python manage.py migrate
-python manage.py runserver 0.0.0.0:8001
+python manage.py runserver 0.0.0.0:8008
 ```
 
-## Docker Compose Notes
-- Source folders are mounted into each container for local development.
-- Each service runs `python manage.py migrate` before launching Gunicorn.
-- PostgreSQL runs in isolated containers with dedicated named volumes.
-- Redis and Neo4j are shared infrastructure, not shared transactional stores.
+## Ghi chú fallback
 
-## Verification Checklist
-- `docker compose up --build` completes successfully.
-- `docker compose ps` shows all Django services up.
-- Each service returns HTTP 200 on `/health/`.
-- Each service returns HTTP 200 on `/api/schema/`.
-- Each service database container is isolated and reachable only by its owner service.
-- Gateway routes `/user/`, `/product/`, `/cart/`, `/order/`, `/payment/`, `/shipping/`, `/inventory/`, `/ai/`.
+- Nếu không có external LLM API key, chat vẫn chạy bằng local/mock provider + retrieval từ knowledge chunks.
+- Nếu PyTorch không khả dụng, LSTM service sẽ fallback sang transition matrix metadata để recommendation vẫn hoạt động.
+- Nếu Neo4j chưa sẵn sàng, app vẫn chạy; graph scoring sẽ fallback an toàn.

@@ -51,7 +51,7 @@ Truy cập qua gateway: `http://localhost:8080`.
 
 ## API integrations
 - User: login, me, addresses
-- Product: list/detail/categories/brands
+- Product: list/detail/categories/product-groups
 - Cart: current, summary, add/update/remove, checkout-preview
 - Order: create from cart, list/detail/timeline
 - Payment: mock webhooks

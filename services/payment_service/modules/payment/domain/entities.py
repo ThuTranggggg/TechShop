@@ -27,7 +27,7 @@ from .value_objects import (
 )
 
 
-@dataclass(frozen=True)
+@dataclass
 class PaymentTransaction:
     """
     Represents a single transaction/attempt related to a payment.
@@ -75,7 +75,7 @@ class PaymentTransaction:
         }
 
 
-@dataclass(frozen=True)
+@dataclass
 class Payment:
     """
     Payment aggregate root.

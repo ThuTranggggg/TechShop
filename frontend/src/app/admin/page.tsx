@@ -7,9 +7,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { adminCreateProduct, adminDeleteProduct, adminListProducts, adminUpdateProduct } from "@/services/api/admin";
 import { getBrands, getCategories, getProductTypes } from "@/services/api/products";
 import { EmptyState } from "@/components/ui/empty-state";
-import { getOrders } from "@/services/api/orders";
-import { getUserPreferenceSummary } from "@/services/api/ai";
+import { getOperationsOrders } from "@/services/api/orders";
+import { getBehaviorSummary, getUserPreferenceSummary, rebuildKnowledgeGraph, rebuildRagIndex, trainLstmModel } from "@/services/api/ai";
 import { formatPrice } from "@/lib/utils";
+import { updateShipmentByOrder } from "@/services/api/shipping";
 
 type ProductForm = {
   id?: string;
@@ -46,16 +47,22 @@ export default function AdminPage() {
   const qc = useQueryClient();
   const [form, setForm] = useState<ProductForm>(INITIAL_FORM);
   const [editingId, setEditingId] = useState<string>("");
+  const [aiOpsResult, setAiOpsResult] = useState<string>("");
 
   const { data: products } = useQuery({ queryKey: ["admin-products"], queryFn: adminListProducts });
-  const { data: categories } = useQuery({ queryKey: ["categories"], queryFn: getCategories });
+  const { data: categoriesData } = useQuery({ queryKey: ["categories"], queryFn: getCategories });
   const { data: brands } = useQuery({ queryKey: ["brands"], queryFn: getBrands });
   const { data: productTypes } = useQuery({ queryKey: ["product-types"], queryFn: getProductTypes });
-  const { data: orders } = useQuery({ queryKey: ["admin-orders"], queryFn: getOrders, enabled: isAdmin });
+  const { data: orders } = useQuery({ queryKey: ["admin-orders"], queryFn: getOperationsOrders, enabled: isAdmin });
   const { data: aiPreference } = useQuery({
     queryKey: ["admin-ai-preference", userId],
     queryFn: () => getUserPreferenceSummary(userId),
     enabled: Boolean(isAdmin && userId),
+  });
+  const { data: behaviorSummary } = useQuery({
+    queryKey: ["admin-behavior-summary"],
+    queryFn: getBehaviorSummary,
+    enabled: isAdmin,
   });
 
   const createMutation = useMutation({
@@ -65,6 +72,11 @@ export default function AdminPage() {
       setForm(INITIAL_FORM);
     },
   });
+  const categories = useMemo(
+    () => (categoriesData?.results ?? []).filter((category) => Number(category.children_count ?? 0) === 0),
+    [categoriesData],
+  );
+  const productGroups = useMemo(() => brands?.results ?? [], [brands]);
   const updateMutation = useMutation({
     mutationFn: ({ id, payload }: { id: string; payload: Record<string, unknown> }) => adminUpdateProduct(id, payload),
     onSuccess: () => {
@@ -76,6 +88,26 @@ export default function AdminPage() {
   const deleteMutation = useMutation({
     mutationFn: adminDeleteProduct,
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-products"] }),
+  });
+  const rebuildKgMutation = useMutation({
+    mutationFn: rebuildKnowledgeGraph,
+    onSuccess: (data) => setAiOpsResult(data.output || "Knowledge graph rebuilt"),
+  });
+  const trainLstmMutation = useMutation({
+    mutationFn: () => trainLstmModel({ epochs: 6, sequence_length: 5, batch_size: 16 }),
+    onSuccess: (data) => setAiOpsResult(data.output || "LSTM training completed"),
+  });
+  const rebuildRagMutation = useMutation({
+    mutationFn: rebuildRagIndex,
+    onSuccess: (data) => setAiOpsResult(data.output || "RAG index rebuilt"),
+  });
+  const shippingMutation = useMutation({
+    mutationFn: ({ orderId, status }: { orderId: string; status: "pending" | "preparing" | "in_transit" | "delivered" | "returned" }) =>
+      updateShipmentByOrder(orderId, { status }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-orders"] });
+      setAiOpsResult("Shipment status updated");
+    },
   });
 
   const canSubmit = useMemo(
@@ -126,7 +158,7 @@ export default function AdminPage() {
           </article>
           <article className="rounded-2xl border border-border bg-white p-3">
             <p className="text-xs uppercase tracking-widest text-slate-500">Danh mục</p>
-            <p className="mt-1 text-xl font-black text-slate-900">{categories?.results?.length ?? 0}</p>
+            <p className="mt-1 text-xl font-black text-slate-900">{categories.length}</p>
           </article>
           <article className="rounded-2xl border border-border bg-white p-3">
             <p className="text-xs uppercase tracking-widest text-slate-500">Đơn đang xử lý</p>
@@ -146,11 +178,11 @@ export default function AdminPage() {
           <input className="rounded-xl border border-border p-3" placeholder="Slug" value={form.slug} onChange={(e) => setForm((p) => ({ ...p, slug: e.target.value }))} />
           <select className="rounded-xl border border-border p-3" value={form.category} onChange={(e) => setForm((p) => ({ ...p, category: e.target.value }))}>
             <option value="">Chọn danh mục</option>
-            {categories?.results?.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+            {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
           <select className="rounded-xl border border-border p-3" value={form.brand} onChange={(e) => setForm((p) => ({ ...p, brand: e.target.value }))}>
-            <option value="">Chọn thương hiệu</option>
-            {brands?.results?.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+            <option value="">Chọn nhóm product</option>
+            {productGroups.map((group) => <option key={group.id} value={group.id}>{group.name}</option>)}
           </select>
           <select className="rounded-xl border border-border p-3" value={form.product_type} onChange={(e) => setForm((p) => ({ ...p, product_type: e.target.value }))}>
             <option value="">Chọn loại sản phẩm</option>
@@ -215,6 +247,45 @@ export default function AdminPage() {
       </section>
 
       <section className="card-premium">
+        <h2 className="text-xl font-bold">AI Operations</h2>
+        <p className="mt-2 text-sm text-slate-600">Trigger KG rebuild, RAG indexing, LSTM training va xem nhanh chi so hanh vi.</p>
+        <div className="mt-4 grid gap-4 md:grid-cols-3">
+          <article className="rounded-xl border border-border bg-white p-4">
+            <p className="text-xs uppercase tracking-widest text-slate-500">Behavior events</p>
+            <p className="mt-1 text-xl font-black text-slate-900">{behaviorSummary?.total_events ?? 0}</p>
+            <p className="mt-1 text-xs text-slate-500">Unique users: {behaviorSummary?.unique_users ?? 0}</p>
+          </article>
+          <article className="rounded-xl border border-border bg-white p-4">
+            <p className="text-xs uppercase tracking-widest text-slate-500">Abandoned carts</p>
+            <p className="mt-1 text-xl font-black text-slate-900">{behaviorSummary?.abandoned_cart_sessions ?? 0}</p>
+            <p className="mt-1 text-xs text-slate-500">Funnel steps: {behaviorSummary?.conversion_funnel?.length ?? 0}</p>
+          </article>
+          <article className="rounded-xl border border-border bg-white p-4">
+            <p className="text-xs uppercase tracking-widest text-slate-500">Top categories</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {behaviorSummary?.top_viewed_categories?.slice(0, 4).map((item) => (
+                <span key={item.category_name} className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+                  {item.category_name} ({item.count})
+                </span>
+              ))}
+            </div>
+          </article>
+        </div>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <button onClick={() => rebuildKgMutation.mutate()} className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
+            Rebuild Knowledge Graph
+          </button>
+          <button onClick={() => trainLstmMutation.mutate()} className="rounded-xl border border-border px-4 py-2 text-sm font-semibold">
+            Train LSTM
+          </button>
+          <button onClick={() => rebuildRagMutation.mutate()} className="rounded-xl border border-border px-4 py-2 text-sm font-semibold">
+            Build RAG Index
+          </button>
+        </div>
+        {aiOpsResult ? <pre className="mt-4 overflow-auto rounded-xl bg-slate-950 p-4 text-xs text-slate-100">{aiOpsResult}</pre> : null}
+      </section>
+
+      <section className="card-premium">
         <h2 className="text-xl font-bold">Quản lý đơn hàng</h2>
         {!orders?.length ? <EmptyState title="Chưa có đơn hàng" description="Đơn hàng mới sẽ xuất hiện tại đây để theo dõi vận hành." /> : null}
         <div className="mt-4 grid gap-3">
@@ -228,6 +299,17 @@ export default function AdminPage() {
                 <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">{String(o.status).toUpperCase()}</span>
               </div>
               <p className="mt-2 text-sm font-semibold text-slate-900">{formatPrice(Number(o.totals?.grand_total ?? 0), o.totals?.currency || "VND")}</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button onClick={() => shippingMutation.mutate({ orderId: o.id, status: "preparing" })} className="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold">
+                  Shipping: Preparing
+                </button>
+                <button onClick={() => shippingMutation.mutate({ orderId: o.id, status: "in_transit" })} className="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold">
+                  Shipping: In Transit
+                </button>
+                <button onClick={() => shippingMutation.mutate({ orderId: o.id, status: "delivered" })} className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white">
+                  Shipping: Delivered
+                </button>
+              </div>
             </article>
           ))}
         </div>
@@ -240,7 +322,7 @@ export default function AdminPage() {
         ) : (
           <div className="mt-4 grid gap-4 md:grid-cols-2">
             <article className="rounded-xl border border-border bg-white p-4">
-              <p className="text-xs uppercase tracking-widest text-slate-500">Top brands</p>
+              <p className="text-xs uppercase tracking-widest text-slate-500">Top nhom product</p>
               <div className="mt-2 flex flex-wrap gap-2">
                 {aiPreference.top_brands?.slice(0, 5).map((b) => (
                   <span key={b.brand_name} className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
@@ -262,6 +344,18 @@ export default function AdminPage() {
             </article>
           </div>
         )}
+        {behaviorSummary?.event_breakdown?.length ? (
+          <article className="mt-4 rounded-xl border border-border bg-white p-4">
+            <p className="text-xs uppercase tracking-widest text-slate-500">Behavior event mix</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {behaviorSummary.event_breakdown.slice(0, 8).map((item) => (
+                <span key={item.event_type} className="rounded-full bg-warning/10 px-3 py-1 text-xs font-semibold text-warning">
+                  {item.event_type} ({item.count})
+                </span>
+              ))}
+            </div>
+          </article>
+        ) : null}
       </section>
     </div>
   );

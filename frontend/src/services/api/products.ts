@@ -15,7 +15,7 @@ export async function getProductVariants(id: string) {
 }
 
 export async function getCategories() {
-  return apiFetch<{ results: Array<{ id: string; name: string; slug: string }> }>("/product/api/v1/catalog/categories/");
+  return apiFetch<{ results: Array<{ id: string; name: string; slug: string; children_count?: number; products_count?: number }> }>("/product/api/v1/catalog/categories/");
 }
 
 export async function getBrands() {

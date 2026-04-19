@@ -108,6 +108,10 @@ REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
 }
 
+MIGRATION_MODULES = {
+    "payment": "modules.payment.infrastructure.migrations",
+}
+
 SPECTACULAR_SETTINGS = {
     "TITLE": f"{SERVICE_NAME} API",
     "DESCRIPTION": f"Foundation skeleton API for {SERVICE_NAME}.",

@@ -19,8 +19,8 @@ export default function OrderDetailPage() {
   const { data: timeline } = useQuery({ queryKey: ["timeline", id], queryFn: () => getOrderTimeline(id), enabled: Boolean(order) });
   const { data: tracking } = useQuery({ queryKey: ["tracking", order?.shipment_reference], queryFn: () => getShipmentTracking(String(order?.shipment_reference)), enabled: Boolean(order?.shipment_reference) });
   const { data: rec } = useQuery({ queryKey: ["order-recommend"], queryFn: () => getProducts({ page_size: "3", is_featured: "true" }) });
-  const paySuccess = useMutation({ mutationFn: mockPaySuccess, onSuccess: () => qc.invalidateQueries({ queryKey: ["order", id] }) });
-  const payFail = useMutation({ mutationFn: mockPayFail, onSuccess: () => qc.invalidateQueries({ queryKey: ["order", id] }) });
+  const paySuccess = useMutation({ mutationFn: (paymentReference: string) => mockPaySuccess(paymentReference), onSuccess: () => qc.invalidateQueries({ queryKey: ["order", id] }) });
+  const payFail = useMutation({ mutationFn: (paymentReference: string) => mockPayFail(paymentReference), onSuccess: () => qc.invalidateQueries({ queryKey: ["order", id] }) });
 
   if (!order) return null;
 
@@ -31,8 +31,8 @@ export default function OrderDetailPage() {
         <h1 className="text-2xl font-bold">{order.order_number}</h1>
         <div className="mt-3 flex flex-wrap gap-2"><StatusBadge status={order.status} /><StatusBadge status={order.payment_status} /><StatusBadge status={order.fulfillment_status} /></div>
         <div className="mt-4 flex gap-2">
-          <button onClick={() => paySuccess.mutate()} className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white">Mock Pay Success</button>
-          <button onClick={() => payFail.mutate()} className="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white">Mock Pay Fail</button>
+          <button onClick={() => order.payment_reference && paySuccess.mutate(order.payment_reference)} className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white">Mock Pay Success</button>
+          <button onClick={() => order.payment_reference && payFail.mutate(order.payment_reference)} className="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white">Mock Pay Fail</button>
         </div>
       </section>
 
@@ -41,7 +41,18 @@ export default function OrderDetailPage() {
         <TrackingTimeline items={timeline?.status_history ?? []} />
       </section>
 
-      {tracking?.timeline?.length ? <section className="rounded-2xl border border-border bg-white p-5"><h2 className="mb-3 text-xl font-bold">Shipment tracking</h2><TrackingTimeline items={tracking.timeline.map((t) => ({ to_status: t.status, created_at: t.timestamp, note: t.location }))} /></section> : null}
+      {(tracking as { events?: Array<{ status_after: string; event_time?: string; location?: string; description?: string }> })?.events?.length ? (
+        <section className="rounded-2xl border border-border bg-white p-5">
+          <h2 className="mb-3 text-xl font-bold">Shipment tracking</h2>
+          <TrackingTimeline
+            items={((tracking as { events?: Array<{ status_after: string; event_time?: string; location?: string; description?: string }> }).events ?? []).map((t) => ({
+              to_status: t.status_after,
+              created_at: t.event_time,
+              note: t.location || t.description,
+            }))}
+          />
+        </section>
+      ) : null}
 
       <RecommendationCarousel products={rec?.results ?? []} title="Ban co the thich" />
     </div>

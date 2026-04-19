@@ -14,6 +14,8 @@ from ..domain.repositories import (
 from ..domain.entities import Payment, PaymentTransaction
 from ..domain.enums import (
     PaymentStatus,
+    PaymentProvider,
+    PaymentMethod,
     PaymentTransactionType,
     PaymentTransactionStatus,
     Currency,
@@ -23,6 +25,7 @@ from ..domain.value_objects import (
     PaymentReference,
     OrderSnapshot,
     PaymentProviderReference,
+    CheckoutMetadata,
 )
 from .models import PaymentModel, PaymentTransactionModel
 
@@ -155,8 +158,18 @@ class PaymentRepositoryImpl(PaymentRepository):
         provider_reference = None
         if model.provider_payment_id:
             provider_reference = PaymentProviderReference(
-                provider=model.provider,
+                provider=PaymentProvider(model.provider),
                 provider_id=model.provider_payment_id,
+            )
+
+        checkout_metadata = None
+        if model.checkout_url or model.client_secret or model.return_url or model.cancel_url or model.success_url:
+            checkout_metadata = CheckoutMetadata(
+                checkout_url=model.checkout_url,
+                client_secret=model.client_secret,
+                return_url=model.return_url,
+                cancel_url=model.cancel_url,
+                success_url=model.success_url,
             )
 
         # Reconstruct money
@@ -178,10 +191,11 @@ class PaymentRepositoryImpl(PaymentRepository):
             payment_reference=PaymentReference(model.payment_reference),
             order=order,
             amount=amount,
-            provider=model.provider,
-            method=model.method,
+            provider=PaymentProvider(model.provider),
+            method=PaymentMethod(model.method),
             status=PaymentStatus(model.status),
             provider_reference=provider_reference,
+            checkout_metadata=checkout_metadata,
             description=model.description,
             failure_reason=model.failure_reason,
             requested_at=model.requested_at,

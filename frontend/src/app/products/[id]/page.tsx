@@ -158,7 +158,7 @@ export default function ProductDetailPage() {
       <section className="border-t border-slate-100 pt-16">
         <header className="mb-12">
           <h2 className="text-3xl font-black">Sản phẩm liên quan</h2>
-          <p className="mt-2 text-slate-500">Có thể bạn cũng quan tâm đến những thiết bị này.</p>
+          <p className="mt-2 text-slate-500">Có thể bạn cũng quan tâm đến các món khác trong cùng danh mục này.</p>
         </header>
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
            {relatedData?.results?.map((p) => (

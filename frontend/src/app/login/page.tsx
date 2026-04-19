@@ -63,7 +63,7 @@ export default function LoginPage() {
             try {
               const res = await login(values);
               setAuth(res.access, res.refresh);
-              router.push("/");
+              window.location.assign("/");
             } catch (e) {
               setError(e instanceof Error ? e.message : "Đăng nhập thất bại");
             } finally {

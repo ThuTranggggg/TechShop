@@ -65,3 +65,13 @@ class AllowAny(BasePermission):
     
     def has_permission(self, request, view):
         return True
+
+
+class IsAdminOrStaff(BasePermission):
+    """Allow staff/admin operational access through gateway headers."""
+
+    def has_permission(self, request, view):
+        role = request.META.get("HTTP_X_USER_ROLE", "").lower()
+        if role in {"admin", "staff"}:
+            return True
+        return request.META.get("HTTP_X_ADMIN", "").lower() == "true"

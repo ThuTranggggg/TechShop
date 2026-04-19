@@ -2,9 +2,11 @@
 Infrastructure repositories.
 Concrete repository implementations using Django ORM.
 """
+from datetime import datetime
 from typing import List, Optional
 from uuid import UUID
-from datetime import datetime
+
+from django.db.models import Q
 
 from modules.ai.domain.entities import (
     BehavioralEvent,
@@ -24,6 +26,7 @@ from modules.ai.domain.repositories import (
 )
 from modules.ai.domain.value_objects import (
     EventType,
+    PriceRange,
     DocumentType,
     ChatRole,
     BrandPreference,
@@ -38,6 +41,7 @@ from modules.ai.infrastructure.models import (
     ChatSessionModel,
     ChatMessageModel,
 )
+from modules.ai.infrastructure.taxonomy import normalize_text, tokenize
 
 
 class DjangoBehavioralEventRepository(BehavioralEventRepository):
@@ -124,7 +128,7 @@ class DjangoBehavioralEventRepository(BehavioralEventRepository):
             brand_name=model.brand_name,
             category_name=model.category_name,
             price_amount=float(model.price_amount) if model.price_amount else None,
-            price_range=model.price_range,
+            price_range=PriceRange(model.price_range) if model.price_range else None,
             keyword=model.keyword,
             source_service=model.source_service,
             occurred_at=model.occurred_at,
@@ -144,8 +148,8 @@ class DjangoUserPreferenceProfileRepository(UserPreferenceProfileRepository):
     def save(self, profile: UserPreferenceProfile) -> UserPreferenceProfile:
         """Save/update a profile."""
         model, _ = UserPreferenceProfileModel.objects.get_or_create(
-            id=profile.id,
-            defaults={"user_id": profile.user_id}
+            user_id=profile.user_id,
+            defaults={"id": profile.id}
         )
         model.preferred_brands = [
             {"brand_name": b.brand_name, "score": b.score, "interaction_count": b.interaction_count}
@@ -200,7 +204,7 @@ class DjangoUserPreferenceProfileRepository(UserPreferenceProfileRepository):
         ]
         preferred_price_ranges = [
             PriceRangePreference(
-                price_range=p["price_range"],
+                price_range=PriceRange(p["price_range"]),
                 score=p["score"],
                 interaction_count=p["interaction_count"],
             )
@@ -340,14 +344,33 @@ class DjangoKnowledgeChunkRepository(KnowledgeChunkRepository):
         return count
 
     def search_similar(self, query: str, limit: int = 5) -> List[KnowledgeChunk]:
-        """Search similar chunks (keyword-based for MVP)."""
-        # MVP: Simple keyword search
-        queryset = KnowledgeChunkModel.objects.filter(
-            content__icontains=query,
-            document__is_active=True
-        )
-        queryset = queryset.order_by("-document__updated_at")[:limit]
-        return [self._model_to_entity(m) for m in queryset]
+        """Search similar chunks using broad keyword matching with graceful fallback."""
+        base_queryset = KnowledgeChunkModel.objects.filter(document__is_active=True).select_related("document")
+        normalized_query = normalize_text(query)
+        query_tokens = [token for token in tokenize(query) if len(token) > 1]
+
+        if not normalized_query and not query_tokens:
+            queryset = base_queryset.order_by("-document__updated_at", "chunk_index")[:limit]
+            return [self._model_to_entity(m) for m in queryset]
+
+        filters = Q()
+        if normalized_query:
+            filters |= Q(content__icontains=query)
+            filters |= Q(document__title__icontains=query)
+
+        for token in query_tokens[:8]:
+            filters |= Q(content__icontains=token)
+            filters |= Q(document__title__icontains=token)
+            filters |= Q(document__metadata__icontains=token)
+            filters |= Q(metadata__icontains=token)
+
+        queryset = base_queryset.filter(filters).order_by("-document__updated_at", "chunk_index")[: max(limit * 4, limit)]
+        results = [self._model_to_entity(model) for model in queryset]
+        if results:
+            return results
+
+        fallback_queryset = base_queryset.order_by("-document__updated_at", "chunk_index")[:limit]
+        return [self._model_to_entity(model) for model in fallback_queryset]
 
     @staticmethod
     def _model_to_entity(model: KnowledgeChunkModel) -> KnowledgeChunk:

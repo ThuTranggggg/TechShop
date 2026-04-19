@@ -165,10 +165,38 @@ TRACKING:
         """Seed behavioral events for demonstration."""
         self.stdout.write(f"Seeding {num_users} users with {events_per_user} events each...")
 
-        # Demo data
-        brands = ["Samsung", "Apple", "Nokia", "Xiaomi", "Oppo", "Vivo", "Realme", "Sony"]
-        categories = ["Smartphone", "Laptop", "Tablet", "Camera", "Smartwatch", "Headphones"]
-        price_amounts = [5_000_000, 8_000_000, 12_000_000, 15_000_000, 20_000_000, 25_000_000]
+        # Demo data for the multi-category storefront
+        brands = [
+            "Dien tu",
+            "Thoi trang",
+            "My pham",
+            "Nha cua doi song",
+            "Me va be",
+            "The thao da ngoai",
+            "Sach van phong pham",
+            "Thuc pham do uong",
+            "Suc khoe ca nhan",
+            "Do choi giai tri",
+            "Cham soc thu cung",
+        ]
+        categories = [
+            "Dien thoai va may tinh bang",
+            "Phu kien cong nghe",
+            "Thoi trang nam",
+            "Thoi trang nu",
+            "Cham soc da",
+            "Trang diem",
+            "Do bep",
+            "Trang tri nha cua",
+            "Sua va bim",
+            "Do tap luyen",
+            "Sach ky nang",
+            "Do an vat",
+            "Vitamin bo sung",
+            "Do choi giao duc",
+            "Thuc an thu cung",
+        ]
+        price_amounts = [89_000, 219_000, 389_000, 690_000, 1_690_000, 8_990_000, 11_990_000]
 
         event_types_dist = [
             ("search", 0.2),
@@ -186,9 +214,9 @@ TRACKING:
             user_id = uuid4()
             self.stdout.write(f"Creating events for user: {user_id}")
 
-            # Create scenario: user prefers Samsung under 10M
-            samsung_score = 0
-            nokia_score = 0
+            # Create scenario: user prefers Dien tu and under-10M products
+            preferred_group_score = 0
+            secondary_group_score = 0
 
             for event_num in range(events_per_user):
                 # Randomize event type
@@ -201,15 +229,15 @@ TRACKING:
                         event_type = etype
                         break
 
-                # Favor Samsung under 10M for this demo user
-                if random.random() < 0.6:  # 60% chance to interact with Samsung
-                    brand = "Samsung"
+                # Favor Dien tu under 10M for this demo user
+                if random.random() < 0.6:
+                    brand = "Dien tu"
                     price = random.choice([5_000_000, 8_000_000, 9_000_000])
-                    samsung_score += 1
-                elif random.random() < 0.3:  # 30% chance for Nike  (just another example)
-                    brand = "Nokia"
+                    preferred_group_score += 1
+                elif random.random() < 0.3:
+                    brand = "My pham"
                     price = random.choice(price_amounts)
-                    nokia_score += 1
+                    secondary_group_score += 1
                 else:
                     brand = random.choice(brands)
                     price = random.choice(price_amounts)
@@ -227,10 +255,10 @@ TRACKING:
                     price_amount=float(price),
                     keyword=f"search {brand.lower()}" if event_type == "search" else None,
                     source_service="demo",
-                    metadata={"demo": True, "scenario": "samsung_preference"},
+                    metadata={"demo": True, "scenario": "multi_category_preference"},
                 )
 
             self.stdout.write(f"  Created {events_per_user} events")
-            self.stdout.write(f"  Samsung interactions: {samsung_score}, Nokia: {nokia_score}")
+            self.stdout.write(f"  Preferred group interactions: {preferred_group_score}, Secondary group: {secondary_group_score}")
 
         self.stdout.write(self.style.SUCCESS(f"Seeded {num_users} users successfully"))
