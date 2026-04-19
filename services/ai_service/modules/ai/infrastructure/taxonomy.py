@@ -82,6 +82,28 @@ def extract_alias_matches(query: str, alias_map: Dict[str, List[str]]) -> List[s
     return matches
 
 
+def normalize_behavior_action(action: str) -> str:
+    """Map legacy CSV actions to canonical AI event types."""
+    normalized = normalize_text(action).replace(" ", "_")
+    aliases = {
+        "view": "product_view",
+        "click": "product_click",
+        "add_to_cart": "add_to_cart",
+        "add_to_wishlist": "add_to_wishlist",
+        "search": "search",
+        "product_view": "product_view",
+        "product_click": "product_click",
+        "view_category": "view_category",
+        "remove_from_cart": "remove_from_cart",
+        "checkout_started": "checkout_started",
+        "order_created": "order_created",
+        "order_cancel": "order_cancel",
+        "payment_success": "payment_success",
+        "chat_query": "chat_query",
+    }
+    return aliases.get(normalized, normalized)
+
+
 def build_taxonomy_terms() -> Set[str]:
     """Return all canonical and alias terms for search enrichment."""
     terms: Set[str] = set()

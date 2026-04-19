@@ -46,6 +46,7 @@ class E2ETestRunner:
     def __init__(self, verbose=False):
         self.verbose = verbose
         self.test_results = []
+        self.auth_user_id = None
         self.created_resources = {
             'users': [],
             'products': [],
@@ -64,9 +65,9 @@ class E2ETestRunner:
         self.log(f"  {title}", 'info')
         self.log(f"{'='*60}", 'info')
     
-    def make_request(self, method: str, service: str, path: str, 
+    def make_request(self, method: str, service: str, path: str,
                      data: Optional[Dict] = None, auth_token: Optional[str] = None,
-                     internal=False) -> tuple[bool, Any]:
+                     internal=False, params: Optional[Dict] = None) -> tuple[bool, Any]:
         """Make HTTP request to service."""
         url = f"{SERVICES[service]}{path}"
         headers = {"Content-Type": "application/json"}
@@ -78,7 +79,7 @@ class E2ETestRunner:
         
         try:
             if method == "GET":
-                resp = requests.get(url, headers=headers, timeout=TIMEOUT)
+                resp = requests.get(url, headers=headers, timeout=TIMEOUT, params=params)
             elif method == "POST":
                 resp = requests.post(url, json=data, headers=headers, timeout=TIMEOUT)
             elif method == "PATCH":
@@ -130,6 +131,7 @@ class E2ETestRunner:
         if not success:
             return None
         user_id = data.get("data", {}).get("id")
+        self.auth_user_id = user_id
         self.created_resources['users'].append(user_id)
         
         # Login
@@ -487,7 +489,10 @@ class E2ETestRunner:
                 return False
             
             # Extract user_id from internal call (for demo, use a UUID)
-            user_id = str(uuid.uuid4())
+            user_id = self.auth_user_id or (self.created_resources['users'][0] if self.created_resources['users'] else None)
+            if not user_id:
+                self.log("\nStopping: Missing registered user ID", 'error')
+                return False
             
             # FLOW 2: Product Catalog
             product = self.test_product_catalog_flow()

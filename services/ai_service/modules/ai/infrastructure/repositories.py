@@ -127,7 +127,7 @@ class DjangoBehavioralEventRepository(BehavioralEventRepository):
             variant_id=model.variant_id,
             brand_name=model.brand_name,
             category_name=model.category_name,
-            price_amount=float(model.price_amount) if model.price_amount else None,
+            price_amount=float(model.price_amount) if model.price_amount is not None else None,
             price_range=PriceRange(model.price_range) if model.price_range else None,
             keyword=model.keyword,
             source_service=model.source_service,

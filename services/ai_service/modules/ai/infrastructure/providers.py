@@ -66,7 +66,7 @@ class MockLLMProvider(BaseLLMProvider):
         entities = self.maybe_extract_entities(query)
 
         if any(self._normalize_text(kw) in query_normalized for kw in self.ORDER_KEYWORDS):
-            if "status" in query_normalized or "tinh trang" in query_normalized:
+            if "status" in query_normalized or "tinh trang" in query_normalized or "trang thai" in query_normalized:
                 return "order_status"
 
         if any(self._normalize_text(kw) in query_normalized for kw in self.SHIPMENT_KEYWORDS):
@@ -203,6 +203,13 @@ class MockLLMProvider(BaseLLMProvider):
     def _answer_general_query(self, query: str, context: str) -> str:
         """Answer general queries."""
         return f"Dựa trên thông tin có sẵn:\n\n{context}"
+
+
+class YescaleAIProvider(MockLLMProvider):
+    """Backward-compatible alias for older tests and docs."""
+
+    def __init__(self, api_key: Optional[str] = None):
+        self.api_key = api_key
 
 
 def get_llm_provider() -> BaseLLMProvider:

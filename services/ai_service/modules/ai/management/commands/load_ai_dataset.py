@@ -14,9 +14,11 @@ from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 
 from modules.ai.application.services import IngestKnowledgeDocumentUseCase, ProductCatalogLookupService, RebuildUserPreferenceProfileUseCase, TrackBehavioralEventUseCase
+from modules.ai.domain.value_objects import EventType
 from modules.ai.infrastructure.domain_services import get_graph_service
 from modules.ai.infrastructure.models import BehavioralEventModel, KnowledgeDocumentModel, UserPreferenceProfileModel
 from modules.ai.infrastructure.sequence_models import train_lstm_model
+from modules.ai.infrastructure.taxonomy import normalize_behavior_action
 
 
 class Command(BaseCommand):
@@ -196,8 +198,12 @@ class Command(BaseCommand):
             if user_id and user_id not in imported_users:
                 imported_users.append(user_id)
 
+            event_type = normalize_behavior_action(row.get("event_type") or row.get("action") or "")
+            if event_type not in {item.value for item in EventType}:
+                continue
+
             tracker.execute(
-                event_type=row.get("event_type") or row.get("action"),
+                event_type=event_type,
                 user_id=UUID(user_id) if user_id else None,
                 session_id=row.get("session_id") or None,
                 product_id=UUID(str(product_id)) if product_id else None,

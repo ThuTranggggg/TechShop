@@ -262,7 +262,7 @@ class TrackBehavioralEventUseCase:
 
         # Normalize price range if price provided
         price_range = None
-        if price_amount:
+        if price_amount is not None:
             price_range = self.price_normalizer.normalize_price(price_amount)
 
         # Create event
@@ -474,7 +474,7 @@ class GenerateRecommendationsUseCase:
         scored_products = self.score_products(candidates, user_id=user_id, query=query)
         return {
             "products": scored_products[:limit],
-            "total_count": len(scored_products[:limit]),
+            "total_count": len(scored_products),
             "mode": "hybrid_personalized" if user_id else "hybrid_catalog",
             "generated_at": timezone.now().isoformat(),
         }
@@ -969,7 +969,7 @@ class BehaviorAnalyticsUseCase:
         }
 
     def get_funnel(self, events: Optional[List[Dict[str, Any]]] = None) -> Dict[str, int]:
-        records = events or self._load_events()
+        records = self._load_events() if events is None else events
         result: Dict[str, int] = {}
         for label, event_types in self.FUNNEL_EVENT_TYPES.items():
             sessions = {

@@ -5,6 +5,7 @@ from modules.ai.application.services import (
     GenerateRecommendationsUseCase,
     TrackBehavioralEventUseCase,
 )
+from modules.ai.infrastructure.domain_services import EventBasedPreferenceProfileBuilder
 from modules.ai.domain.entities import BehavioralEvent, UserPreferenceProfile
 from modules.ai.domain.value_objects import BrandPreference, CategoryPreference, EventType, PriceRange, PriceRangePreference
 
@@ -12,10 +13,14 @@ from modules.ai.domain.value_objects import BrandPreference, CategoryPreference,
 class FakeEventRepo:
     def __init__(self):
         self.saved = None
+        self.recent = []
 
     def add(self, event):
         self.saved = event
         return event
+
+    def get_recent_by_user(self, user_id, limit=10):
+        return list(self.recent)[:limit]
 
 
 class FakeProfileRepo:
@@ -120,6 +125,27 @@ def test_track_behavioral_event_uses_supplied_timestamp():
     assert profile_repo.saved.last_interaction_at.tzinfo is not None
 
 
+def test_preference_builder_includes_zero_price_events():
+    profile = UserPreferenceProfile(
+        id=uuid4(),
+        user_id=uuid4(),
+    )
+    event = BehavioralEvent(
+        id=uuid4(),
+        event_type=EventType.PRODUCT_CLICK,
+        product_id=uuid4(),
+        brand_name="Samsung",
+        category_name="Phone",
+        price_amount=0,
+    )
+
+    builder = EventBasedPreferenceProfileBuilder(price_normalizer=FakePriceNormalizer())
+    updated = builder.update_profile_with_event(profile, event)
+
+    assert len(updated.preferred_price_ranges) == 1
+    assert updated.preferred_price_ranges[0].price_range == PriceRange.UNDER_1M
+
+
 def test_generate_recommendations_sorts_by_score():
     user_id = UUID("550e8400-e29b-41d4-a716-446655440000")
     profile = UserPreferenceProfile(
@@ -130,7 +156,8 @@ def test_generate_recommendations_sorts_by_score():
         preferred_price_ranges=[PriceRangePreference(PriceRange.FROM_5M_TO_10M, 70, 1)],
     )
     profile_repo = FakeProfileRepo(profile=profile)
-    use_case = GenerateRecommendationsUseCase(profile_repo=profile_repo, scorer=FakeScorer())
+    event_repo = FakeEventRepo()
+    use_case = GenerateRecommendationsUseCase(event_repo=event_repo, profile_repo=profile_repo, scorer=FakeScorer())
 
     products = [
         {"id": str(uuid4()), "name": "Other", "brand": "Other", "category": "Phone", "price": 1000},
@@ -142,3 +169,36 @@ def test_generate_recommendations_sorts_by_score():
     assert scored[0]["brand"] == "Samsung"
     assert scored[0]["score"] > scored[1]["score"]
     assert scored[0]["reason_codes"] == ["preferred_brand"]
+
+
+def test_recommend_from_catalog_reports_full_candidate_count():
+    class FakeLookupService:
+        def search_products(self, query: str, limit: int = 5, entities=None):
+            return [
+                {"id": str(uuid4()), "name": "P1", "brand": "Samsung", "category": "Phone", "price": 1000},
+                {"id": str(uuid4()), "name": "P2", "brand": "Samsung", "category": "Phone", "price": 1000},
+                {"id": str(uuid4()), "name": "P3", "brand": "Samsung", "category": "Phone", "price": 1000},
+                {"id": str(uuid4()), "name": "P4", "brand": "Samsung", "category": "Phone", "price": 1000},
+            ]
+
+    class NoopGraphService(FakeGraphService):
+        def upsert_product_node(self, product):
+            return None
+
+        def score_product_affinity(self, user_id, product):
+            return 0.0
+
+    user_id = uuid4()
+    profile_repo = FakeProfileRepo(profile=UserPreferenceProfile(id=user_id, user_id=user_id))
+    use_case = GenerateRecommendationsUseCase(
+        event_repo=FakeEventRepo(),
+        profile_repo=profile_repo,
+        scorer=FakeScorer(),
+        graph_service=NoopGraphService(),
+        product_lookup_service=FakeLookupService(),
+    )
+
+    result = use_case.recommend_from_catalog(user_id=user_id, query="phone", limit=2)
+
+    assert len(result["products"]) == 2
+    assert result["total_count"] == 4

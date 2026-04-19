@@ -13,6 +13,7 @@ from uuid import UUID
 
 from modules.ai.domain.entities import BehavioralEvent
 from modules.ai.domain.value_objects import EventType
+from modules.ai.infrastructure.taxonomy import normalize_behavior_action
 
 logger = logging.getLogger(__name__)
 
@@ -180,7 +181,7 @@ def load_histories_from_csv(dataset_path: Path) -> List[Tuple[str, List[str]]]:
     with Path(dataset_path).open("r", encoding="utf-8-sig", newline="") as file_obj:
         reader = csv.DictReader(file_obj)
         for row in reader:
-            action = (row.get("action") or row.get("event_type") or "").strip()
+            action = normalize_behavior_action((row.get("action") or row.get("event_type") or "").strip())
             if action not in SEQUENCE_EVENT_TYPES:
                 continue
             user_id = (row.get("user_id") or "").strip()

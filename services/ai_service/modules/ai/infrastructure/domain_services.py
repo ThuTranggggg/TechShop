@@ -94,7 +94,7 @@ class EventBasedPreferenceProfileBuilder(PreferenceProfileBuilder):
                 score_delta,
             )
 
-        if event.price_amount:
+        if event.price_amount is not None:
             price_range = self.price_normalizer.normalize_price(float(event.price_amount))
             profile.preferred_price_ranges = self._update_price_preferences(
                 profile.preferred_price_ranges,

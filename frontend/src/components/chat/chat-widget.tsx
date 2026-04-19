@@ -6,7 +6,7 @@ import { MessageCircle, X, ArrowUpRight } from "lucide-react";
 import { useUiStore } from "@/store/ui-store";
 import { config } from "@/lib/config";
 import { ChatMessageBubble } from "@/components/chat/chat-message-bubble";
-import { askAi, trackAiEvent } from "@/services/api/ai";
+import { askAi, trackAiEvent, type AiRelatedProduct, type AiSource } from "@/services/api/ai";
 import { getAccessToken } from "@/services/auth";
 import { extractUserIdFromJwt } from "@/lib/jwt";
 import { useMounted } from "@/hooks/use-mounted";
@@ -16,8 +16,8 @@ export function ChatWidget() {
   const mounted = useMounted();
   const token = getAccessToken();
   const userId = mounted && token ? extractUserIdFromJwt(token) : undefined;
-  const [messages, setMessages] = useState<Array<{ role: "user" | "assistant"; text: string; sources?: Array<{ document_title?: string; document_type?: string }>; relatedProducts?: Array<{ product_id?: string; name?: string; price?: number; thumbnail_url?: string }> }>>([]);
-  const [relatedProducts, setRelatedProducts] = useState<Array<{ product_id?: string; name?: string; price?: number; thumbnail_url?: string }>>([]);
+  const [messages, setMessages] = useState<Array<{ role: "user" | "assistant"; text: string; sources?: AiSource[]; relatedProducts?: AiRelatedProduct[] }>>([]);
+  const [relatedProducts, setRelatedProducts] = useState<AiRelatedProduct[]>([]);
   const [value, setValue] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -35,12 +35,7 @@ export function ChatWidget() {
         role: "assistant",
         text: res.answer,
         sources: res.sources,
-        relatedProducts: res.related_products?.map((item) => ({
-          product_id: item.product_id,
-          name: item.name,
-          price: item.price,
-          thumbnail_url: item.thumbnail_url,
-        })),
+        relatedProducts: res.related_products,
       }]);
       setRelatedProducts((prev) => [...prev, ...(res.related_products ?? [])]);
     } catch {
@@ -84,8 +79,8 @@ export function ChatWidget() {
               <div className="mt-2 grid grid-cols-1 gap-2">
                 {relatedProducts.slice(0, 4).map((product, index) => (
                   <Link
-                    key={`${product.product_id ?? index}`}
-                    href={product.product_id ? `/products/${product.product_id}` : "/products"}
+                    key={`${product.id ?? index}`}
+                    href={product.id ? `/products/${product.id}` : "/products"}
                     className="flex items-center gap-3 rounded-2xl border border-border bg-slate-50 p-3 transition-colors hover:bg-slate-100"
                   >
                     <img
@@ -95,7 +90,9 @@ export function ChatWidget() {
                     />
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-sm font-semibold text-slate-900">{product.name || "Sản phẩm liên quan"}</div>
-                      {typeof product.price === "number" ? <div className="text-xs text-slate-500">{new Intl.NumberFormat("vi-VN").format(product.price)} đ</div> : null}
+                      {typeof product.base_price === "number" ? (
+                        <div className="text-xs text-slate-500">{new Intl.NumberFormat("vi-VN").format(product.base_price)} đ</div>
+                      ) : null}
                     </div>
                     <ArrowUpRight className="h-4 w-4 text-slate-400" />
                   </Link>
