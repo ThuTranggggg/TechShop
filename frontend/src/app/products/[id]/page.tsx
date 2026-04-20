@@ -11,6 +11,7 @@ import { getProducts } from "@/services/api/products";
 import { trackAiEvent } from "@/services/api/ai";
 import { getAccessToken } from "@/services/auth";
 import { extractUserIdFromJwt } from "@/lib/jwt";
+import { getProductImageUrl } from "@/lib/product-image";
 
 import { Check, ShieldCheck, Sparkles, Truck } from "lucide-react";
 
@@ -58,23 +59,26 @@ export default function ProductDetailPage() {
   return (
     <div className="space-y-16 pb-20">
       <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:items-start">
-        {/* Product Gallery */}
         <div className="sticky top-24 space-y-4">
           <div className="overflow-hidden rounded-[2.5rem] bg-slate-50 card-premium">
-            <img 
-              src={data.thumbnail_url || "https://images.unsplash.com/photo-1517336714739-489689fd1ca8?w=1200"} 
-              alt={data.name} 
-              className="aspect-square w-full object-cover transition-transform duration-700 hover:scale-105" 
+            <img
+              src={getProductImageUrl(data)}
+              alt={data.name}
+              className="aspect-square w-full object-cover transition-transform duration-700 hover:scale-105"
             />
           </div>
-          <div className="grid grid-cols-4 gap-4">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="aspect-square rounded-2xl bg-slate-100 border border-slate-200/50 hover:border-primary cursor-pointer transition-colors" />
-            ))}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="rounded-2xl border border-slate-200/70 bg-white p-4">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Thương hiệu</p>
+              <p className="mt-2 text-sm font-semibold text-slate-900">{data.brand_name || "TechShop"}</p>
+            </div>
+            <div className="rounded-2xl border border-slate-200/70 bg-white p-4">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Danh mục</p>
+              <p className="mt-2 text-sm font-semibold text-slate-900">{data.category_name || "Sản phẩm"}</p>
+            </div>
           </div>
         </div>
 
-        {/* Product Info */}
         <div className="flex flex-col pt-4">
           <div className="mb-6 flex items-center gap-3">
             <span className="rounded-full bg-slate-100 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-slate-500">
@@ -96,13 +100,6 @@ export default function ProductDetailPage() {
           </div>
 
           <div className="mt-10 space-y-6 border-y border-slate-100 py-10">
-            <div>
-              <h3 className="mb-4 text-sm font-bold uppercase tracking-widest text-slate-900">Mô tả sản phẩm</h3>
-              <p className="text-lg leading-relaxed text-slate-600">
-                {data.description || data.short_description}
-              </p>
-            </div>
-
             <div className="grid grid-cols-2 gap-4">
               <div className="flex items-start gap-3 rounded-2xl bg-success/5 p-4">
                 <ShieldCheck className="mt-0.5 h-5 w-5 text-success" />

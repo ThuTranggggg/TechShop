@@ -20,8 +20,8 @@ export default function RegisterPage() {
 
   return (
     <section className="mx-auto max-w-3xl rounded-[2.5rem] border border-border/80 bg-card p-8 shadow-premium md:p-12">
-      <h1 className="text-3xl font-extrabold text-slate-900">Tạo tài khoản customer</h1>
-      <p className="mt-2 text-sm text-slate-600">Tài khoản đăng ký mới mặc định mang role `customer` để demo đầy đủ luồng mua hàng.</p>
+      <h1 className="text-3xl font-extrabold text-slate-900">Tạo tài khoản khách hàng</h1>
+      <p className="mt-2 text-sm text-slate-600">Tài khoản đăng ký mới mặc định mang vai trò `customer` để demo đầy đủ luồng mua hàng.</p>
 
       {error ? <div className="mt-6 rounded-2xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger">{error}</div> : null}
 

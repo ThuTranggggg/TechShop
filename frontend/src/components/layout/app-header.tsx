@@ -14,7 +14,7 @@ import { me } from "@/services/api/user";
 const links = [
   { href: "/products", label: "Sản phẩm" },
   { href: "/orders", label: "Đơn hàng" },
-  { href: "/chat", label: "AI Demo" },
+  { href: "/chat", label: "Demo AI" },
 ];
 
 export function AppHeader() {
@@ -33,7 +33,7 @@ export function AppHeader() {
           </div>
           <div className="hidden sm:block">
             <div className="font-display text-xl font-extrabold tracking-tight">TechShop</div>
-            <div className="text-[10px] uppercase tracking-[0.24em] text-slate-500">Digital Atelier</div>
+            <div className="text-[10px] uppercase tracking-[0.24em] text-slate-500">Trải nghiệm thương mại AI</div>
           </div>
         </Link>
         <nav className="hidden lg:flex items-center gap-3 rounded-full border border-border/80 bg-card/70 p-1.5 text-sm font-bold shadow-soft">
@@ -62,13 +62,13 @@ export function AppHeader() {
           ) : null}
           <Link href="/products" className="hidden sm:inline-flex items-center gap-2 rounded-full border border-border bg-card px-3.5 py-2 text-xs font-semibold text-slate-600 hover:bg-muted">
             <Compass className="h-3.5 w-3.5" />
-            Browse
+            Khám phá
           </Link>
           <Link href="/chat" className="hidden md:inline-flex items-center gap-2 rounded-full border border-border bg-card px-3.5 py-2 text-xs font-semibold text-slate-600 hover:bg-muted">
             <Sparkles className="h-3.5 w-3.5" />
-            RAG Demo
+            Demo RAG
           </Link>
-          <Link href="/cart" prefetch={false} className="relative transition-transform hover:scale-110 active:scale-90" aria-label="Cart">
+          <Link href="/cart" prefetch={false} className="relative transition-transform hover:scale-110 active:scale-90" aria-label="Giỏ hàng">
             <CartBadge />
           </Link>
           {token ? (
@@ -83,6 +83,7 @@ export function AppHeader() {
                   window.location.href = "/login";
                 }}
                 className="inline-flex items-center rounded-full border border-border bg-card px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-muted"
+                aria-label="Đăng xuất"
               >
                 <LogOut className="h-3.5 w-3.5" />
               </button>

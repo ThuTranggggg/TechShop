@@ -4,7 +4,7 @@ Concrete repository implementations using Django ORM.
 """
 from datetime import datetime
 from typing import List, Optional
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from django.db.models import Q
 
@@ -345,32 +345,84 @@ class DjangoKnowledgeChunkRepository(KnowledgeChunkRepository):
 
     def search_similar(self, query: str, limit: int = 5) -> List[KnowledgeChunk]:
         """Search similar chunks using broad keyword matching with graceful fallback."""
-        base_queryset = KnowledgeChunkModel.objects.filter(document__is_active=True).select_related("document")
+        try:
+            base_queryset = (
+                KnowledgeChunkModel.objects.filter(document__is_active=True)
+                .select_related("document")
+                .defer("embedding")
+            )
+            normalized_query = normalize_text(query)
+            query_tokens = [token for token in tokenize(query) if len(token) > 1]
+
+            if not normalized_query and not query_tokens:
+                queryset = base_queryset.order_by("-document__updated_at", "chunk_index")[:limit]
+                return [self._model_to_entity(m) for m in queryset]
+
+            filters = Q()
+            if normalized_query:
+                filters |= Q(content__icontains=query)
+                filters |= Q(document__title__icontains=query)
+
+            for token in query_tokens[:8]:
+                filters |= Q(content__icontains=token)
+                filters |= Q(document__title__icontains=token)
+                filters |= Q(document__metadata__icontains=token)
+                filters |= Q(metadata__icontains=token)
+
+            queryset = base_queryset.filter(filters).order_by("-document__updated_at", "chunk_index")[: max(limit * 4, limit)]
+            results = [self._model_to_entity(model) for model in queryset]
+            if results:
+                return results
+
+            fallback_queryset = base_queryset.order_by("-document__updated_at", "chunk_index")[:limit]
+            return [self._model_to_entity(model) for model in fallback_queryset]
+        except Exception as exc:
+            logger.warning("Knowledge chunk retrieval failed, falling back to text docs: %s", exc)
+            return self._fallback_search_from_documents(query, limit)
+
+    def _fallback_search_from_documents(self, query: str, limit: int) -> List[KnowledgeChunk]:
+        """Return text-only fallback chunks when the vector-backed table cannot be queried."""
+        base_queryset = KnowledgeDocumentModel.objects.filter(is_active=True)
         normalized_query = normalize_text(query)
         query_tokens = [token for token in tokenize(query) if len(token) > 1]
 
         if not normalized_query and not query_tokens:
-            queryset = base_queryset.order_by("-document__updated_at", "chunk_index")[:limit]
-            return [self._model_to_entity(m) for m in queryset]
+            docs = base_queryset.order_by("-updated_at", "-created_at")[:limit]
+        else:
+            filters = Q()
+            if normalized_query:
+                filters |= Q(title__icontains=query)
+                filters |= Q(content__icontains=query)
+                filters |= Q(metadata__icontains=query)
 
-        filters = Q()
-        if normalized_query:
-            filters |= Q(content__icontains=query)
-            filters |= Q(document__title__icontains=query)
+            for token in query_tokens[:8]:
+                filters |= Q(title__icontains=token)
+                filters |= Q(content__icontains=token)
+                filters |= Q(metadata__icontains=token)
 
-        for token in query_tokens[:8]:
-            filters |= Q(content__icontains=token)
-            filters |= Q(document__title__icontains=token)
-            filters |= Q(document__metadata__icontains=token)
-            filters |= Q(metadata__icontains=token)
+            docs = base_queryset.filter(filters).order_by("-updated_at", "-created_at")[: max(limit * 4, limit)]
+            if not docs:
+                docs = base_queryset.order_by("-updated_at", "-created_at")[:limit]
 
-        queryset = base_queryset.filter(filters).order_by("-document__updated_at", "chunk_index")[: max(limit * 4, limit)]
-        results = [self._model_to_entity(model) for model in queryset]
-        if results:
-            return results
-
-        fallback_queryset = base_queryset.order_by("-document__updated_at", "chunk_index")[:limit]
-        return [self._model_to_entity(model) for model in fallback_queryset]
+        fallback_chunks: List[KnowledgeChunk] = []
+        for index, doc in enumerate(docs):
+            fallback_chunks.append(
+                KnowledgeChunk(
+                    id=uuid4(),
+                    document_id=doc.id,
+                    chunk_index=index,
+                    content=doc.content,
+                    embedding_ref=doc.source,
+                    metadata={
+                        **(doc.metadata or {}),
+                        "document_type": doc.document_type,
+                        "source": doc.source,
+                        "title": doc.title,
+                    },
+                    created_at=doc.created_at,
+                )
+            )
+        return fallback_chunks
 
     @staticmethod
     def _model_to_entity(model: KnowledgeChunkModel) -> KnowledgeChunk:

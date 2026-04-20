@@ -8,9 +8,9 @@ const products = [
     id: "prod-iphone-15",
     name: "iPhone 15",
     slug: "iphone-15",
-    short_description: "Flagship phone for the demo storefront.",
+    short_description: "Điện thoại flagship cho storefront demo.",
     brand_name: "Apple",
-    category_name: "Dien thoai",
+    category_name: "Điện thoại",
     base_price: 19990000,
     currency: "VND",
     thumbnail_url: "https://images.unsplash.com/photo-1695048133142-1a2049d5e7bd?auto=format&fit=crop&w=900&q=80",
@@ -20,9 +20,9 @@ const products = [
     id: "prod-galaxy-s24",
     name: "Galaxy S24",
     slug: "galaxy-s24",
-    short_description: "Second demo product used in e2e coverage.",
+    short_description: "Sản phẩm demo thứ hai dùng trong kiểm thử E2E.",
     brand_name: "Samsung",
-    category_name: "Dien thoai",
+    category_name: "Điện thoại",
     base_price: 18990000,
     currency: "VND",
     thumbnail_url: "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?auto=format&fit=crop&w=900&q=80",
@@ -31,7 +31,7 @@ const products = [
 ];
 
 const categories = [
-  { id: "cat-phone", name: "Dien thoai", slug: "dien-thoai" },
+  { id: "cat-phone", name: "Điện thoại", slug: "dien-thoai" },
   { id: "cat-laptop", name: "Laptop", slug: "laptop" },
 ];
 

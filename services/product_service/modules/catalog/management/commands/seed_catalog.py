@@ -13,6 +13,7 @@ from modules.catalog.application.seed_data import (
     CATEGORY_SEED_DATA,
     PRODUCT_SEED_DATA,
     PRODUCT_TYPE_SEED_DATA,
+    product_image,
     stable_uuid,
 )
 from modules.catalog.domain.enums import CategoryStatus, ProductStatus
@@ -94,7 +95,7 @@ class Command(BaseCommand):
                     f"behavior analytics and cross-category recommendations."
                 ),
             )
-            thumbnail_url = f"https://picsum.photos/seed/{item['slug']}/800/600"
+            thumbnail_url = product_image(item["product_type_code"], item["category_slug"])
 
             product, _ = ProductModel.objects.update_or_create(
                 slug=item["slug"],

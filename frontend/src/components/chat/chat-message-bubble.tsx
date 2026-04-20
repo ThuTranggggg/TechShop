@@ -17,11 +17,11 @@ export function ChatMessageBubble({ role, text, sources, relatedProducts }: Chat
 
       {!isUser && sources?.length ? (
         <div className="mt-3 border-t border-border/70 pt-3">
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Nguon tri thuc RAG</p>
+          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Nguồn tri thức RAG</p>
           <div className="mt-2 space-y-2">
             {sources.slice(0, 3).map((source) => (
               <article key={`${source.document_id}-${source.chunk_index ?? "source"}`} className="rounded-2xl bg-slate-50 px-3 py-2">
-                <p className="font-semibold text-slate-900">{source.document_title || "Tai lieu noi bo"}</p>
+                <p className="font-semibold text-slate-900">{source.document_title || "Tài liệu nội bộ"}</p>
                 <p className="mt-1 text-xs text-slate-500">
                   {source.document_type || "knowledge"} {source.source ? `• ${source.source}` : ""}
                 </p>
@@ -34,7 +34,7 @@ export function ChatMessageBubble({ role, text, sources, relatedProducts }: Chat
 
       {!isUser && relatedProducts?.length ? (
         <div className="mt-3 border-t border-border/70 pt-3">
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">San pham lien quan</p>
+          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Sản phẩm liên quan</p>
           <div className="mt-2 grid gap-2">
             {relatedProducts.slice(0, 3).map((product) => (
               <Link
@@ -44,7 +44,7 @@ export function ChatMessageBubble({ role, text, sources, relatedProducts }: Chat
               >
                 <p className="font-semibold">{product.name}</p>
                 <p className="mt-1 text-xs text-slate-500">
-                  {product.brand_name || "Nhom product"} {product.base_price ? `• ${new Intl.NumberFormat("vi-VN").format(Number(product.base_price))} đ` : ""}
+                  {product.brand_name || "Nhóm sản phẩm"} {product.base_price ? `• ${new Intl.NumberFormat("vi-VN").format(Number(product.base_price))} đ` : ""}
                 </p>
               </Link>
             ))}

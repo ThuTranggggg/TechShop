@@ -27,7 +27,7 @@ export default function OrderDetailPage() {
   return (
     <div className="space-y-6">
       <section className="rounded-2xl border border-border bg-white p-5">
-        {justPlaced ? <p className="mb-2 text-sm font-semibold text-emerald-700">Don hang da tao thanh cong.</p> : null}
+        {justPlaced ? <p className="mb-2 text-sm font-semibold text-emerald-700">Đơn hàng đã tạo thành công.</p> : null}
         <h1 className="text-2xl font-bold">{order.order_number}</h1>
         <div className="mt-3 flex flex-wrap gap-2"><StatusBadge status={order.status} /><StatusBadge status={order.payment_status} /><StatusBadge status={order.fulfillment_status} /></div>
         <div className="mt-4 flex gap-2">
@@ -37,13 +37,13 @@ export default function OrderDetailPage() {
       </section>
 
       <section className="rounded-2xl border border-border bg-white p-5">
-        <h2 className="mb-4 text-xl font-bold">Timeline</h2>
+        <h2 className="mb-4 text-xl font-bold">Dòng thời gian</h2>
         <TrackingTimeline items={timeline?.status_history ?? []} />
       </section>
 
       {(tracking as { events?: Array<{ status_after: string; event_time?: string; location?: string; description?: string }> })?.events?.length ? (
         <section className="rounded-2xl border border-border bg-white p-5">
-          <h2 className="mb-3 text-xl font-bold">Shipment tracking</h2>
+          <h2 className="mb-3 text-xl font-bold">Theo dõi vận chuyển</h2>
           <TrackingTimeline
             items={((tracking as { events?: Array<{ status_after: string; event_time?: string; location?: string; description?: string }> }).events ?? []).map((t) => ({
               to_status: t.status_after,
@@ -54,7 +54,7 @@ export default function OrderDetailPage() {
         </section>
       ) : null}
 
-      <RecommendationCarousel products={rec?.results ?? []} title="Ban co the thich" />
+      <RecommendationCarousel products={rec?.results ?? []} title="Bạn có thể thích" />
     </div>
   );
 }

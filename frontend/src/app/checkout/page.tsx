@@ -38,7 +38,7 @@ export default function CheckoutPage() {
       trackAiEvent({ event_type: "order_created", user_id: userId, metadata: { order_id: order.id } }).catch(() => undefined);
       router.push(`/orders/${order.id}?justPlaced=1`);
     },
-    onError: (e) => setError(e instanceof Error ? e.message : "Checkout failed"),
+    onError: (e) => setError(e instanceof Error ? e.message : "Thanh toán thất bại"),
   });
 
   if (!mounted || !cart) return null;
@@ -46,7 +46,7 @@ export default function CheckoutPage() {
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px]">
       <section className="rounded-2xl border border-border bg-white p-5">
-        <h1 className="mb-4 text-2xl font-bold">Checkout</h1>
+        <h1 className="mb-4 text-2xl font-bold">Thanh toán</h1>
         {error ? <p className="mb-3 text-sm text-red-600">{error}</p> : null}
         <AddressForm loading={createMutation.isPending} onSubmit={(data) => createMutation.mutate(data)} />
       </section>

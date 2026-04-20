@@ -49,39 +49,39 @@ DEMO_USERS = [
 DEMO_PASSWORD = "Demo@123456"
 
 DEMO_CATEGORY_TREE = [
-    {"slug": "dien-tu", "name": "Dien tu", "parent": None, "description": "Nhom product gom thiet bi dien tu va phu kien cong nghe phuc vu hoc tap, lien lac va giai tri hang ngay.", "image_url": "https://picsum.photos/seed/dien-tu/1200/800", "sort_order": 1},
-    {"slug": "dien-thoai-va-may-tinh-bang", "name": "Dien thoai va may tinh bang", "parent": "dien-tu", "description": "Danh muc smartphone va tablet cho hoc tap, giai tri, lam viec di dong va lien lac moi ngay.", "image_url": "https://picsum.photos/seed/dien-thoai-va-may-tinh-bang/1200/800", "sort_order": 2},
-    {"slug": "phu-kien-cong-nghe", "name": "Phu kien cong nghe", "parent": "dien-tu", "description": "Danh muc pin du phong, tai nghe, sac nhanh va cac phu kien ho tro he sinh thai thiet bi so.", "image_url": "https://picsum.photos/seed/phu-kien-cong-nghe/1200/800", "sort_order": 3},
-    {"slug": "thoi-trang", "name": "Thoi trang", "parent": None, "description": "Nhom product thoi trang cho nhu cau mac dep, di lam, di hoc va su dung hang ngay.", "image_url": "https://picsum.photos/seed/thoi-trang/1200/800", "sort_order": 4},
-    {"slug": "thoi-trang-nam", "name": "Thoi trang nam", "parent": "thoi-trang", "description": "Danh muc ao, quan va set do co ban cho phong cach nam tinh, de mac va de phoi.", "image_url": "https://picsum.photos/seed/thoi-trang-nam/1200/800", "sort_order": 5},
-    {"slug": "thoi-trang-nu", "name": "Thoi trang nu", "parent": "thoi-trang", "description": "Danh muc dam, ao khoac va trang phuc nu cho cong so, dao pho va su kien nho.", "image_url": "https://picsum.photos/seed/thoi-trang-nu/1200/800", "sort_order": 6},
-    {"slug": "my-pham", "name": "My pham", "parent": None, "description": "Nhom product lam dep gom cham soc da va trang diem co ban cho nhu cau ca nhan.", "image_url": "https://picsum.photos/seed/my-pham/1200/800", "sort_order": 7},
-    {"slug": "cham-soc-da", "name": "Cham soc da", "parent": "my-pham", "description": "Danh muc serum, kem duong va san pham duong am phu hop routine sang toi.", "image_url": "https://picsum.photos/seed/cham-soc-da/1200/800", "sort_order": 8},
-    {"slug": "trang-diem", "name": "Trang diem", "parent": "my-pham", "description": "Danh muc cushion, son va san pham makeup phu hop phong cach tu nhien den noi bat.", "image_url": "https://picsum.photos/seed/trang-diem/1200/800", "sort_order": 9},
-    {"slug": "nha-cua-doi-song", "name": "Nha cua doi song", "parent": None, "description": "Nhom product gia dung va trang tri cho phong bep, phong ngu va khong gian song.", "image_url": "https://picsum.photos/seed/nha-cua-doi-song/1200/800", "sort_order": 10},
-    {"slug": "do-bep", "name": "Do bep", "parent": "nha-cua-doi-song", "description": "Danh muc noi chien, chao, dung cu bep giup nau an nhanh va gon gang hon.", "image_url": "https://picsum.photos/seed/do-bep/1200/800", "sort_order": 11},
-    {"slug": "trang-tri-nha-cua", "name": "Trang tri nha cua", "parent": "nha-cua-doi-song", "description": "Danh muc den ngu, ke trang tri va vat dung giup khong gian song am cung hon.", "image_url": "https://picsum.photos/seed/trang-tri-nha-cua/1200/800", "sort_order": 12},
-    {"slug": "me-va-be", "name": "Me va be", "parent": None, "description": "Nhom product phuc vu cham soc tre nho va do dung thiet yeu cho me va be.", "image_url": "https://picsum.photos/seed/me-va-be/1200/800", "sort_order": 13},
-    {"slug": "do-so-sinh", "name": "Do so sinh", "parent": "me-va-be", "description": "Danh muc quan ao so sinh, khan sua va vat dung mem mai cho giai doan dau doi.", "image_url": "https://picsum.photos/seed/do-so-sinh/1200/800", "sort_order": 14},
-    {"slug": "sua-va-bim", "name": "Sua va bim", "parent": "me-va-be", "description": "Danh muc sua cong thuc, bim ta va cac san pham tieu hao cho be hang ngay.", "image_url": "https://picsum.photos/seed/sua-va-bim/1200/800", "sort_order": 15},
-    {"slug": "the-thao-da-ngoai", "name": "The thao da ngoai", "parent": None, "description": "Nhom product tap luyen va da ngoai cho nhu cau van dong, trekking va cam trai.", "image_url": "https://picsum.photos/seed/the-thao-da-ngoai/1200/800", "sort_order": 16},
-    {"slug": "do-tap-luyen", "name": "Do tap luyen", "parent": "the-thao-da-ngoai", "description": "Danh muc tham yoga, ta tay va dung cu giup tap luyen tai nha linh hoat.", "image_url": "https://picsum.photos/seed/do-tap-luyen/1200/800", "sort_order": 17},
-    {"slug": "da-ngoai-cam-trai", "name": "Da ngoai cam trai", "parent": "the-thao-da-ngoai", "description": "Danh muc leu, binh giu nhiet va do da ngoai cho nhung chuyen di cuoi tuan.", "image_url": "https://picsum.photos/seed/da-ngoai-cam-trai/1200/800", "sort_order": 18},
-    {"slug": "sach-van-phong-pham", "name": "Sach van phong pham", "parent": None, "description": "Nhom product sach ky nang va van phong pham cho hoc tap, lam viec va ghi chu.", "image_url": "https://picsum.photos/seed/sach-van-phong-pham/1200/800", "sort_order": 19},
-    {"slug": "sach-ky-nang", "name": "Sach ky nang", "parent": "sach-van-phong-pham", "description": "Danh muc sach ky nang mem, tai chinh va phat trien ban than cho nguoi hoc va di lam.", "image_url": "https://picsum.photos/seed/sach-ky-nang/1200/800", "sort_order": 20},
-    {"slug": "van-phong-pham", "name": "Van phong pham", "parent": "sach-van-phong-pham", "description": "Danh muc so tay, but viet va do dung ban hoc de to chuc cong viec hieu qua.", "image_url": "https://picsum.photos/seed/van-phong-pham/1200/800", "sort_order": 21},
-    {"slug": "thuc-pham-do-uong", "name": "Thuc pham do uong", "parent": None, "description": "Nhom product do an vat, ca phe va thuc uong dong goi cho nhu cau tich tru tai nha va van phong.", "image_url": "https://picsum.photos/seed/thuc-pham-do-uong/1200/800", "sort_order": 22},
-    {"slug": "do-an-vat", "name": "Do an vat", "parent": "thuc-pham-do-uong", "description": "Danh muc snack lanh manh, hat dinh duong va mon an nhe de su dung moi ngay.", "image_url": "https://picsum.photos/seed/do-an-vat/1200/800", "sort_order": 23},
-    {"slug": "do-uong-pha-san", "name": "Do uong pha san", "parent": "thuc-pham-do-uong", "description": "Danh muc ca phe, tra va thuc uong pha nhanh phu hop tai nha va noi lam viec.", "image_url": "https://picsum.photos/seed/do-uong-pha-san/1200/800", "sort_order": 24},
-    {"slug": "suc-khoe-ca-nhan", "name": "Suc khoe ca nhan", "parent": None, "description": "Nhom product cham soc suc khoe, vitamin bo sung va vat dung ca nhan hang ngay.", "image_url": "https://picsum.photos/seed/suc-khoe-ca-nhan/1200/800", "sort_order": 25},
-    {"slug": "vitamin-bo-sung", "name": "Vitamin bo sung", "parent": "suc-khoe-ca-nhan", "description": "Danh muc vitamin, collagen va san pham bo sung cho muc tieu suc khoe va sac dep.", "image_url": "https://picsum.photos/seed/vitamin-bo-sung/1200/800", "sort_order": 26},
-    {"slug": "cham-soc-ca-nhan", "name": "Cham soc ca nhan", "parent": "suc-khoe-ca-nhan", "description": "Danh muc ban chai dien, may cham soc va san pham ho tro ve sinh ca nhan.", "image_url": "https://picsum.photos/seed/cham-soc-ca-nhan/1200/800", "sort_order": 27},
-    {"slug": "do-choi-giai-tri", "name": "Do choi giai tri", "parent": None, "description": "Nhom product do choi giao duc, boardgame va mo hinh cho gia dinh va tre em.", "image_url": "https://picsum.photos/seed/do-choi-giai-tri/1200/800", "sort_order": 28},
-    {"slug": "do-choi-giao-duc", "name": "Do choi giao duc", "parent": "do-choi-giai-tri", "description": "Danh muc do choi hoc tap giup tre phat trien tu duy, mau sac va ky nang nen tang.", "image_url": "https://picsum.photos/seed/do-choi-giao-duc/1200/800", "sort_order": 29},
-    {"slug": "boardgame-mo-hinh", "name": "Boardgame mo hinh", "parent": "do-choi-giai-tri", "description": "Danh muc boardgame va mo hinh lap rap cho giai tri nhom va suu tam.", "image_url": "https://picsum.photos/seed/boardgame-mo-hinh/1200/800", "sort_order": 30},
-    {"slug": "cham-soc-thu-cung", "name": "Cham soc thu cung", "parent": None, "description": "Nhom product thuc an va phu kien co ban cho cho, meo va thu cung trong nha.", "image_url": "https://picsum.photos/seed/cham-soc-thu-cung/1200/800", "sort_order": 31},
-    {"slug": "thuc-an-thu-cung", "name": "Thuc an thu cung", "parent": "cham-soc-thu-cung", "description": "Danh muc hat, pate va thuc an dong goi cho cho meo o nhieu giai doan.", "image_url": "https://picsum.photos/seed/thuc-an-thu-cung/1200/800", "sort_order": 32},
-    {"slug": "phu-kien-thu-cung", "name": "Phu kien thu cung", "parent": "cham-soc-thu-cung", "description": "Danh muc day dan, cat ve sinh va vat dung giup cham soc thu cung sach se va an toan.", "image_url": "https://picsum.photos/seed/phu-kien-thu-cung/1200/800", "sort_order": 33},
+    {"slug": "dien-tu", "name": "Dien tu", "parent": None, "description": "Nhom product gom thiet bi dien tu va phu kien cong nghe phuc vu hoc tap, lien lac va giai tri hang ngay.", "image_url": "https://images.unsplash.com/photo-1526738549149-8e07eca6c147?auto=format&fit=crop&w=1200&q=80", "sort_order": 1},
+    {"slug": "dien-thoai-va-may-tinh-bang", "name": "Dien thoai va may tinh bang", "parent": "dien-tu", "description": "Danh muc smartphone va tablet cho hoc tap, giai tri, lam viec di dong va lien lac moi ngay.", "image_url": "https://images.unsplash.com/photo-1526738549149-8e07eca6c147?auto=format&fit=crop&w=1200&q=80", "sort_order": 2},
+    {"slug": "phu-kien-cong-nghe", "name": "Phu kien cong nghe", "parent": "dien-tu", "description": "Danh muc pin du phong, tai nghe, sac nhanh va cac phu kien ho tro he sinh thai thiet bi so.", "image_url": "https://images.unsplash.com/photo-1523170335258-f5ed11844a49?auto=format&fit=crop&w=1200&q=80", "sort_order": 3},
+    {"slug": "thoi-trang", "name": "Thoi trang", "parent": None, "description": "Nhom product thoi trang cho nhu cau mac dep, di lam, di hoc va su dung hang ngay.", "image_url": "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1200&q=80", "sort_order": 4},
+    {"slug": "thoi-trang-nam", "name": "Thoi trang nam", "parent": "thoi-trang", "description": "Danh muc ao, quan va set do co ban cho phong cach nam tinh, de mac va de phoi.", "image_url": "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1200&q=80", "sort_order": 5},
+    {"slug": "thoi-trang-nu", "name": "Thoi trang nu", "parent": "thoi-trang", "description": "Danh muc dam, ao khoac va trang phuc nu cho cong so, dao pho va su kien nho.", "image_url": "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1200&q=80", "sort_order": 6},
+    {"slug": "my-pham", "name": "My pham", "parent": None, "description": "Nhom product lam dep gom cham soc da va trang diem co ban cho nhu cau ca nhan.", "image_url": "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1200&q=80", "sort_order": 7},
+    {"slug": "cham-soc-da", "name": "Cham soc da", "parent": "my-pham", "description": "Danh muc serum, kem duong va san pham duong am phu hop routine sang toi.", "image_url": "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1200&q=80", "sort_order": 8},
+    {"slug": "trang-diem", "name": "Trang diem", "parent": "my-pham", "description": "Danh muc cushion, son va san pham makeup phu hop phong cach tu nhien den noi bat.", "image_url": "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1200&q=80", "sort_order": 9},
+    {"slug": "nha-cua-doi-song", "name": "Nha cua doi song", "parent": None, "description": "Nhom product gia dung va trang tri cho phong bep, phong ngu va khong gian song.", "image_url": "https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=1200&q=80", "sort_order": 10},
+    {"slug": "do-bep", "name": "Do bep", "parent": "nha-cua-doi-song", "description": "Danh muc noi chien, chao, dung cu bep giup nau an nhanh va gon gang hon.", "image_url": "https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=1200&q=80", "sort_order": 11},
+    {"slug": "trang-tri-nha-cua", "name": "Trang tri nha cua", "parent": "nha-cua-doi-song", "description": "Danh muc den ngu, ke trang tri va vat dung giup khong gian song am cung hon.", "image_url": "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1200&q=80", "sort_order": 12},
+    {"slug": "me-va-be", "name": "Me va be", "parent": None, "description": "Nhom product phuc vu cham soc tre nho va do dung thiet yeu cho me va be.", "image_url": "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=1200&q=80", "sort_order": 13},
+    {"slug": "do-so-sinh", "name": "Do so sinh", "parent": "me-va-be", "description": "Danh muc quan ao so sinh, khan sua va vat dung mem mai cho giai doan dau doi.", "image_url": "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=1200&q=80", "sort_order": 14},
+    {"slug": "sua-va-bim", "name": "Sua va bim", "parent": "me-va-be", "description": "Danh muc sua cong thuc, bim ta va cac san pham tieu hao cho be hang ngay.", "image_url": "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=1200&q=80", "sort_order": 15},
+    {"slug": "the-thao-da-ngoai", "name": "The thao da ngoai", "parent": None, "description": "Nhom product tap luyen va da ngoai cho nhu cau van dong, trekking va cam trai.", "image_url": "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1200&q=80", "sort_order": 16},
+    {"slug": "do-tap-luyen", "name": "Do tap luyen", "parent": "the-thao-da-ngoai", "description": "Danh muc tham yoga, ta tay va dung cu giup tap luyen tai nha linh hoat.", "image_url": "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1200&q=80", "sort_order": 17},
+    {"slug": "da-ngoai-cam-trai", "name": "Da ngoai cam trai", "parent": "the-thao-da-ngoai", "description": "Danh muc leu, binh giu nhiet va do da ngoai cho nhung chuyen di cuoi tuan.", "image_url": "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80", "sort_order": 18},
+    {"slug": "sach-van-phong-pham", "name": "Sach van phong pham", "parent": None, "description": "Nhom product sach ky nang va van phong pham cho hoc tap, lam viec va ghi chu.", "image_url": "https://images.unsplash.com/photo-1497032628192-86f99bcd76bc?auto=format&fit=crop&w=1200&q=80", "sort_order": 19},
+    {"slug": "sach-ky-nang", "name": "Sach ky nang", "parent": "sach-van-phong-pham", "description": "Danh muc sach ky nang mem, tai chinh va phat trien ban than cho nguoi hoc va di lam.", "image_url": "https://images.unsplash.com/photo-1495446815901-a7297e633e8d?auto=format&fit=crop&w=1200&q=80", "sort_order": 20},
+    {"slug": "van-phong-pham", "name": "Van phong pham", "parent": "sach-van-phong-pham", "description": "Danh muc so tay, but viet va do dung ban hoc de to chuc cong viec hieu qua.", "image_url": "https://images.unsplash.com/photo-1497032628192-86f99bcd76bc?auto=format&fit=crop&w=1200&q=80", "sort_order": 21},
+    {"slug": "thuc-pham-do-uong", "name": "Thuc pham do uong", "parent": None, "description": "Nhom product do an vat, ca phe va thuc uong dong goi cho nhu cau tich tru tai nha va van phong.", "image_url": "https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=1200&q=80", "sort_order": 22},
+    {"slug": "do-an-vat", "name": "Do an vat", "parent": "thuc-pham-do-uong", "description": "Danh muc snack lanh manh, hat dinh duong va mon an nhe de su dung moi ngay.", "image_url": "https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=1200&q=80", "sort_order": 23},
+    {"slug": "do-uong-pha-san", "name": "Do uong pha san", "parent": "thuc-pham-do-uong", "description": "Danh muc ca phe, tra va thuc uong pha nhanh phu hop tai nha va noi lam viec.", "image_url": "https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=1200&q=80", "sort_order": 24},
+    {"slug": "suc-khoe-ca-nhan", "name": "Suc khoe ca nhan", "parent": None, "description": "Nhom product cham soc suc khoe, vitamin bo sung va vat dung ca nhan hang ngay.", "image_url": "https://images.unsplash.com/photo-1471864190281-a93a3070b6de?auto=format&fit=crop&w=1200&q=80", "sort_order": 25},
+    {"slug": "vitamin-bo-sung", "name": "Vitamin bo sung", "parent": "suc-khoe-ca-nhan", "description": "Danh muc vitamin, collagen va san pham bo sung cho muc tieu suc khoe va sac dep.", "image_url": "https://images.unsplash.com/photo-1471864190281-a93a3070b6de?auto=format&fit=crop&w=1200&q=80", "sort_order": 26},
+    {"slug": "cham-soc-ca-nhan", "name": "Cham soc ca nhan", "parent": "suc-khoe-ca-nhan", "description": "Danh muc ban chai dien, may cham soc va san pham ho tro ve sinh ca nhan.", "image_url": "https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&w=1200&q=80", "sort_order": 27},
+    {"slug": "do-choi-giai-tri", "name": "Do choi giai tri", "parent": None, "description": "Nhom product do choi giao duc, boardgame va mo hinh cho gia dinh va tre em.", "image_url": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80", "sort_order": 28},
+    {"slug": "do-choi-giao-duc", "name": "Do choi giao duc", "parent": "do-choi-giai-tri", "description": "Danh muc do choi hoc tap giup tre phat trien tu duy, mau sac va ky nang nen tang.", "image_url": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80", "sort_order": 29},
+    {"slug": "boardgame-mo-hinh", "name": "Boardgame mo hinh", "parent": "do-choi-giai-tri", "description": "Danh muc boardgame va mo hinh lap rap cho giai tri nhom va suu tam.", "image_url": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80", "sort_order": 30},
+    {"slug": "cham-soc-thu-cung", "name": "Cham soc thu cung", "parent": None, "description": "Nhom product thuc an va phu kien co ban cho cho, meo va thu cung trong nha.", "image_url": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=1200&q=80", "sort_order": 31},
+    {"slug": "thuc-an-thu-cung", "name": "Thuc an thu cung", "parent": "cham-soc-thu-cung", "description": "Danh muc hat, pate va thuc an dong goi cho cho meo o nhieu giai doan.", "image_url": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=1200&q=80", "sort_order": 32},
+    {"slug": "phu-kien-thu-cung", "name": "Phu kien thu cung", "parent": "cham-soc-thu-cung", "description": "Danh muc day dan, cat ve sinh va vat dung giup cham soc thu cung sach se va an toan.", "image_url": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=1200&q=80", "sort_order": 33},
 ]
 
 DEMO_PRODUCT_TYPES = {
@@ -509,7 +509,7 @@ for slug, info in brands.items():
         defaults={{
             "name": info["name"],
             "description": info["description"],
-            "logo_url": f"https://picsum.photos/seed/brand-{{slug}}/400/400",
+            "logo_url": f"https://ui-avatars.com/api/?name={{info['name'].replace(' ', '+')}}&background=0f172a&color=ffffff&size=400&bold=true",
             "is_active": True,
         }},
     )
@@ -518,7 +518,7 @@ for slug, info in brands.items():
         b.name = info["name"]; changed = True
     if b.description != info["description"]:
         b.description = info["description"]; changed = True
-    desired_logo = f"https://picsum.photos/seed/brand-{{slug}}/400/400"
+    desired_logo = f"https://ui-avatars.com/api/?name={{info['name'].replace(' ', '+')}}&background=0f172a&color=ffffff&size=400&bold=true"
     if b.logo_url != desired_logo:
         b.logo_url = desired_logo; changed = True
     if not b.is_active:
@@ -526,6 +526,49 @@ for slug, info in brands.items():
     if changed:
         b.save()
     brand_objs[slug] = b
+
+def thumbnail_url_for_demo_product(product_type_code, category_slug, slug):
+    if product_type_code == "ELECTRONIC_DEVICE":
+        if "laptop" in slug:
+            return "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=960&q=80"
+        if "tablet" in slug:
+            return "https://images.unsplash.com/photo-1545239351-1141bd82e8a6?auto=format&fit=crop&w=960&q=80"
+        return "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=960&q=80"
+    if product_type_code == "TECH_ACCESSORY":
+        if "tai-nghe" in slug or "headphone" in slug or "buds" in slug:
+            return "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=960&q=80"
+        if "dong-ho" in slug or "watch" in slug:
+            return "https://images.unsplash.com/photo-1546868871-7041f2a55e12?auto=format&fit=crop&w=960&q=80"
+        return "https://images.unsplash.com/photo-1523170335258-f5ed11844a49?auto=format&fit=crop&w=960&q=80"
+    if product_type_code in {"MEN_FASHION", "WOMEN_FASHION"}:
+        return "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=960&q=80"
+    if product_type_code in {"SKINCARE", "MAKEUP"}:
+        return "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=960&q=80"
+    if product_type_code == "KITCHENWARE":
+        return "https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=960&q=80"
+    if product_type_code == "HOME_DECOR":
+        return "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=960&q=80"
+    if product_type_code in {"NEWBORN_ESSENTIAL", "BABY_DAILY_CARE"}:
+        return "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=960&q=80"
+    if product_type_code == "FITNESS_GEAR":
+        return "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=960&q=80"
+    if product_type_code == "OUTDOOR_CAMPING":
+        return "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=960&q=80"
+    if product_type_code == "SKILL_BOOK":
+        return "https://images.unsplash.com/photo-1495446815901-a7297e633e8d?auto=format&fit=crop&w=960&q=80"
+    if product_type_code == "STATIONERY":
+        return "https://images.unsplash.com/photo-1497032628192-86f99bcd76bc?auto=format&fit=crop&w=960&q=80"
+    if product_type_code in {"SNACK", "READY_DRINK"}:
+        return "https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=960&q=80"
+    if product_type_code == "SUPPLEMENT":
+        return "https://images.unsplash.com/photo-1471864190281-a93a3070b6de?auto=format&fit=crop&w=960&q=80"
+    if product_type_code == "PERSONAL_CARE":
+        return "https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&w=960&q=80"
+    if product_type_code in {"EDUCATIONAL_TOY", "BOARDGAME_MODEL"}:
+        return "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=960&q=80"
+    if product_type_code in {"PET_FOOD", "PET_ACCESSORY"}:
+        return "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=960&q=80"
+    return "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=960&q=80"
 
 items = {repr(DEMO_PRODUCTS)}
 type_map = {repr(DEMO_PRODUCT_TYPES)}
@@ -576,7 +619,7 @@ for idx, (slug, name, category_slug, brand_slug, price, featured) in enumerate(i
     }}
     seo_title = f"{{name}} | {{category.name}} {{brand.name}}"
     seo_description = f"Kham pha {{name}} trong danh muc {{category.name}} - toi uu cho {{category_meta['use_case']}}."
-    thumbnail_url = f"https://picsum.photos/seed/{{slug}}/800/600"
+    thumbnail_url = thumbnail_url_for_demo_product(product_type.code, category_slug, slug)
     p, _ = ProductModel.objects.get_or_create(
         slug=slug,
         defaults={{

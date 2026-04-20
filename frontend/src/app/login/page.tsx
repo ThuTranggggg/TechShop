@@ -20,7 +20,7 @@ export default function LoginPage() {
         <div className="relative space-y-8">
           <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] text-primary">
             <Sparkles className="h-3.5 w-3.5" />
-            Secure Access
+            Truy cập an toàn
           </span>
           <h1 className="font-display text-4xl font-extrabold leading-tight text-slate-900">
             Chào mừng trở lại
@@ -28,7 +28,7 @@ export default function LoginPage() {
             với TechShop.
           </h1>
           <p className="max-w-md text-slate-600">
-            Đăng nhập để đồng bộ giỏ hàng, theo dõi đơn hàng và nhận gợi ý cá nhân hóa từ AI assistant.
+            Đăng nhập để đồng bộ giỏ hàng, theo dõi đơn hàng và nhận gợi ý cá nhân hóa từ trợ lý AI.
           </p>
           <div className="grid gap-3">
             <div className="rounded-2xl border border-border bg-card/70 p-4">

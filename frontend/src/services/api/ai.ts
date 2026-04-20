@@ -133,7 +133,7 @@ export const createChatSession = (user_id?: string) =>
   });
 
 export const askAi = (payload: { session_id?: string; user_id?: string; query: string; context?: Record<string, unknown> }) =>
-  apiFetch<AiAnswerResponse>("/ai/api/v1/ai/chat/", {
+  apiFetch<AiAnswerResponse>("/ai/api/v1/ai/chat/ask/", {
     method: "POST",
     body: JSON.stringify(payload),
   });

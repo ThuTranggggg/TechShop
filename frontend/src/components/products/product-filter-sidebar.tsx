@@ -18,7 +18,7 @@ export function ProductFilterSidebar({
           {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
         <select className="w-full rounded-xl border border-border bg-white px-3 py-2.5 text-slate-700" onChange={(e) => onChange({ brand: e.target.value })}>
-          <option value="">Nhóm product</option>
+          <option value="">Thương hiệu</option>
           {productGroups.map((group) => <option key={group.id} value={group.id}>{group.name}</option>)}
         </select>
       </div>

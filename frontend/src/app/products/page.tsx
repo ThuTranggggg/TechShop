@@ -51,8 +51,8 @@ export default function ProductsPage() {
       <ProductFilterSidebar categories={categories} productGroups={productGroups} onChange={(value) => setParams((prev) => ({ ...prev, ...value }))} />
       <section className="space-y-5">
         <div className="rounded-3xl border border-border/80 bg-card p-4 shadow-soft">
-          <h1 className="font-display text-3xl font-extrabold text-slate-900">Catalog</h1>
-          <p className="mt-1 text-sm text-slate-600">Lọc theo nhóm product, danh mục và mức giá để chọn món phù hợp nhất.</p>
+          <h1 className="font-display text-3xl font-extrabold text-slate-900">Catalog sản phẩm</h1>
+          <p className="mt-1 text-sm text-slate-600">Lọc theo thương hiệu, danh mục và mức giá để chọn món phù hợp nhất.</p>
         </div>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <SearchBar
@@ -70,7 +70,7 @@ export default function ProductsPage() {
         ) : (
           <EmptyState title="Không có sản phẩm" description="Thử đổi bộ lọc hoặc từ khóa khác." />
         )}
-        {recProducts.length ? <RecommendationCarousel products={recProducts} title="Recommendation cho bạn" /> : null}
+        {recProducts.length ? <RecommendationCarousel products={recProducts} title="Gợi ý cho bạn" /> : null}
       </section>
     </div>
   );

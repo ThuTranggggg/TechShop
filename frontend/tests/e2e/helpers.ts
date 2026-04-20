@@ -34,7 +34,7 @@ export async function loginThroughUi(page: Page, email: string, password = DEFAU
     page.waitForURL("**/"),
     page.getByRole("button", { name: "Đăng nhập" }).click(),
   ]);
-  await expect(page.getByRole("heading", { name: "Mua sắm công nghệ" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Mua sắm công nghệ gọn, đẹp và có AI hỗ trợ." })).toBeVisible();
 }
 
 export async function registerThroughUi(page: Page, payload: {
@@ -54,7 +54,7 @@ export async function registerThroughUi(page: Page, payload: {
     page.waitForURL("**/"),
     page.getByRole("button", { name: "Đăng ký" }).click(),
   ]);
-  await expect(page.getByRole("heading", { name: "Mua sắm công nghệ" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Mua sắm công nghệ gọn, đẹp và có AI hỗ trợ." })).toBeVisible();
 }
 
 export async function submitAddressForm(page: Page, values: {

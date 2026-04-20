@@ -49,18 +49,18 @@ test("home and catalog surfaces render seeded products and recommendations", asy
     await loginThroughUi(page, CUSTOMER_EMAIL);
 
     await page.goto("/");
-    await expect(page.getByRole("heading", { name: "Mua sắm công nghệ theo cách hoàn toàn mới." })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Mua sắm công nghệ gọn, đẹp và có AI hỗ trợ." })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Sản phẩm nổi bật" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "iPhone 15" }).first()).toBeVisible();
     await expect(page.getByRole("heading", { name: "Gợi ý AI cho bạn" })).toBeVisible();
 
     await page.goto("/products");
-    await expect(page.getByRole("heading", { name: "Danh mục sản phẩm" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Catalog sản phẩm" })).toBeVisible();
     await page.getByPlaceholder("Tìm laptop, điện thoại, thương hiệu...").fill("Galaxy");
     await page.getByRole("button", { name: "Tìm" }).click();
     await expect(page.getByRole("heading", { name: "Galaxy S24" }).first()).toBeVisible();
 
-    await page.locator("aside").getByRole("combobox").first().selectOption({ label: "Dien thoai" });
+    await page.locator("aside").getByRole("combobox").first().selectOption({ label: "Điện thoại" });
     await page.locator("aside").getByRole("combobox").nth(1).selectOption({ label: "Samsung" });
     await page.getByText("Sắp xếp").locator("..").getByRole("combobox").selectOption("-base_price");
     await expect(page.getByRole("heading", { name: "Galaxy S24" }).first()).toBeVisible();
@@ -70,7 +70,7 @@ test("home and catalog surfaces render seeded products and recommendations", asy
       page.getByRole("link", { name: "Galaxy S24", exact: true }).click(),
     ]);
     await expect(page.locator("h1")).toContainText("Galaxy S24", { timeout: 10_000 });
-    await expect(page.getByText("Galaxy S24 - demo product", { exact: true })).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText("Bảo hành 12 tháng")).toBeVisible({ timeout: 10_000 });
     await expect(page.getByRole("heading", { name: "Sản phẩm liên quan" })).toBeVisible({ timeout: 10000 });
   }));
 
@@ -79,7 +79,7 @@ test("cart, checkout, and order detail flows work through the gateway", async ({
     await loginThroughUi(page, CUSTOMER_EMAIL);
 
     await page.goto("/cart/", { waitUntil: "domcontentloaded" });
-    await expect(page.getByRole("heading", { name: "Giỏ hàng của bạn." })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Giỏ hàng của bạn" })).toBeVisible();
     await expect(page.getByText("Redmi Note 13 Pro", { exact: true })).toBeVisible();
     await expect(page.getByText("iPhone 15 Pro Max", { exact: true })).toBeVisible();
 
@@ -98,7 +98,7 @@ test("cart, checkout, and order detail flows work through the gateway", async ({
     await expect(iphoneQuantity).toHaveText("2", { timeout: 15_000 });
 
     await page.getByRole("link", { name: "Tiến hành thanh toán" }).click();
-    await expect(page.getByRole("heading", { name: "Checkout" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Thanh toán" })).toBeVisible();
 
     await submitAddressForm(page, {
       receiver_name: "John Doe",
@@ -113,7 +113,7 @@ test("cart, checkout, and order detail flows work through the gateway", async ({
       page.getByRole("button", { name: "Tạo đơn hàng" }).click(),
     ]);
 
-    await expect(page.getByText("Don hang da tao thanh cong.")).toBeVisible();
+    await expect(page.getByText("Đơn hàng đã tạo thành công.")).toBeVisible();
     const createdOrderNumber = await page.locator("h1").textContent();
     expect(createdOrderNumber).toContain("ORD-");
     await expect(page.getByRole("button", { name: "Mock Pay Success" })).toBeVisible();
@@ -145,11 +145,11 @@ test("chat surfaces and profile data render for the seeded customer", async ({ p
     await loginThroughUi(page, CUSTOMER_EMAIL);
 
     await page.goto("/chat/", { waitUntil: "domcontentloaded" });
-    await expect(page.getByRole("heading", { name: "AI Assistant" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Trợ lý AI" })).toBeVisible();
     await page.getByRole("button", { name: "Đơn hàng của tôi đang ở đâu?" }).click();
-    await page.getByPlaceholder("Nhap cau hoi...").fill("Đơn hàng của tôi đang ở đâu?");
-    await page.getByRole("button", { name: "Gui" }).click();
-    await expect(page.getByText("AI Assistant").first()).toBeVisible();
+    await page.getByPlaceholder("Nhập câu hỏi...").fill("Đơn hàng của tôi đang ở đâu?");
+    await page.getByRole("button", { name: "Gửi" }).click();
+    await expect(page.getByText("Trợ lý AI").first()).toBeVisible();
     await expect(page.getByRole("button", { name: "Đơn hàng của tôi đang ở đâu?" })).toBeVisible();
     await expect(page.locator("div.rounded-2xl").filter({ hasText: "Đơn hàng của tôi đang ở đâu?" }).last()).toBeVisible();
 
@@ -168,7 +168,7 @@ test("admin gating blocks customers and admin CRUD remains functional", async ({
 
     await loginThroughUi(page, ADMIN_EMAIL);
     await page.goto("/admin/", { waitUntil: "domcontentloaded" });
-    await expect(page.getByRole("heading", { name: "Admin Dashboard" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Bảng điều khiển Admin" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Quản lý đơn hàng" })).toBeVisible();
 
     const productName = `Playwright Demo ${Date.now()}`;
@@ -181,7 +181,7 @@ test("admin gating blocks customers and admin CRUD remains functional", async ({
     await form.getByPlaceholder("Mô tả ngắn").fill("Product created by Playwright.");
     await form.getByPlaceholder("Mô tả chi tiết").fill("Playwright created this product in the real stack.");
     await form.getByPlaceholder("Ảnh thumbnail URL").fill("https://images.unsplash.com/photo-1517336714739-489689fd1ca8?w=1200");
-    await form.locator("select").nth(0).selectOption({ label: "Dien thoai" });
+    await form.locator("select").nth(0).selectOption({ label: "Điện thoại" });
     await form.locator("select").nth(1).selectOption({ label: "Apple" });
     await form.locator("select").nth(2).selectOption({ label: "Phone" });
     await form.getByRole("button", { name: "Tạo mới" }).click();
@@ -190,7 +190,7 @@ test("admin gating blocks customers and admin CRUD remains functional", async ({
     const createdCard = page.locator("article").filter({ hasText: productName }).first();
     await createdCard.getByRole("button", { name: "Sửa" }).click();
     await expect(page.getByRole("button", { name: "Cập nhật" })).toBeVisible();
-    await page.locator("select").nth(0).selectOption({ label: "Dien thoai" });
+    await page.locator("select").nth(0).selectOption({ label: "Điện thoại" });
     await page.locator("select").nth(1).selectOption({ label: "Apple" });
     await page.locator("select").nth(2).selectOption({ label: "Phone" });
     await page.getByPlaceholder("Tên sản phẩm").fill(updatedName);

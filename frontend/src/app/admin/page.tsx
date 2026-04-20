@@ -91,22 +91,22 @@ export default function AdminPage() {
   });
   const rebuildKgMutation = useMutation({
     mutationFn: rebuildKnowledgeGraph,
-    onSuccess: (data) => setAiOpsResult(data.output || "Knowledge graph rebuilt"),
+    onSuccess: (data) => setAiOpsResult(data.output || "Đã dựng lại đồ thị tri thức"),
   });
   const trainLstmMutation = useMutation({
     mutationFn: () => trainLstmModel({ epochs: 6, sequence_length: 5, batch_size: 16 }),
-    onSuccess: (data) => setAiOpsResult(data.output || "LSTM training completed"),
+    onSuccess: (data) => setAiOpsResult(data.output || "Đã huấn luyện LSTM"),
   });
   const rebuildRagMutation = useMutation({
     mutationFn: rebuildRagIndex,
-    onSuccess: (data) => setAiOpsResult(data.output || "RAG index rebuilt"),
+    onSuccess: (data) => setAiOpsResult(data.output || "Đã dựng lại chỉ mục RAG"),
   });
   const shippingMutation = useMutation({
     mutationFn: ({ orderId, status }: { orderId: string; status: "pending" | "preparing" | "in_transit" | "delivered" | "returned" }) =>
       updateShipmentByOrder(orderId, { status }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin-orders"] });
-      setAiOpsResult("Shipment status updated");
+      setAiOpsResult("Đã cập nhật trạng thái vận chuyển");
     },
   });
 
@@ -149,7 +149,7 @@ export default function AdminPage() {
   return (
     <div className="mx-auto max-w-6xl space-y-8">
       <section className="card-premium">
-        <h1 className="text-2xl font-black text-slate-900">Admin Dashboard</h1>
+        <h1 className="text-2xl font-black text-slate-900">Bảng điều khiển Admin</h1>
         <p className="mt-2 text-sm text-slate-600">Quản trị vận hành storefront: catalog, đơn hàng và tín hiệu AI.</p>
         <div className="mt-5 grid gap-3 md:grid-cols-4">
           <article className="rounded-2xl border border-border bg-white p-3">
@@ -181,7 +181,7 @@ export default function AdminPage() {
             {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
           <select className="rounded-xl border border-border p-3" value={form.brand} onChange={(e) => setForm((p) => ({ ...p, brand: e.target.value }))}>
-            <option value="">Chọn nhóm product</option>
+            <option value="">Chọn thương hiệu</option>
             {productGroups.map((group) => <option key={group.id} value={group.id}>{group.name}</option>)}
           </select>
           <select className="rounded-xl border border-border p-3" value={form.product_type} onChange={(e) => setForm((p) => ({ ...p, product_type: e.target.value }))}>
@@ -198,7 +198,7 @@ export default function AdminPage() {
             </button>
             {editingId ? (
               <button type="button" onClick={() => { setEditingId(""); setForm(INITIAL_FORM); }} className="rounded-xl border border-border px-4 py-2 text-sm font-semibold">
-                Huỷ chỉnh sửa
+                Hủy chỉnh sửa
               </button>
             ) : null}
           </div>
@@ -247,21 +247,21 @@ export default function AdminPage() {
       </section>
 
       <section className="card-premium">
-        <h2 className="text-xl font-bold">AI Operations</h2>
-        <p className="mt-2 text-sm text-slate-600">Trigger KG rebuild, RAG indexing, LSTM training va xem nhanh chi so hanh vi.</p>
+        <h2 className="text-xl font-bold">Vận hành AI</h2>
+        <p className="mt-2 text-sm text-slate-600">Kích hoạt dựng lại đồ thị tri thức, lập chỉ mục RAG, huấn luyện LSTM và xem nhanh chỉ số hành vi.</p>
         <div className="mt-4 grid gap-4 md:grid-cols-3">
           <article className="rounded-xl border border-border bg-white p-4">
-            <p className="text-xs uppercase tracking-widest text-slate-500">Behavior events</p>
+            <p className="text-xs uppercase tracking-widest text-slate-500">Sự kiện hành vi</p>
             <p className="mt-1 text-xl font-black text-slate-900">{behaviorSummary?.total_events ?? 0}</p>
-            <p className="mt-1 text-xs text-slate-500">Unique users: {behaviorSummary?.unique_users ?? 0}</p>
+            <p className="mt-1 text-xs text-slate-500">Người dùng duy nhất: {behaviorSummary?.unique_users ?? 0}</p>
           </article>
           <article className="rounded-xl border border-border bg-white p-4">
-            <p className="text-xs uppercase tracking-widest text-slate-500">Abandoned carts</p>
+            <p className="text-xs uppercase tracking-widest text-slate-500">Giỏ bỏ dở</p>
             <p className="mt-1 text-xl font-black text-slate-900">{behaviorSummary?.abandoned_cart_sessions ?? 0}</p>
-            <p className="mt-1 text-xs text-slate-500">Funnel steps: {behaviorSummary?.conversion_funnel?.length ?? 0}</p>
+            <p className="mt-1 text-xs text-slate-500">Số bước funnel: {behaviorSummary?.conversion_funnel?.length ?? 0}</p>
           </article>
           <article className="rounded-xl border border-border bg-white p-4">
-            <p className="text-xs uppercase tracking-widest text-slate-500">Top categories</p>
+            <p className="text-xs uppercase tracking-widest text-slate-500">Thương hiệu hàng đầu</p>
             <div className="mt-2 flex flex-wrap gap-2">
               {behaviorSummary?.top_viewed_categories?.slice(0, 4).map((item) => (
                 <span key={item.category_name} className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
@@ -273,13 +273,13 @@ export default function AdminPage() {
         </div>
         <div className="mt-4 flex flex-wrap gap-2">
           <button onClick={() => rebuildKgMutation.mutate()} className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
-            Rebuild Knowledge Graph
+            Xây dựng đồ thị tri thức
           </button>
           <button onClick={() => trainLstmMutation.mutate()} className="rounded-xl border border-border px-4 py-2 text-sm font-semibold">
-            Train LSTM
+            Huấn luyện LSTM
           </button>
           <button onClick={() => rebuildRagMutation.mutate()} className="rounded-xl border border-border px-4 py-2 text-sm font-semibold">
-            Build RAG Index
+            Xây dựng chỉ mục RAG
           </button>
         </div>
         {aiOpsResult ? <pre className="mt-4 overflow-auto rounded-xl bg-slate-950 p-4 text-xs text-slate-100">{aiOpsResult}</pre> : null}
@@ -294,20 +294,20 @@ export default function AdminPage() {
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
                   <h3 className="font-semibold text-slate-900">{o.order_number}</h3>
-                  <p className="text-xs text-slate-500">Thanh toán: {o.payment_status} • Fulfillment: {o.fulfillment_status || "-"}</p>
+                  <p className="text-xs text-slate-500">Thanh toán: {o.payment_status} • Hoàn tất: {o.fulfillment_status || "-"}</p>
                 </div>
                 <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">{String(o.status).toUpperCase()}</span>
               </div>
               <p className="mt-2 text-sm font-semibold text-slate-900">{formatPrice(Number(o.totals?.grand_total ?? 0), o.totals?.currency || "VND")}</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <button onClick={() => shippingMutation.mutate({ orderId: o.id, status: "preparing" })} className="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold">
-                  Shipping: Preparing
+                  Vận chuyển: Đang chuẩn bị
                 </button>
                 <button onClick={() => shippingMutation.mutate({ orderId: o.id, status: "in_transit" })} className="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold">
-                  Shipping: In Transit
+                  Vận chuyển: Đang giao
                 </button>
                 <button onClick={() => shippingMutation.mutate({ orderId: o.id, status: "delivered" })} className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white">
-                  Shipping: Delivered
+                  Vận chuyển: Đã giao
                 </button>
               </div>
             </article>
@@ -316,13 +316,13 @@ export default function AdminPage() {
       </section>
 
       <section className="card-premium">
-        <h2 className="text-xl font-bold">AI Monitoring</h2>
+        <h2 className="text-xl font-bold">Giám sát AI</h2>
         {!aiPreference ? (
           <p className="mt-3 text-sm text-slate-500">Chưa có đủ tín hiệu hành vi để hiển thị hồ sơ AI cá nhân.</p>
         ) : (
           <div className="mt-4 grid gap-4 md:grid-cols-2">
             <article className="rounded-xl border border-border bg-white p-4">
-              <p className="text-xs uppercase tracking-widest text-slate-500">Top nhom product</p>
+              <p className="text-xs uppercase tracking-widest text-slate-500">Thương hiệu hàng đầu</p>
               <div className="mt-2 flex flex-wrap gap-2">
                 {aiPreference.top_brands?.slice(0, 5).map((b) => (
                   <span key={b.brand_name} className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
@@ -332,7 +332,7 @@ export default function AdminPage() {
               </div>
             </article>
             <article className="rounded-xl border border-border bg-white p-4">
-              <p className="text-xs uppercase tracking-widest text-slate-500">Top categories</p>
+              <p className="text-xs uppercase tracking-widest text-slate-500">Danh mục hàng đầu</p>
               <div className="mt-2 flex flex-wrap gap-2">
                 {aiPreference.top_categories?.slice(0, 5).map((c) => (
                   <span key={c.category_name} className="rounded-full bg-accent/10 px-3 py-1 text-xs font-semibold text-accent">
@@ -340,13 +340,13 @@ export default function AdminPage() {
                   </span>
                 ))}
               </div>
-              <p className="mt-4 text-xs text-slate-600">Purchase intent score: {Math.round(Number(aiPreference.purchase_intent_score ?? 0))}</p>
+              <p className="mt-4 text-xs text-slate-600">Điểm ý định mua hàng: {Math.round(Number(aiPreference.purchase_intent_score ?? 0))}</p>
             </article>
           </div>
         )}
         {behaviorSummary?.event_breakdown?.length ? (
           <article className="mt-4 rounded-xl border border-border bg-white p-4">
-            <p className="text-xs uppercase tracking-widest text-slate-500">Behavior event mix</p>
+            <p className="text-xs uppercase tracking-widest text-slate-500">Phân bổ sự kiện hành vi</p>
             <div className="mt-2 flex flex-wrap gap-2">
               {behaviorSummary.event_breakdown.slice(0, 8).map((item) => (
                 <span key={item.event_type} className="rounded-full bg-warning/10 px-3 py-1 text-xs font-semibold text-warning">

@@ -45,9 +45,7 @@ export default function CartPage() {
         <ShoppingBag className="h-12 w-12" />
       </div>
       <h2 className="text-3xl font-black text-slate-950">Giỏ hàng của bạn đang trống</h2>
-      <p className="mt-4 max-w-sm text-lg text-slate-500">
-        Đừng bỏ lỡ các ưu đãi hấp dẫn. Khám phá những sản phẩm công nghệ mới nhất ngay bây giờ!
-      </p>
+      <p className="mt-4 max-w-sm text-lg text-slate-500">Khám phá catalog để thêm sản phẩm phù hợp vào giỏ hàng.</p>
       <Link href="/" className="btn-primary mt-10 px-10 h-14">
         Tiếp tục mua hàng
       </Link>
@@ -57,7 +55,7 @@ export default function CartPage() {
   return (
     <div className="pb-20">
       <header className="mb-12 border-b border-slate-100 pb-10">
-        <h1 className="text-4xl font-black tracking-tight text-slate-950">Giỏ hàng của bạn.</h1>
+        <h1 className="text-4xl font-black tracking-tight text-slate-950">Giỏ hàng của bạn</h1>
         <p className="mt-2 text-lg text-slate-500">Bạn đang có {data.items.length} sản phẩm trong giỏ hàng.</p>
       </header>
 
@@ -73,20 +71,20 @@ export default function CartPage() {
             </div>
           ))}
 
-          <div className="mt-12 flex flex-col items-center justify-between gap-6 overflow-hidden rounded-[2rem] bg-slate-950 p-8 text-white sm:flex-row">
-            <div className="flex items-center gap-6">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10">
-                <Sparkles className="h-7 w-7 text-primary" />
+            <div className="mt-12 flex flex-col items-center justify-between gap-6 overflow-hidden rounded-[2rem] bg-slate-950 p-8 text-white sm:flex-row">
+              <div className="flex items-center gap-6">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10">
+                  <Sparkles className="h-7 w-7 text-primary" />
+                </div>
+                <div>
+                  <div className="text-lg font-bold">Ưu đãi thành viên</div>
+                  <div className="text-sm text-slate-400">Đăng nhập để nhận thêm mã giảm giá và gợi ý cá nhân hóa.</div>
+                </div>
               </div>
-              <div>
-                <div className="text-lg font-bold">Ưu đãi thành viên</div>
-                <div className="text-sm text-slate-400">Đăng nhập để nhận thêm mã giảm giá hỏa tốc</div>
-              </div>
+              <Link href="/login" className="flex items-center gap-2 font-bold text-white hover:text-primary transition-colors">
+                Đăng nhập ngay <ArrowRight className="h-4 w-4" />
+              </Link>
             </div>
-            <Link href="/login" className="flex items-center gap-2 font-bold text-white hover:text-primary transition-colors">
-              Đăng nhập ngay <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
         </div>
 
         <aside className="lg:sticky lg:top-24 lg:col-span-4">
@@ -98,10 +96,10 @@ export default function CartPage() {
             >
               Tiến hành thanh toán <ArrowRight className="h-5 w-5" />
             </Link>
-            <p className="mt-6 text-center text-xs font-semibold uppercase tracking-widest text-slate-400">
-              An toàn & Bảo mật 100%
-            </p>
-          </div>
+              <p className="mt-6 text-center text-xs font-semibold uppercase tracking-widest text-slate-400">
+                An toàn & bảo mật 100%
+              </p>
+            </div>
         </aside>
       </div>
     </div>

@@ -37,7 +37,7 @@ export function AuthForm({
             setValue("password", "Demo@123456");
           }}
         >
-          Customer demo
+          Demo khách hàng
         </button>
         <button
           type="button"
@@ -47,7 +47,7 @@ export function AuthForm({
             setValue("password", "Demo@123456");
           }}
         >
-          Admin demo
+          Demo admin
         </button>
         <button
           type="button"
@@ -57,7 +57,7 @@ export function AuthForm({
             setValue("password", "Demo@123456");
           }}
         >
-          Staff demo
+          Demo nhân sự
         </button>
       </div>
       <div>

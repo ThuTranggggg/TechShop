@@ -18,15 +18,15 @@ type ChatMessage = {
 };
 
 const demoPrompts = [
-  "Tu van mot routine cham soc da duoi 500 nghin.",
-  "Chinh sach doi tra cua TechShop nhu the nao?",
-  "Can goi y mot bo do cam trai cho cuoi tuan.",
+  "Tư vấn một routine chăm sóc da dưới 500 nghìn.",
+  "Chính sách đổi trả của TechShop như thế nào?",
+  "Gợi ý một bộ đồ cắm trại cho cuối tuần.",
 ];
 
 const ragSteps = [
-  "Nguoi dung dat cau hoi ve san pham, don hang hoac chinh sach.",
-  "AI phan loai intent, trich xuat nhom product, danh muc va muc gia roi tim tai lieu lien quan.",
-  "He thong hop nhat context tu catalog + knowledge base roi sinh cau tra loi trong chat.",
+  "Người dùng đặt câu hỏi về sản phẩm, đơn hàng hoặc chính sách.",
+  "AI phân loại intent, trích xuất nhóm sản phẩm, danh mục và mức giá rồi tìm tài liệu liên quan.",
+  "Hệ thống hợp nhất ngữ cảnh từ catalog + kho tri thức rồi sinh câu trả lời trong chat.",
 ];
 
 export default function ChatPage() {
@@ -48,18 +48,18 @@ export default function ChatPage() {
   const capabilityCards = useMemo(
     () => [
       {
-        title: "Deep Model",
-        description: "AI service phan loai y dinh, trich xuat thuc the va sinh cau tra loi tu ngu canh da truy hoi.",
+        title: "Mô hình sâu",
+        description: "Dịch vụ AI phân loại ý định, trích xuất thực thể và sinh câu trả lời từ ngữ cảnh đã truy hồi.",
         icon: Bot,
       },
       {
-        title: "Knowledge Base",
-        description: `${knowledgeCount} tai lieu tri thuc dang san sang cho shipping, payment, return policy va huong dan.`,
+        title: "Kho tri thức",
+        description: `${knowledgeCount} tài liệu tri thức đang sẵn sàng cho giao hàng, thanh toán, đổi trả và hướng dẫn.`,
         icon: Database,
       },
       {
         title: "RAG + Chat",
-        description: "Moi cau tra loi co the hien thi tai lieu nguon va goi y san pham lien quan ngay trong khung chat.",
+        description: "Mỗi câu trả lời có thể hiển thị tài liệu nguồn và gợi ý sản phẩm liên quan ngay trong khung chat.",
         icon: MessageSquareText,
       },
     ],
@@ -106,7 +106,7 @@ export default function ChatPage() {
         ...prev,
         {
           role: "assistant",
-          text: "AI service tam thoi chua phan hoi. Ban co the thu lai voi mot cau hoi ngan hon.",
+          text: "Dịch vụ AI tạm thời chưa phản hồi. Bạn có thể thử lại với một câu hỏi ngắn hơn.",
         },
       ]);
     } finally {
@@ -121,12 +121,12 @@ export default function ChatPage() {
           <div>
             <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-primary">
               <Sparkles className="h-3.5 w-3.5" />
-              AI Service Demo
+              Demo dịch vụ AI
             </span>
-            <h1 className="mt-4 text-3xl font-black text-slate-900 md:text-5xl">RAG chatbot cho bai toan tu van mua hang thuc te.</h1>
+            <h1 className="mt-4 text-3xl font-black text-slate-900 md:text-5xl">RAG chatbot cho bài toán tư vấn mua hàng thực tế.</h1>
             <p className="mt-4 max-w-3xl text-base leading-7 text-slate-600">
-              Trang nay cho thay day du 3 thanh phan: mo hinh AI, knowledge base va quy trinh RAG + chat. Ban co the dat cau hoi,
-              xem tai lieu nguon ma AI da truy hoi, va mo nhanh san pham lien quan ngay trong phan hoi.
+              Trang này cho thấy ba thành phần chính: mô hình AI, kho tri thức và quy trình RAG + chat. Bạn có thể đặt câu hỏi,
+              xem tài liệu nguồn đã truy hồi và mở nhanh sản phẩm liên quan ngay trong phản hồi.
             </p>
           </div>
           <div className="grid gap-3">
@@ -154,13 +154,13 @@ export default function ChatPage() {
         <div className="rounded-3xl border border-border bg-white p-5 shadow-soft lg:p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="text-2xl font-bold text-slate-900">AI Shopping Assistant</h2>
-              <p className="mt-1 text-sm text-slate-600">Hoi ve san pham, don hang, thanh toan, doi tra va chinh sach giao hang.</p>
+              <h2 className="text-2xl font-bold text-slate-900">Trợ lý mua sắm AI</h2>
+              <p className="mt-1 text-sm text-slate-600">Hỏi về sản phẩm, đơn hàng, thanh toán, đổi trả và chính sách giao hàng.</p>
             </div>
             <div className="flex flex-wrap gap-2 text-xs font-semibold">
-              <span className="rounded-full bg-primary/10 px-3 py-1 text-primary">Model-backed</span>
-              <span className="rounded-full bg-accent/10 px-3 py-1 text-accent">{knowledgeCount} KB docs</span>
-              <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-700">RAG + catalog retrieval</span>
+              <span className="rounded-full bg-primary/10 px-3 py-1 text-primary">Dựa trên mô hình</span>
+              <span className="rounded-full bg-accent/10 px-3 py-1 text-accent">{knowledgeCount} tài liệu</span>
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-700">RAG + truy hồi catalog</span>
             </div>
           </div>
 
@@ -191,14 +191,14 @@ export default function ChatPage() {
             ) : (
               <div className="flex min-h-[500px] flex-col items-center justify-center rounded-[1.5rem] border border-dashed border-border bg-white px-6 text-center">
                 <Bot className="h-10 w-10 text-primary" />
-                <h3 className="mt-4 text-xl font-bold text-slate-900">San sang demo RAG + Chat</h3>
+                <h3 className="mt-4 text-xl font-bold text-slate-900">Sẵn sàng demo RAG + Chat</h3>
                 <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">
-                  Hay hoi ve my pham, me va be, do gia dung, chinh sach doi tra, thanh toan hoac logistics. Cac phan hoi se hien thi tai
-                  lieu tri thuc duoc truy hoi khi co.
+                  Hãy hỏi về mỹ phẩm, mẹ và bé, đồ gia dụng, chính sách đổi trả, thanh toán hoặc vận chuyển. Phản hồi sẽ hiển thị tài
+                  liệu tri thức đã truy hồi khi có.
                 </p>
               </div>
             )}
-            {loading ? <ChatMessageBubble role="assistant" text="Dang truy hoi tri thuc va tong hop cau tra loi..." /> : null}
+            {loading ? <ChatMessageBubble role="assistant" text="Đang truy hồi tri thức và tổng hợp câu trả lời..." /> : null}
           </div>
 
           <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-3 sm:flex-row">
@@ -206,22 +206,22 @@ export default function ChatPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               className="w-full"
-              placeholder="Nhap cau hoi de bat dau demo AI..."
-              aria-label="Nhap cau hoi cho AI"
+              placeholder="Nhập câu hỏi để bắt đầu demo AI..."
+              aria-label="Nhập câu hỏi cho AI"
             />
             <button type="submit" className="btn-primary h-12 px-6" disabled={loading}>
-              Gui cau hoi
+              Gửi câu hỏi
             </button>
           </form>
         </div>
 
         <aside className="space-y-6">
           <section className="rounded-3xl border border-border bg-card p-5 shadow-soft">
-            <h2 className="text-xl font-bold text-slate-900">Quy trinh RAG</h2>
+            <h2 className="text-xl font-bold text-slate-900">Quy trình RAG</h2>
             <div className="mt-4 space-y-3">
               {ragSteps.map((step, index) => (
                 <article key={step} className="rounded-2xl bg-slate-50 p-4">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Buoc {index + 1}</p>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Bước {index + 1}</p>
                   <p className="mt-1 text-sm leading-6 text-slate-700">{step}</p>
                 </article>
               ))}
@@ -231,10 +231,10 @@ export default function ChatPage() {
           <section className="rounded-3xl border border-border bg-card p-5 shadow-soft">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <h2 className="text-xl font-bold text-slate-900">Knowledge Base</h2>
-                <p className="mt-1 text-sm text-slate-600">Nguon tri thuc noi bo ma chatbot dang dung de truy hoi.</p>
+                <h2 className="text-xl font-bold text-slate-900">Kho tri thức</h2>
+                <p className="mt-1 text-sm text-slate-600">Nguồn tri thức nội bộ mà chatbot đang dùng để truy hồi.</p>
               </div>
-              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">{knowledgeCount} tai lieu</span>
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">{knowledgeCount} tài liệu</span>
             </div>
 
             <div className="mt-4 space-y-3">
@@ -254,20 +254,20 @@ export default function ChatPage() {
                 ))
               ) : (
                 <p className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-600">
-                  Chua tai duoc danh sach tri thuc. Neu backend chua seed du lieu, hay chay seeding de hien thi day du.
+                  Chưa tải được danh sách tri thức. Nếu backend chưa seed dữ liệu, hãy chạy seeding để hiển thị đầy đủ.
                 </p>
               )}
             </div>
           </section>
 
           <section className="rounded-3xl border border-border bg-card p-5 shadow-soft">
-            <h2 className="text-xl font-bold text-slate-900">Demo thuc tien</h2>
+            <h2 className="text-xl font-bold text-slate-900">Demo thực tiễn</h2>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              Luong demo phuc vu mua sam thuc te: tim san pham theo ngan sach, hoi chinh sach sau ban va dieu huong nguoi dung den trang
-              catalog tu chat.
+              Luồng demo phục vụ mua sắm thực tế: tìm sản phẩm theo ngân sách, hỏi chính sách sau bán và điều hướng người dùng đến trang
+              catalog từ chat.
             </p>
             <Link href="/products" className="btn-secondary mt-4 w-full justify-center">
-              Xem catalog san pham
+              Xem catalog sản phẩm
             </Link>
           </section>
         </aside>

@@ -13,8 +13,60 @@ def stable_uuid(kind: str, value: str) -> str:
     return str(uuid5(SEED_NAMESPACE, f"{kind}:{value}"))
 
 
+def _unsplash(photo_id: str) -> str:
+    return f"https://images.unsplash.com/{photo_id}?auto=format&fit=crop&w=960&q=80"
+
+
+_CATEGORY_IMAGES = {
+    "electronics": _unsplash("photo-1526738549149-8e07eca6c147"),
+    "fashion": _unsplash("photo-1529139574466-a303027c1d8b"),
+    "cosmetics": _unsplash("photo-1522335789203-aabd1fc54bc9"),
+    "home-appliances": _unsplash("photo-1556911220-bff31c812dba"),
+    "accessories": _unsplash("photo-1523170335258-f5ed11844a49"),
+    "books": _unsplash("photo-1495446815901-a7297e633e8d"),
+    "groceries": _unsplash("photo-1495474472287-4d71bcdd2085"),
+    "sports": _unsplash("photo-1517836357463-d25dfeac3438"),
+    "baby-kids": _unsplash("photo-1515488042361-ee00e0ddd4e4"),
+    "furniture": _unsplash("photo-1505693416388-ac5ce068fe85"),
+    "office": _unsplash("photo-1497032628192-86f99bcd76bc"),
+    "toys": _unsplash("photo-1516321318423-f06f85e504b3"),
+}
+
+
 def image(seed: str) -> str:
-    return f"https://picsum.photos/seed/{seed}/960/640"
+    return _CATEGORY_IMAGES.get(seed, _CATEGORY_IMAGES["electronics"])
+
+
+_PRODUCT_TYPE_IMAGES = {
+    "LAPTOP": _unsplash("photo-1498050108023-c5249f4df085"),
+    "MOBILE": _unsplash("photo-1511707171634-5f897ff02aa9"),
+    "TABLET": _unsplash("photo-1545239351-1141bd82e8a6"),
+    "AUDIO": _unsplash("photo-1505740420928-5e560c06d30e"),
+    "AIR_CONDITIONER": _unsplash("photo-1556911220-bff31c812dba"),
+    "REFRIGERATOR": _unsplash("photo-1556911220-bff31c812dba"),
+    "HOME_DEVICE": _unsplash("photo-1519947486511-46149fa0a254"),
+    "TOP": _unsplash("photo-1483985988355-763728e1935b"),
+    "BOTTOM": _unsplash("photo-1542272604-787c3835535d"),
+    "SHOES": _unsplash("photo-1542291026-7eec264c27ff"),
+    "SANDALS": _unsplash("photo-1606813904188-5d52f7b2b5f7"),
+    "HAT": _unsplash("photo-1521369909029-8f7f8f4b2b41"),
+    "LIPSTICK": _unsplash("photo-1522335789203-aabd1fc54bc9"),
+    "FOUNDATION": _unsplash("photo-1522335789203-aabd1fc54bc9"),
+    "SUNSCREEN": _unsplash("photo-1522335789203-aabd1fc54bc9"),
+    "SKINCARE": _unsplash("photo-1522335789203-aabd1fc54bc9"),
+    "ACCESSORY": _unsplash("photo-1523170335258-f5ed11844a49"),
+    "BOOK": _unsplash("photo-1495446815901-a7297e633e8d"),
+    "GROCERY": _unsplash("photo-1495474472287-4d71bcdd2085"),
+    "SPORTS_GEAR": _unsplash("photo-1517836357463-d25dfeac3438"),
+    "BABY_CARE": _unsplash("photo-1515488042361-ee00e0ddd4e4"),
+    "FURNITURE": _unsplash("photo-1505693416388-ac5ce068fe85"),
+    "STATIONERY": _unsplash("photo-1497032628192-86f99bcd76bc"),
+    "TOY": _unsplash("photo-1516321318423-f06f85e504b3"),
+}
+
+
+def product_image(product_type_code: str, category_slug: str | None = None) -> str:
+    return _PRODUCT_TYPE_IMAGES.get(product_type_code, image(category_slug or "electronics"))
 
 
 CATEGORY_SEED_DATA = [
